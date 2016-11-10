@@ -68,7 +68,33 @@ The co-evolution of graphics hardware, software and content, largely pushed forw
 the gaming industry has led to modern graphics processing units that are optimized for
 operating efficiently on floating point numbers, vectors and matrices.
 In a standard computer graphics pipleline, $4x4$ matrices are used to represent coordinate
-transformations operating on 4-dimensional homogenious coordinate vectors.
+transformations operating on 4-dimensional homogenious coordinate vectors, with their components stored as floating point numbers.
+
+\subsection{Floating point numbers}
+The widely used IEEE754 standard for representing 32-bit floating point numbers makes it possible to express numbers in a much larger range than integer types. While a 32-bit signed integer type can only represent numbers in the range 
+$[-2^{31}, 2^{31} - 1]$, an IEEE754 float approximately support the range $[-2^{127}, 2^{127}]$.
+
+High precision close to zero and decreasing precision for larger numbers are achieved by representing values as a sign, mantissa and exponent. The IEEE754 single precision floating point format uses 1 sign bit $s$, 8 exponent bits $e_i$ and 23 mantissa bits $m_i$. Equation \ref{floatingpoint} yields the value $v$ represented by $s$, $b$ and $e$, where $e \in [-127, 128]$ is encoded in the exponent bits $e_i$. 
+
+\begin{equation} \label{floatingpoint}
+v = \begin{cases}
+(-1)^s \cdot \sum_{i = 1}^{23}b_i 2^{-i} \cdot 2^{-126}, & \text{for } e = -127 \\
+(-1)^s \cdot (1 + \sum_{i = 1}^{23}b_i 2^{-i}) \cdot 2^e, & \text{for } -126 \leq e \leq 127 \\
+\text{Special numbers such as NaN and }\infty, & \text{for } e = 128
+\end{cases}
+\end{equation}
+
+Only values $v$ that can be composed by these 32 bits are valid floating point numbers, and all other real values that result from computation need to be rounded before they are stored in this format. The IEEE754 standard requires that the result of operations $+$, $-$, $*$ and $\div$ acting on any two floating point numbers should be the same result as when performing the operation with infinite precision and then rounding to the closest representable float\cite{???}. An upper bound of the absolute rounding error can be expressed as $\epsilon \cdot v$. The \emph{machine epsilon}, $\epsilon$ is a constant given by $2^{-(n + 1)}$, where $n$ is the number of mantissa bits.
+For IEEE754 float, $\epsilon = 2^{-24}\approx 5.96 \cdot 10^{-8}$.
+
+\[Accuracy and Stability of Numerical Algorithms\]
+
+
+\subsubsection{Catastrophic cancellation}
+The roudning errors that occur after arithmetic operations gives floating point numbers the property that for a sufficiently large number $a$ and a number $b$ sufficiently close to zero, $a + b$ will return the same floating point representation as $a$ alone. While the expected that $(a + b) - a$ should yield $b$, the expression will evaluate to $0$ using floating point artithmetic. This loss of presicion is commonly referred to as \emph{catastrophic cancellation}.
+
+\subsubsection{Exponent under- and overflow}
+Operations that cause overflow and underflow in the exponent of IEEE754 floats, result in loss of data. Given that the value range 
 
 \subsection{Scene Graphs}
 In software, matrices are commonly generated from a scene graph structure, allowing developers
@@ -79,25 +105,9 @@ of the ancestor nodes are concatonated to a \emph{model matrix} using matrix mul
 
 An additional \emph{view matrix} is also commonly generated based on a camera position and rotation expressed in the world coordinate system, and then used to transtorm world coordinates to \emph{view coordinates}.
 
-\subsection{Floating point numbers}
-The widely used IEEE754 standard for representing floating point numbers deals with scale
-differences by representing values as a sign, mantissa and exponent. The IEEE754
-single precision floating point format uses 1 sign bit $s$, 8 exponent bits $e_i$ and 23 mantissa bits $m_i$.
-The value $v$ represented by these bits can be epressed as in equation \ref{floatingpoint}, with a few exceptions including zero, infinity and denormal numbers (TODO.)
+Representing the known universe in a traditional scene graph structure with floating point matrices has obvious problems.
 
-\begin{equation} \label{floatingpoint}
-v = (-1)^s \cdot (1 + \sum_{i = 1}^{23}b_{23 - i} 2^{-i}) \cdot 2^{e-127}
-\end{equation}
-
-
-
-
-\subsection{Floating Point Numbers}
-
-
-- Floating point numbers \\
-- Catastrophic cancellation \\
-- depth buffer precision \\
+\subsection{Depth buffer}
 
 \section{Related Work}
 Hanson et Al. introduces the concept of Power scaled coordinates, where ... \\
@@ -140,6 +150,10 @@ and J. Kniss
 and E.Angel
 and S. Wenger \\
 \url{https://www.ece.ucsb.edu/~psen/Papers/EG10_DigitalPlanetariums.pdf}
+
+
+Higham, Nicholas (2002). Accuracy and Stability of Numerical Algorithms (2 ed). SIAM. p. 37.
+\url{http://ftp.demec.ufpr.br/CFD/bibliografia/Higham_2002_Accuracy%20and%20Stability%20of%20Numerical%20Algorithms.pdf}
 
 
 %-------------------------------------------------------------------------
