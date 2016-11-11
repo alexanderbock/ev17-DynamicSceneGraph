@@ -51,19 +51,34 @@ make it impossible to distinguish between two physical locations, is approximate
 $10^{-35}$ meters.
 
 Comprehending the vast differences of scales in the known universe is needless 
-to say a huge challenge for us humans. Computer graphics and visualization have
-prooven to be immensively valuable tools for communicating scientific findings
+to say a huge challenge for us humans. Computer graphics and interactive visualization have
+proven to be immensively valuable tools for communicating scientific findings
 and contextualizing informaiton. However, even in our virtual worlds, huge scale
-differences are difficult to represent, due to limitations in numeric precision
+differences are difficult to represent, due to limitations in numerical precision
 in state-of-the-art hardware and software architectures.
 
 In movie productions and visualziation software with limited interaction possibilies,
 producers and developers may use various compositing techniques to blend
 between large and small scenes, to account for the individual cases where a transition
-between scales is required. Allowing the user to navigate around in a dataset with more
-freedom requires a more general system that can handle scale differences automatically.
+between scales is required. 
 
-\section{The Traditional Rendering Pipeline}
+Allowing the user to navigate around in a dataset with greater
+freedom requires a more general system that can handle scale differences automatically.
+There are several challenges with developing such a system, where the the most prominent
+one may be providing adequate numerical precision for all the components in the visualization pipeline.
+Another important aspect is adapting the eye-separation used for stereoscopic rendering to enhance depth perception and improve immersion. From the perspective of software development and content creation,
+it is desirable for this sort of system to facilitate creation of visualization content rather than introducing additional
+complexity.
+
+This work contributes to visualization of datasets with large scale differences by providing:
+\begin{itemize}
+\item A \emph{Precision-Adaptive Scene Graph} approach for representing objects and cameras to avoid presicion-related artifacts.
+\item A scheme for adaptive eye-separation for stereoscopic rendering.
+\item Minimal modifications on a conventional rendering pipeline.
+\item Interoperability with volumetric rendering and order-independent-transparency.
+\end{itemize}
+
+\section{The Conventional Rendering Pipeline}
 The co-evolution of graphics hardware, software and content, largely pushed forward by
 the gaming industry has led to modern graphics processing units that are optimized for
 operating efficiently on floating point numbers, vectors and matrices.
@@ -74,7 +89,7 @@ transformations operating on 4-dimensional homogenious coordinate vectors, with 
 The widely used IEEE754 standard for representing 32-bit floating point numbers makes it possible to express numbers in a much larger range than integer types. While a 32-bit signed integer type can only represent numbers in the range 
 $[-2^{31}, 2^{31} - 1]$, an IEEE754 float approximately support the range $[-2^{127}, 2^{127}]$.
 
-High precision close to zero and decreasing precision for larger numbers are achieved by representing values as a sign, mantissa and exponent. The IEEE754 single precision floating point format uses 1 sign bit $s$, 8 exponent bits $e_i$ and 23 mantissa bits $m_i$. Equation \ref{floatingpoint} yields the value $v$ represented by $s$, $b$ and $e$, where $e \in [-127, 128]$ is encoded in the exponent bits $e_i$. 
+By representing values as a sign, mantissa and exponent is is possible to achieve high precision close to zero, decreasing precision for larger numbers and a dramatic increase in value range. The IEEE754 single precision floating point format uses 1 sign bit $s$, 8 exponent bits $e_i$ and 23 mantissa bits $m_i$. Equation \ref{floatingpoint} yields the value $v$ represented by $s$, $b$ and $e$, where $e \in [-127, 128]$ is encoded in the exponent bits $e_i$. 
 
 \begin{equation} \label{floatingpoint}
 v = \begin{cases}
@@ -98,8 +113,8 @@ Operations that cause overflow and underflow in the exponent of IEEE754 floats, 
 
 \subsection{Scene Graphs}
 In software, matrices are commonly generated from a scene graph structure, allowing developers
-to represent transformations hierarchically. Each node in the graph may contain a
-coordinate transform, also affecting all its children. To transform an object from its
+to represent coordinate transformations hierarchically. Each node in the graph may contain a transformation that is 
+also affecting all its children. To transform an object from its
 local coordinate system to a global \emph{world coordinate system}, the transformation matrices
 of the ancestor nodes are concatonated to a \emph{model matrix} using matrix multiplication. 
 
