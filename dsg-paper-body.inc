@@ -53,7 +53,14 @@ $10^{-35}$ meters.
 Comprehending the vast differences of scales in the known universe is needless 
 to say a huge challenge for us humans. Computer graphics and interactive visualization have
 proven to be immensively valuable tools for communicating scientific findings
-and contextualizing informaiton. However, even in our virtual worlds, huge scale
+and contextualizing informaiton.
+
+Notable examples of applications where huge scale differences are visualized 
+together include movie productions, such as \emph{Powers of Ten}\ref{powersOfTen} from 1977,
+All We Are [citation needed], as well as interactive software for digital planetariums,
+such as Uniview from Sciss, DigiStar from Evans and Sutherland, [citations and more examples].
+
+However, even in our virtual worlds, huge scale
 differences are difficult to represent, due to limitations in numerical precision
 in state-of-the-art hardware and software architectures.
 
@@ -67,8 +74,7 @@ freedom requires a more general system that can handle scale differences automat
 There are several challenges with developing such a system, where the the most prominent
 one may be providing adequate numerical precision for all the components in the visualization pipeline.
 Another important aspect is adapting the eye-separation used for stereoscopic rendering to enhance depth perception and improve immersion. From the perspective of software development and content creation,
-it is desirable for this sort of system to facilitate creation of visualization content rather than introducing additional
-complexity.
+it is desirable for this sort of system to facilitate creation of visualization content rather than introducing additional complexity.
 
 This work contributes to visualization of datasets with large scale differences by providing:
 \begin{itemize}
@@ -78,12 +84,20 @@ This work contributes to visualization of datasets with large scale differences 
 \item Interoperability with volumetric rendering and order-independent-transparency.
 \end{itemize}
 
-\section{The Conventional Rendering Pipeline}
+\section{Related Work}
+The concept of \emph{Power Scaled Coordinates}, introduced by Hanson et al. \cite{hanson2000very},
+addresses some of the challenges with multi-scale visualization. By using the fourth component of a homogenious coordinate vector to encode powers of ten, the proposed system can operate with floating point numbers close to unit scale. The method does not enhance the precision of coordinate transformations carried out in the visualization pipeline, but solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors. However, this is achieved by adding unnecessary complexity in terms of introducing an extra layer of logarithmic representation on top of regular floating point vectors, which already have the property of encoding scale logarithmically. 
+
+Further work by Fu et al. \cite{fu2007transparently} elaborate more on the concept of power scale coordinates and introduce a depth scaling scheme to cover a wider range of distances than what is possible with a fixed point depth buffer and a conventional near and far plane. The depth buffer range is divided into three regions, where small and huge depth values are remapped using logarithmic scales, while values in the mid-range are stored linearly. While this method may be beneficial for some specific type of scene content, the method does not provide a generic way to select appropriate threshold values, and the choice of three separate regions with different mapping does not necessarily provide better results than one single logarithmic mapping. 
+
+The \emph{ScaleGraph} method, introduced by Klashed et al. \cite{KHECY10} as a part of the digital planetarium software Uniview, employs a scene graph structure with sub-scenes that the camera can belong to. The content of the current sub-scene is rendered in its local coordinate system, which maintains the precision of vertex coordinates. When rendering content outside the current sub-scene, objects are translated onto the bounding sphere of the scene, and rescaled to compensate for perspective effects. Vectors between sub-scenes are computed by traversing the scenegraph through the closest common ancestor in the tree, to avoid introducing precision errors caused by handling unnecessarily large numbers. By moving objects onto the bounding sphere of the current scene, object depths are mapped to a managable range. However, the method does not deal with depth sorting of objects that are outside the current sub-scene. Furthermore, the work does not address stereoscopic rendering of objects across sub-scenes.
+
+\section{Background}
 The co-evolution of graphics hardware, software and content, largely pushed forward by
 the gaming industry has led to modern graphics processing units that are optimized for
-operating efficiently on floating point numbers, vectors and matrices.
+operating efficiently on 32-bit floating point numbers, vectors and matrices.
 In a standard computer graphics pipleline, $4x4$ matrices are used to represent coordinate
-transformations operating on 4-dimensional homogenious coordinate vectors, with their components stored as floating point numbers.
+transformations operating on 4-dimensional homogenious coordinate vectors, with their components stored as floating point numbers. 
 
 \subsection{Floating point numbers}
 The widely used IEEE754 standard for representing 32-bit floating point numbers makes it possible to express numbers in a much larger range than integer types. While a 32-bit signed integer type can only represent numbers in the range 
@@ -99,17 +113,16 @@ v = \begin{cases}
 \end{cases}
 \end{equation}
 
-Only values $v$ that can be composed by these 32 bits are valid floating point numbers, and all other real values that result from computation need to be rounded before they are stored in this format. The IEEE754 standard requires that the result of operations $+$, $-$, $*$ and $\div$ acting on any two floating point numbers should be the same result as when performing the operation with infinite precision and then rounding to the closest representable float\cite{???}. An upper bound of the absolute rounding error can be expressed as $\epsilon \cdot v$. The \emph{machine epsilon}, $\epsilon$ is a constant given by $2^{-(n + 1)}$, where $n$ is the number of mantissa bits.
+Only values $v$ that can be composed by these 32 bits are valid floating point numbers, and all other real values that result from computation need to be rounded before they are stored in this format. The IEEE754 standard requires that the result of operations $+$, $-$, $*$ and $\div$ acting on any two floating point numbers should be the same result as an infinitely precise computation followed by a rounding to the closest representable float\cite{zuras2008ieee}. An upper bound of the absolute rounding error can be expressed as $\epsilon \cdot v$\cite{higham2002accuracy}. The \emph{machine epsilon}, $\epsilon$ is a constant given by $2^{-(n + 1)}$, where $n$ is the number of mantissa bits.
 For IEEE754 float, $\epsilon = 2^{-24}\approx 5.96 \cdot 10^{-8}$.
-
-\[Accuracy and Stability of Numerical Algorithms\]
-
 
 \subsubsection{Catastrophic cancellation}
 The roudning errors that occur after arithmetic operations gives floating point numbers the property that for a sufficiently large number $a$ and a number $b$ sufficiently close to zero, $a + b$ will return the same floating point representation as $a$ alone. While the expected that $(a + b) - a$ should yield $b$, the expression will evaluate to $0$ using floating point artithmetic. This loss of presicion is commonly referred to as \emph{catastrophic cancellation}.
 
 \subsubsection{Exponent under- and overflow}
-Operations that cause overflow and underflow in the exponent of IEEE754 floats, result in loss of data. Given that the value range 
+The exponent range $[-127, 128]$ in 32-bit IEEE754 floats implies approximately 76 orders of magnitude. Computations that yield exponents outside that range will cause exponent underflow or overflow, and result in loss of data. Computing norms of vectors require taking the square root of the summed squares of the components, which means that a stright-forward implementation of this operation only works with scales with 38 orders of magnitude.
+
+The scale difference in orders of magnitude betweeen the Planck length and the diameter of the observable universe is approximately $62$. While 32-bit floats are able to represent this scale difference, a convensional approach to computing lengths and normalizing vectors would break down.
 
 \subsection{Scene Graphs}
 In software, matrices are commonly generated from a scene graph structure, allowing developers
@@ -122,19 +135,11 @@ An additional \emph{view matrix} is also commonly generated based on a camera po
 
 Representing the known universe in a traditional scene graph structure with floating point matrices has obvious problems.
 
+
+TODO: mention double and quad precision.
+
 \subsection{Depth buffer}
 
-\section{Related Work}
-Hanson et Al. introduces the concept of Power scaled coordinates, where ... \\
-
-Prominent examples of applications where huge scale differences are visualized 
-together include movie productions, such as "Powers of Ten" [citaition needed],
-All We Are [citation needed], as well as interactive software for digital planetariums,
-notable examples being Uniview from Sciss, DigiStar from Evans and Sutherland, [citations and more examples].
-
-- Describe Scale Graph (find a good reference) \\
-- Problems with stereo rendering in ScaleGraph \\
-- Double and Quad precision rendering \\
 
 \section{Dynamic Scene Graph}
 
@@ -152,23 +157,8 @@ Please direct any questions to the production editor in charge of
 these proceedings.
 
 \section{Possible references}
-Very Large Scale Visualization Methods for
-Astrophysical Data. \\
-Andrew J. Hanson, Chi-Wing Fu, and Eric A. Wernert \\
-\url{http://www.cs.indiana.edu/~hansona/papers/vissym00.pdf}
 
-
-Progress in Rendering and Modeling for Digital Planetariums \\
-M. Magnor
-and P. Sen
-and J. Kniss
-and E.Angel
-and S. Wenger \\
-\url{https://www.ece.ucsb.edu/~psen/Papers/EG10_DigitalPlanetariums.pdf}
-
-
-Higham, Nicholas (2002). Accuracy and Stability of Numerical Algorithms (2 ed). SIAM. p. 37.
-\url{http://ftp.demec.ufpr.br/CFD/bibliografia/Higham_2002_Accuracy%20and%20Stability%20of%20Numerical%20Algorithms.pdf}
+Charles Eames and Ray Eames. Powers of Ten, 1977. 9 1/2 minute film, made for IBM.
 
 
 %-------------------------------------------------------------------------
@@ -176,7 +166,7 @@ Higham, Nicholas (2002). Accuracy and Stability of Numerical Algorithms (2 ed). 
 %\bibliographystyle{eg-alpha}
 \bibliographystyle{eg-alpha-doi}
 
-\bibliography{egbibsample}
+\bibliography{dsg-bib}
 
 %-------------------------------------------------------------------------
 
