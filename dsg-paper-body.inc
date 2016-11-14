@@ -3,8 +3,8 @@
 % D.Fellner, v1.17, Sep 23, 2010
 
 
-\title[EG A software architecture for interactive visualization of datasets of astronomical scale differences]%
-      {A software architecture for interactive visualization of datasets of astronomical scale differences}
+\title[EG A software architecture for interactive visualization of datasets with astronomical scale differences]%
+      {A software architecture for interactive visualization of datasets with astronomical scale differences}
 
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
