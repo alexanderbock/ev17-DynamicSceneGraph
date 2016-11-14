@@ -56,7 +56,7 @@ proven to be immensively valuable tools for communicating scientific findings
 and contextualizing informaiton.
 
 Notable examples of applications where huge scale differences are visualized 
-together include movie productions, such as \emph{Powers of Ten}\ref{powersOfTen} from 1977,
+together include movie productions, such as \emph{Powers of Ten}\cite{powersOfTen} from 1977,
 All We Are [citation needed], as well as interactive software for digital planetariums,
 such as Uniview from Sciss, DigiStar from Evans and Sutherland, [citations and more examples].
 
@@ -113,11 +113,33 @@ v = \begin{cases}
 \end{cases}
 \end{equation}
 
-Only values $v$ that can be composed by these 32 bits are valid floating point numbers, and all other real values that result from computation need to be rounded before they are stored in this format. The IEEE754 standard requires that the result of operations $+$, $-$, $*$ and $\div$ acting on any two floating point numbers should be the same result as an infinitely precise computation followed by a rounding to the closest representable float\cite{zuras2008ieee}. An upper bound of the absolute rounding error can be expressed as $\epsilon \cdot v$\cite{higham2002accuracy}. The \emph{machine epsilon}, $\epsilon$ is a constant given by $2^{-(n + 1)}$, where $n$ is the number of mantissa bits.
+Only values $v$ that can be composed by these 32 bits are valid floating point numbers, and all other real values that result from computation need to be rounded before they are stored in this format. The IEEE754 standard requires that the result of operations $+$, $-$, $*$ and $/$ acting on any two floating point numbers should be the same result as an infinitely precise computation followed by a rounding to the closest representable float\cite{zuras2008ieee}. An upper bound of the absolute rounding error for the number $v$ can be expressed as $\epsilon|v|$\cite{higham2002accuracy}. The \emph{machine epsilon} $\epsilon$ is the maximum relative rounding error constant given by $2^{-(n + 1)}$, where $n$ is the number of mantissa bits.
 For IEEE754 float, $\epsilon = 2^{-24}\approx 5.96 \cdot 10^{-8}$.
 
 \subsubsection{Catastrophic cancellation}
-The roudning errors that occur after arithmetic operations gives floating point numbers the property that for a sufficiently large number $a$ and a number $b$ sufficiently close to zero, $a + b$ will return the same floating point representation as $a$ alone. While the expected that $(a + b) - a$ should yield $b$, the expression will evaluate to $0$ using floating point artithmetic. This loss of presicion is commonly referred to as \emph{catastrophic cancellation}.
+When evaluating the expression $(a + b) - b$ using floating point artithmetics, the value of $(a + b)$ will be subject to rounding before $b$ is subtracted. Letting $f$ mark an operation as followed by a floating point rounding, and $e(v)$ be the unknown rounding error of the value $v$, capped by $[-\epsilon|v|, \epsilon|v|]$ the value of the expression is given by equation \ref{floatAdd}.
+
+\begin{multline*}
+(a \underset{f}{+} b) \underset{f}{-} b =
+(a + b + e(a + b)) \underset{f}{-} b = \\
+a + b + e(a + b) - b + e(a + b + e(a + b) - b) = \\
+a + e(a + b) + e(a + e(a + b))
+\end{multline*}
+
+Instead of only yielding the expected value $a$, there is also a residual error term that grows approximately linearly with b. This loss of presicion is commonly referred to as \emph{catastrophic cancellation}.
+
+A multiplication followed by a division with the same number $(a * b) / b$ will \emph{not} cause a similar loss of precision, as seen in equation \ref{floatMult}.
+
+\begin{multline*}
+(a \underset{f}{\cdot} b) \underset{f}{/} b =
+(a \cdot b + e(a \cdot b)) \underset{f}{/} b = \\
+(a \cdot b + e(a \cdot b)) / b + e((a \cdot b + e(a \cdot b)) / b) = \\
+a + e(a \cdot b) / b + e(a + e(a \cdot b) / b)  
+\end{multline*}
+
+Here, the residual errors do not grow with respect to b, since the error is also 
+
+Any rendering pipeline that performs this type of operation in forms such as matrix multiplications or vector additions risk degradation of precision. 
 
 \subsubsection{Exponent under- and overflow}
 The exponent range $[-127, 128]$ in 32-bit IEEE754 floats implies approximately 76 orders of magnitude. Computations that yield exponents outside that range will cause exponent underflow or overflow, and result in loss of data. Computing norms of vectors require taking the square root of the summed squares of the components, which means that a stright-forward implementation of this operation only works with scales with 38 orders of magnitude.
@@ -127,7 +149,7 @@ The scale difference in orders of magnitude betweeen the Planck length and the d
 \subsection{Scene Graphs}
 In software, matrices are commonly generated from a scene graph structure, allowing developers
 to represent coordinate transformations hierarchically. Each node in the graph may contain a transformation that is 
-also affecting all its children. To transform an object from its
+also affecting all its children. In order to transform an object from its
 local coordinate system to a global \emph{world coordinate system}, the transformation matrices
 of the ancestor nodes are concatonated to a \emph{model matrix} using matrix multiplication. 
 
@@ -138,12 +160,13 @@ Representing the known universe in a traditional scene graph structure with floa
 
 TODO: mention double and quad precision.
 
-\subsection{Depth buffer}
+\subsection{Depth Sorting}
 
 
-\section{Dynamic Scene Graph}
+\section{Method}
+\subsection{Dynamic Scene Graph}
 
-\section{Depth Buffer}
+\subsection{Depth Sorting}
 
 \subsection{Volume rendering and Order Independent Transparency}
 
@@ -158,7 +181,7 @@ these proceedings.
 
 \section{Possible references}
 
-Charles Eames and Ray Eames. Powers of Ten, 1977. 9 1/2 minute film, made for IBM.
+
 
 
 %-------------------------------------------------------------------------
