@@ -103,12 +103,12 @@ transformations operating on 4-dimensional homogenious coordinate vectors, with 
 The widely used IEEE754 standard for representing 32-bit floating point numbers makes it possible to express numbers in a much larger range than integer types. While a 32-bit signed integer type can only represent numbers in the range 
 $[-2^{31}, 2^{31} - 1]$, an IEEE754 float approximately support the range $[-2^{127}, 2^{127}]$.
 
-By representing values as a sign, mantissa and exponent is is possible to achieve high precision close to zero, decreasing precision for larger numbers and a dramatic increase in value range. The IEEE754 single precision floating point format uses 1 sign bit $s$, 8 exponent bits $e_i$ and 23 mantissa bits $m_i$. Equation \ref{floatingpoint} yields the value $v$ represented by $s$, $b$ and $e$, where $e \in [-127, 128]$ is encoded in the exponent bits $e_i$. 
+By representing values as a sign, mantissa and exponent is is possible to achieve high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range. The IEEE754 single precision floating point format uses 1 sign bit $s$, 8 exponent bits $\mathbf{e}_i$ and 23 mantissa bits $\mathbf{m}_i$. Equation \ref{floatingpoint} yields the value $v$ represented by $s$, $\mathbf{m}$ and $e$, where the integer $e \in [-127, 128]$ is encoded in the exponent bits $\mathbf{e}_i$. 
 
 \begin{equation} \label{floatingpoint}
 v = \begin{cases}
-(-1)^s \cdot \sum_{i = 1}^{23}b_i 2^{-i} \cdot 2^{-126}, & \text{for } e = -127 \\
-(-1)^s \cdot (1 + \sum_{i = 1}^{23}b_i 2^{-i}) \cdot 2^e, & \text{for } -126 \leq e \leq 127 \\
+(-1)^s \cdot \sum_{i = 1}^{23}\mathbf{m}_i 2^{-i} \cdot 2^{-126}, & \text{for } e = -127 \\
+(-1)^s \cdot (1 + \sum_{i = 1}^{23}\mathbf{m}_i 2^{-i}) \cdot 2^e, & \text{for } -126 \leq e \leq 127 \\
 \text{Special numbers such as NaN and }\infty, & \text{for } e = 128
 \end{cases}
 \end{equation}
@@ -117,17 +117,17 @@ Only values $v$ that can be composed by these 32 bits are valid floating point n
 For IEEE754 float, $\epsilon = 2^{-24}\approx 5.96 \cdot 10^{-8}$.
 
 \subsubsection{Catastrophic cancellation}
-When evaluating the expression $(a + b) - b$ using floating point artithmetic, the value of $(a + b)$ will be subject to rounding before $b$ is subtracted. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number in the interval $[v - \epsilon|v|, v + \epsilon|v|] = v(1 + \epsilon[-1,1])$. Using interval arithmetic, equation \ref{floatadd} gives the possible value interval of the evaluated expression, where an operation marked by $f$ is followed by rounding to the closest representable floating point number.
+When evaluating the expression $(a + b) - b$ using floating point artithmetic, the value of $(a + b)$ will be subject to rounding before $b$ is subtracted. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number in the interval $[v - \epsilon|v|, v + \epsilon|v|] = v(1 + \epsilon[-1,1])$. Using interval arithmetic, equation \ref{floatadd} gives the possible values of the evaluated expression, where an operation marked by $f$ is followed by rounding to the closest representable floating point number.
 
 \begin{equation} \label{floatadd}
 \begin{split}
 (a \underset{f}{+} b) \underset{f}{-} b \in
 ((a + b)(1 + \epsilon[-1, 1]) - b)(1 + \epsilon[-1, 1]) = \\
-= a + \epsilon[-1, 1](2a + b + \epsilon(a + b))
+= a + \epsilon(2a + b + \epsilon(a + b))[-1, 1]
 \end{split}
 \end{equation}
 
-The interval radius of possible outputs contains a factor of $b$, indicating that a larger value of $b$ will  result in proportionally larger rounding errors. The loss of precision caused by adding and subtracting the same large number from a smaller one is commonly referred to as \emph{catastrophic cancellation}. 
+The interval radius of possible outputs contains a term with a factor of $b$, indicating that small values of $a$ and large values of $b$ will result in increasing relative rounding errors. The loss of precision caused by adding and subtracting the same large number from a smaller one is commonly referred to as \emph{catastrophic cancellation}. 
 In any rendering pipeline where e.g. matrix multiplications or vector additions result in this type of operations, there is a risk for floating point precision problems.
 
 A scalar multiplication followed by a division by the same number (the expression $(a \cdot b) / b$) will \emph{not} yield a similar loss of precision, as shown in equation \ref{floatmult}, where the radius of the output interval is independent from $b$.
@@ -136,7 +136,7 @@ A scalar multiplication followed by a division by the same number (the expressio
 \begin{split}
 (a \underset{f}{\cdot} b) \underset{f}{/} b \in 
 ((a \cdot b)(1 + \epsilon[-1, 1]) / b)(1 + \epsilon[-1, 1]) = \\
-= a + \epsilon[-1, 1](2a + a\epsilon)
+= a + \epsilon(2a + \epsilon a)[-1, 1]
 \end{split}
 \end{equation}
 
