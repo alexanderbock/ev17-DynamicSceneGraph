@@ -60,11 +60,11 @@ together include movie productions, such as \emph{Powers of Ten}\cite{powersOfTe
 All We Are [citation needed], as well as interactive software for digital planetariums,
 such as Uniview from Sciss, DigiStar from Evans and Sutherland, [citations and more examples].
 
-However, even in our virtual worlds, huge scale
+Even in our virtual worlds, huge scale
 differences are difficult to represent, due to limitations in numerical precision
 in state-of-the-art hardware and software architectures.
 
-In movie productions and visualziation software with limited interaction possibilies,
+In movie productions and visualization software with limited interaction possibilies,
 producers and developers may use various compositing techniques to blend
 between large and small scenes, to account for the individual cases where a transition
 between scales is required. 
@@ -86,7 +86,7 @@ This work contributes to visualization of datasets with large scale differences 
 
 \section{Related Work}
 The concept of \emph{Power Scaled Coordinates}, introduced by Hanson et al. \cite{hanson2000very},
-addresses some of the challenges with multi-scale visualization. By using the fourth component of a homogenious coordinate vector to encode powers of ten, the proposed system can operate with floating point numbers close to unit scale. The method does not enhance the precision of coordinate transformations carried out in the visualization pipeline, but solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors. However, this is achieved by adding unnecessary complexity in terms of introducing an extra layer of logarithmic representation on top of regular floating point vectors, which already have the property of encoding scale logarithmically. 
+addresses some of the challenges with multi-scale visualization. By using the fourth component of a homogenious coordinate vector to encode powers of ten, the proposed system can operate with floating point numbers close to unit scale. The method does not enhance the precision of coordinate transformations carried out in the visualization pipeline, but solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors. However, this is achieved by adding complexity in terms of an extra layer of logarithmic representation on top of regular floating point vectors, which already have the property of encoding scale logarithmically. 
 
 Further work by Fu et al. \cite{fu2007transparently} elaborate more on the concept of power scale coordinates and introduce a depth scaling scheme to cover a wider range of distances than what is possible with a fixed point depth buffer and a conventional near and far plane. The depth buffer range is divided into three regions, where small and huge depth values are remapped using logarithmic scales, while values in the mid-range are stored linearly. While this method may be beneficial for some specific type of scene content, the method does not provide a generic way to select appropriate threshold values, and the choice of three separate regions with different mapping does not necessarily provide better results than one single logarithmic mapping. 
 
@@ -100,48 +100,57 @@ In a standard computer graphics pipleline, $4x4$ matrices are used to represent 
 transformations operating on 4-dimensional homogenious coordinate vectors, with their components stored as floating point numbers. 
 
 \subsection{Floating point numbers}
-The widely used IEEE754 standard for representing 32-bit floating point numbers makes it possible to express numbers in a much larger range than integer types. While a 32-bit signed integer type can only represent numbers in the range 
+The widely used IEEE754 standard for representing 32-bit floating point numbers \cite{zuras2008ieee} makes it possible to express numbers in a much larger range than integer types. While a 32-bit signed integer type can only represent numbers in the range 
 $[-2^{31}, 2^{31} - 1]$, an IEEE754 float approximately support the range $[-2^{127}, 2^{127}]$.
 
-By representing values as a sign, mantissa and exponent is is possible to achieve high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range. The IEEE754 single precision floating point format uses 1 sign bit $s$, 8 exponent bits $\mathbf{e}_i$ and 23 mantissa bits $\mathbf{m}_i$. Equation \ref{floatingpoint} yields the value $v$ represented by $s$, $\mathbf{m}$ and $e$, where the integer $e \in [-127, 128]$ is encoded in the exponent bits $\mathbf{e}_i$. 
+In floating point numbers, values are represented as a sign, mantissa and exponent which gives the properties of high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range. The IEEE754 single precision floating point format uses 1 sign bit $s$, 8 exponent bits and 23 mantissa bits $\mathbf{m}_i$. Equation \ref{floatingpoint} yields the value $v$ represented by $s$, $\mathbf{m}$ and the integer $e \in [-127, 128]$ which is encoded in the exponent bits. 
 
 \begin{equation} \label{floatingpoint}
 v = \begin{cases}
-(-1)^s \cdot \sum_{i = 1}^{23}\mathbf{m}_i 2^{-i} \cdot 2^{-126}, & \text{for } e = -127 \\
-(-1)^s \cdot (1 + \sum_{i = 1}^{23}\mathbf{m}_i 2^{-i}) \cdot 2^e, & \text{for } -126 \leq e \leq 127 \\
+(-1)^s \cdot \sum_{i = 1}^{23}\mathbf{m}_i\,2^{-i} \cdot 2^{-126}, & \text{for } e = -127 \\
+(-1)^s \cdot (1 + \sum_{i = 1}^{23}\mathbf{m}_i\,2^{-i}) \cdot 2^e, & \text{for } -126 \leq e \leq 127 \\
 \text{Special numbers such as NaN and }\infty, & \text{for } e = 128
 \end{cases}
 \end{equation}
 
-Only values $v$ that can be composed by these 32 bits are valid floating point numbers, and all other real values that result from computation need to be rounded before they are stored in this format. The IEEE754 standard requires that the result of operations $+$, $-$, $\cdot$ and $/$ acting on any two floating point numbers should be the same result as an infinitely precise computation followed by a rounding to the closest representable float\cite{zuras2008ieee}. An upper bound of the absolute rounding error for the number $v$ can be expressed as $\epsilon|v|$\cite{higham2002accuracy}. The \emph{machine epsilon} $\epsilon$ is the maximum relative rounding error constant given by $2^{-(n + 1)}$, where $n$ is the number of mantissa bits.
-For IEEE754 float, $\epsilon = 2^{-24}\approx 5.96 \cdot 10^{-8}$.
+Only values $v$ that can be composed by these 32 bits are valid floating point numbers, and all other real values that result from computation need to be rounded before they are stored in this format. The IEEE754 standard requires that the result of operations $+$, $-$, $\cdot$ and $/$ acting on any two floating point numbers should be the same result as an infinitely precise computation followed by a rounding to the closest representable float. Throughout the following sections $\oplus$, $\ominus$, $\odot$ and $\oslash$ will be used to denote addition, subtraction, multiplication and division followed by rounding.
+
+An upper bound of the absolute spacing between a floating point number $v$ and an adjacent one can be expressed as $\epsilon|v|$\cite{higham2002accuracy}, where the \emph{machine epsilon} $\epsilon$ is a constant given by $2^{-(n + 1)}$, and $n$ is the number of mantissa bits. Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, where $u = \frac{\epsilon}{2}$.
+For IEEE754 float, $\epsilon = 2^{-24}\approx 5.96 \cdot 10^{-8}$, meaning that values are precise to about seven significant figures in decimal notation.
+
+\subsubsection{Interval arithmetic}
+To reason about the precision of various floating point operations, it is possible to use interval arithmetic as a mathematical tool to track possible rounding errors. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$. Using interval arithmetic, the interval can be rewritten as $v(1 + u[-1,1])$.
+
+
+
+
 
 \subsubsection{Catastrophic cancellation}
-When evaluating the expression $(a + b) - b$ using floating point artithmetic, the value of $(a + b)$ will be subject to rounding before $b$ is subtracted. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number in the interval $[v - \epsilon|v|, v + \epsilon|v|] = v(1 + \epsilon[-1,1])$. Using interval arithmetic, equation \ref{floatadd} gives the possible values of the evaluated expression, where an operation marked by $f$ is followed by rounding to the closest representable floating point number.
+When evaluating the expression $(a + b) - b$ using floating point artithmetic, the value of $(a + b)$ will be subject to rounding before $b$ is subtracted. Using interval arithmetic, equation \ref{floatadd} gives the possible values of the evaluated expression.
 
 \begin{equation} \label{floatadd}
 \begin{split}
-(a \underset{f}{+} b) \underset{f}{-} b \in
-((a + b)(1 + \epsilon[-1, 1]) - b)(1 + \epsilon[-1, 1]) = \\
-= a + \epsilon(2a + b + \epsilon(a + b))[-1, 1]
+(a \oplus b) \ominus b \in
+\big((a + b)(1 + u[-1, 1]) - b\big)(1 + u[-1, 1]) = \\
+= a + u\big(2a + b + u(a + b)\big)[-1, 1]
 \end{split}
 \end{equation}
 
-The interval radius of possible outputs contains a term with a factor of $b$, indicating that small values of $a$ and large values of $b$ will result in increasing relative rounding errors. The loss of precision caused by adding and subtracting the same large number from a smaller one is commonly referred to as \emph{catastrophic cancellation}. 
+The interval size of possible outputs contains a term with a factor of $b$, indicating that small values of $a$ and large values of $b$ will result in increasing relative rounding errors. The loss of precision caused by adding and subtracting the same large number from a smaller one is commonly referred to as \emph{catastrophic cancellation}. 
 In any rendering pipeline where e.g. matrix multiplications or vector additions result in this type of operations, there is a risk for floating point precision problems.
 
-A scalar multiplication followed by a division by the same number (the expression $(a \cdot b) / b$) will \emph{not} yield a similar loss of precision, as shown in equation \ref{floatmult}, where the radius of the output interval is independent from $b$.
+A scalar multiplication followed by a division by the same number (the expression $(a \cdot b) / b$) will \emph{not} yield a similar loss of precision, as shown in equation \ref{floatmult}, where the size of the output interval is independent from $b$.
 
 \begin{equation} \label{floatmult}
 \begin{split}
-(a \underset{f}{\cdot} b) \underset{f}{/} b \in 
-((a \cdot b)(1 + \epsilon[-1, 1]) / b)(1 + \epsilon[-1, 1]) = \\
-= a + \epsilon(2a + \epsilon a)[-1, 1]
+(a \odot b) \oslash b \in 
+\big((a \cdot b)(1 + u[-1, 1]) / b\big)(1 + u[-1, 1]) = \\
+= a + u(2a + u a)[-1, 1]
 \end{split}
 \end{equation}
 
 \subsubsection{Exponent under- and overflow}
-The exponent range $[-127, 128]$ in 32-bit IEEE754 floats gives a possible range of values with approximately 76 orders of magnitude (OM). Computations that yield exponents outside that range will cause exponent underflow or overflow, and result in loss of data. Computing norms of vectors require taking the square root of the summed squares of the components, which means that a stright-forward implementation of this operation only works with scales with 38 OM.
+The exponent range $[-126, 127]$ in 32-bit IEEE754 floats gives a possible scale range of approximately 76 orders of magnitude (OM). Computations that yield exponents outside that range will cause exponent underflow or overflow, and result in loss of data. A straight-forward implementation of computing the length of a vector using the Pythagorean theorem would need to store squared length in a floating point value as an intermediate step, halfing the range of valid input exponents and limiting the input scale differences to 38 OM.
 
 The scale difference betweeen the Planck length and the diameter of the observable universe is approximately $62$ OM. While 32-bit floats are able to represent this scale difference, a convensional approach to computing lengths and normalizing vectors would break down.
 
