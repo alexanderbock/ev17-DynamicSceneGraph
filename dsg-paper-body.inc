@@ -53,7 +53,7 @@ $10^{-35}$ meters.
 Comprehending the vast differences of scales in the known universe is needless 
 to say a huge challenge for us humans. Computer graphics and interactive visualization have
 proven to be immensively valuable tools for communicating scientific findings
-and contextualizing informaiton.
+and contextualizing information.
 
 Notable examples of applications where huge scale differences are visualized 
 together include movie productions, such as \emph{Powers of Ten}\cite{powersOfTen} from 1977,
@@ -64,14 +64,14 @@ Even in our virtual worlds, huge scale
 differences are difficult to represent, due to limitations in numerical precision
 in state-of-the-art hardware and software architectures.
 
-In movie productions and visualization software with limited interaction possibilies,
+In movie productions and visualization software with limited interaction possibilities,
 producers and developers may use various compositing techniques to blend
 between large and small scenes, to account for the individual cases where a transition
 between scales is required. 
 
 Allowing the user to navigate around in a dataset with greater
 freedom requires a more general system that can handle scale differences automatically.
-There are several challenges with developing such a system, where the the most prominent
+There are several challenges with developing such a system, where the most prominent
 one may be providing adequate numerical precision for all the components in the visualization pipeline. 
 Another important aspect is adapting the eye-separation used for stereoscopic rendering to enhance depth perception and improve immersion. From the perspective of software development and content creation,
 it is desirable for this sort of system to facilitate creation of visualization content rather than introducing additional complexity.
@@ -157,7 +157,7 @@ The exponent range $[-126, 127]$ in 32-bit IEEE754 floats gives a possible scale
 The scale difference betweeen the Planck length and the diameter of the observable universe is approximately $62$ OM. While 32-bit floats are able to represent this scale difference, a convensional approach to computing lengths and normalizing vectors would break down.
 
 \subsection{Coordinate transformations}
-In computer graphics software, scene content is commonly organized in a \emph{scene graph}, which allow that coordinate transformations are represented hierarchically. Each node in the graph may contain a transformation, representable as a 4x4 matrix, that affects all its children. In order to transform an object from its local \emph{model coordinate system} to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatonated to a \emph{model matrix} using matrix multiplication.
+In computer graphics software, scene content is commonly organized in a \emph{scene graph}, which allow that coordinate transformations are represented hierarchically. Each node in the graph may contain a transformation, representable as a 4x4 matrix, that affects all its children. In order to transform an object from its local \emph{model coordinate system} to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatenated to a \emph{model matrix} using matrix multiplication.
 
 A \emph{view matrix} is also commonly generated based on a camera position and rotation expressed in the world coordinate system, and then used to transform world coordinates to \emph{view coordinates}, with the camera in the origin, and the z-axis parallel to the view direction.
 
@@ -170,10 +170,10 @@ Using column vectors, the NDC's $\mathbf{n}$ are derived by the model coordinate
 
 \begin{align} \label{eq:mvp}
 \mathbf{p} = PVM\mathbf{x} \\
-\mathbf{n} = \frac{\mathbf{p}}{\mathbf{p}_w}
+\mathbf{n} = \frac{\mathbf{p}}{p_w}
 \end{align}
 
-Here, V is the view matrix, $M$ is the model matrix, and $\mathbf{x}$, $\mathbf{p}$ and $\mathbf{n}$ are homogenious coordinate vectors on the form $(x, y, z, w)^t$. The precision in normalized device coordinates depends on the collective effects of $M$, $V$, $P$ and the perspective division on $\mathbf{x}$. Using knowledge about floating point numbers as well as the properties of the matrices, it is possible to determine to predict potential rounding errors in $\mathbf{n}$.
+Here, V is the view matrix, $M$ is the model matrix, and $\mathbf{x}$, $\mathbf{p}$ and $\mathbf{n}$ are homogenious coordinate vectors on the form $(x, y, z, w)^t$. The precision in normalized device coordinates depends on the collective effects of $M$, $V$, $P$ and the perspective division on $\mathbf{x}$. Using knowledge about floating point numbers as well as the properties of the matrices, it is possible to determine potential rounding errors in $\mathbf{n}$.
 
 $M$ and $V$ are commonly composed from three types of transformations that are encoded in the scene graph: scaling, translation and rotation. A translation matrix $T$, a scaling matrix $S$ and a rotation matrix $R$ can be written as in equations \ref{eq:str-forms}, where $I$ is the identity matrix and $\mathbf{0}$ is the null vector.
 
