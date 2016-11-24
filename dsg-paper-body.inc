@@ -115,9 +115,7 @@ v = \begin{cases}
 \end{cases}
 \end{equation}
 
-Only values $v$ that can be composed by these 32 bits are valid floating point numbers, and all other real values that result from computation need to be rounded before they are stored in this format. The IEEE754 standard requires that the result of operations $+$, $-$, $\cdot$ and $/$ acting on any two floating point numbers should be the same result as an infinitely precise computation followed by a rounding to the closest representable float. Throughout the following sections $\oplus$, $\ominus$, $\odot$ and $\oslash$ will be used to denote addition, subtraction, multiplication and division followed by rounding.
-
-An upper bound of the absolute spacing between a floating point number $v$ and an adjacent one can be expressed as $\epsilon|v|$\cite{higham2002accuracy}, where the \emph{machine epsilon} $\epsilon$ is a constant given by $2^{-(n + 1)}$, and $n$ is the number of mantissa bits. Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, where $u = \frac{\epsilon}{2}$.
+Only values $v$ that can be composed by these 32 bits are valid floating point numbers, and all other real values that result from computation need to be rounded before they are stored in this format. An upper bound of the absolute spacing between a floating point number $v$ and an adjacent one can be expressed as $\epsilon|v|$\cite{higham2002accuracy}, where the \emph{machine epsilon} $\epsilon$ is a constant given by $2^{-(n + 1)}$, and $n$ is the number of mantissa bits. Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, where the rounding error coefficient $u = \frac{\epsilon}{2}$.
 For IEEE754 float, $\epsilon = 2^{-24}\approx 5.96 \cdot 10^{-8}$, meaning that values are precise to about 7 significant figures in decimal notation.
 
 \subsubsection{Increasing the bit depth}
@@ -127,10 +125,105 @@ An alternative data type for representing numbers is the IEEE754 64-bit floating
 To reason about the precision of various floating point operations, it is possible to use interval arithmetic as a mathematical tool to track possible rounding errors. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$. Using interval arithmetic, the interval can be rewritten as $v(1 + u[-1,1])$.
 
 
-\subsubsection{Catastrophic cancellation}
-When evaluating the expression $(a + b) - b$ using floating point artithmetic, the value of $(a + b)$ will be subject to rounding before $b$ is subtracted. Using interval arithmetic, equation \ref{eq:floatadd} gives the possible values of the evaluated expression.
+The IEEE754 standard requires that the result of operations $+$, $-$, $\cdot$ and $/$ acting on any two floating point numbers should be the same result as an infinitely precise computation followed by a rounding to the closest representable float.  Throughout the following sections, $\oplus$, $\ominus$, $\odot$ and $\oslash$ will be used to denote floating point addition, subtraction, multiplication and division. In eqation \ref{eq:floatoperations}, we define the operations to yield the possible interval of real numbers that the corresponding floating point operation may evaluate to when applying floating point rounding.
 
-\begin{equation} \label{eq:floatadd}
+\begin{equation} \label{eq:floatoperations}
+\begin{split}
+(a \oplus b) = (a + b)(1 + u[-1, 1]) \subseteq a + b + (a + b)u[-1, 1] \\
+(a \ominus b) = (a - b)(1 + u[-1, 1]) \subseteq a - b + (a + b)u[-1, 1] \\
+(a \odot b) = ab(1 + u[-1, 1]) \subseteq ab + abu[-1, 1] \\
+(a \oslash b) = \frac{a}{b}(1 + u[-1, 1]) \subseteq \frac{a}{b} + \frac{a}{b} u[-1, 1]
+\end{split}
+\end{equation}
+
+When a result from one floating point operation is used in further computations,
+the rounding errors will propagate through the whole series of operations.
+By tracking upper bounds of these error sizes, we can show which type of series of operations that may lead to significant loss of presicion.
+
+\subsubsection{Error intervals}
+We introduce the notation $\mathds{E}(\lambda)$ to represent an error interval based on a vector $\lambda$ of non-negative integers $\lambda_i$ as in equation \ref{eq:errorterm}.
+
+\begin{equation} \label{eq:errorterm}
+\mathds{E}(\lambda) = \sum_{i=0}^\infty( \lambda_i u^i [-1, 1])
+\end{equation}
+
+Based on interval arithmetic, we derive two properties of the error intervals.
+
+\begin{equation} \label{eq:errortermrules}
+\begin{split}
+\mathds{E}(\alpha) + \mathds{E}(\beta) = \mathds{E}(\alpha + \beta) \\ 
+\mathds{E}(\alpha) \mathds{E}(\beta) = \mathds{E}(\alpha * \beta) \\ 
+\end{split}
+\end{equation} 
+
+We also observe some properties of $\oplus$, and $\odot$ as they act on the two intervals $a(1 + \mathds{E}(\alpha))$ and $b( 1 + \mathds{E}(\beta))$. $u[-1,1]$ can be rewritten as $\mathds{E}(\delta)$, with all $\delta_i = 0$ except $\delta_1 = 1$.
+
+\begin{equation} \label{eq:errorterm3} 
+\begin{split}
+a(1 + \mathds{E}(\alpha)) \oplus b( 1 + \mathds{E}(\beta)) = \\
+= (a(1 + \mathds{E}(\alpha)) + b( 1 + \mathds{E}(\beta)))(1 + \mathds{E}(\delta)) = \\
+= (a + a\mathds{E}(\alpha) + b + b\mathds{E}(\beta))(1 + \mathds{E}(\delta)) = \\
+= a + a\mathds{E}(\alpha + \delta + (\delta * \delta)) + b + b\mathds{E}(\beta + \delta + (\delta * \delta))
+\end{split}
+\end{equation}
+
+\begin{equation} \label{eq:errorterm4} 
+\begin{split}
+a(1 + \mathds{E}(\alpha)) \odot b( 1 + \mathds{E}(\beta)) = \\
+= ab(1 + \mathds{E}(\alpha))(1 + \mathds{E}(\beta))(1 + \mathds{E}(\delta)) = \\
+ab + ab\mathds{E}(\alpha + \beta + \gamma + \alpha*\beta + \alpha*\gamma + \beta*\gamma + \alpha*\beta*\gamma)
+\end{split}
+\end{equation}
+
+
+
+
+
+\begin{equation} \label{eq:catastrophic-example}
+\begin{split}
+(a \oplus b) \ominus c = \big((a + b)(1 + u[-1, 1]) + c\big)(1 + u[-1, 1]) \subseteq \\
+(a + b + c + au[-1, 1] + bu[-1, 1])(1 + u[-1, 1]) \subseteq \\
+a + b + c + (|2au| + |2bu| + |cu| + |au^2| + |bu^2|)[-1, 1] \subseteq \\
+\subseteq a + b + c + \mathds{E}_u(a) + \mathds{E}_u(b) + \mathds{E}_u(c)
+\end{split}
+\end{equation}
+
+From equation \ref{eq:catastrophic-example}, we observe that the result of this specific floating point computation will be contained by an interval expressed with terms depending on $u$ and the input terms $a$, $b$ and $c$. 
+
+
+Using this definition, we can rewrite equation \ref{eq:catastrophic-example} to 
+
+for some $n$ and $\lambda_i$.
+
+
+The positive integers $n$ and $c_i$, $i \in [1, n]$ will grow with the number of operations that involves the floating point number $x$. However, for our purposes, the number of operations will be orders of magnitude smaller than the scale differences of possible values of x. With this in mind, a few conclusions can be made about the properties of $\mathds{E}$.
+
+
+
+
+\begin{equation} \label{eq:errorterm4} 
+\begin{split}
+(a + E_u(a)) \ominus (b + \mathds{E}_u(b) = \\
+\big(((a + \mathds{E}_u(a)) - (b + \mathds{E}_u(b))\big)(1 + u[-1, 1]) \subseteq \\
+\subseteq a - b + \mathds{E}_u(|a| + |b|)
+\end{split}
+\end{equation}
+
+\begin{equation} \label{eq:errorterm5} 
+\begin{split}
+(a + E_u(a)) \odot (b + \mathds{E}_u(b) = \\
+\big((a + \mathds{E}_u(a))(b + \mathds{E}_u(b))\big)(1 + u[-1, 1]) \subseteq \\
+\subseteq ab + \mathds{E}_u(ab)
+\end{split}
+\end{equation}
+
+TODO: Division.
+
+
+\subsubsection{Catastrophic cancellation}
+When evaluating the expression $(a + b) - b$ using floating point artithmetic, the value of $(a + b)$ will be subject to rounding before $b$ is subtracted. Using interval arithmetic, equation \ref{eq:floataddsub} gives the possible values of the evaluated expression.
+
+\begin{equation} \label{eq:floataddsub}
 \begin{split}
 (a \oplus b) \ominus b \in
 \big((a + b)(1 + u[-1, 1]) - b\big)(1 + u[-1, 1]) = \\
@@ -211,6 +304,15 @@ While floating point matrix multiplacation implementations may differ in terms o
 
 
 $https://www.opengl.org/registry/doc/GLSLangSpec.4.20.11.clean.pdf : page 92$
+
+
+\subsection{Interval arithmetic}
+To reason about the precision of various floating point operations, it is possible to use interval arithmetic as a mathematical tool to track possible rounding errors. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$. Using interval arithmetic, the interval can be rewritten as $v(1 + u[-1,1])$.
+
+
+
+
+
 
 \subsection{View Frustums}
 
