@@ -54,18 +54,15 @@ $10^{-35}$ meters.
 Comprehending the vast differences of scales in the known universe is needless 
 to say a huge challenge for us humans. Computer graphics and interactive visualization have
 proven to be immensively valuable tools for communicating scientific findings
-and contextualizing information.
-
-Notable examples of applications where huge scale differences are visualized 
+and contextualizing information. Notable examples of applications where huge scale differences are visualized 
 together include movie productions, such as \emph{Powers of Ten}\cite{powersOfTen} from 1977,
 All We Are [citation needed], as well as interactive software for digital planetariums,
 such as Uniview from Sciss, DigiStar from Evans and Sutherland, [citations and more examples].
 
 Even in our virtual worlds, huge scale
 differences are difficult to represent, due to limitations in numerical precision
-in state-of-the-art hardware and software architectures.
-
-In movie productions and visualization software with limited interaction possibilities,
+in state-of-the-art hardware and software architectures. In movie productions and
+visualization software with limited interaction possibilities,
 producers and developers may use various compositing techniques to blend
 between large and small scenes, to account for the individual cases where a transition
 between scales is required. 
@@ -77,6 +74,23 @@ one may be providing adequate numerical precision for all the components in the 
 Another important aspect is adapting the eye-separation used for stereoscopic rendering to enhance depth perception and improve immersion. From the perspective of software development and content creation,
 it is desirable for this sort of system to facilitate creation of visualization content rather than introducing additional complexity.
 
+
+
+\subsection{Challenges}
+The co-evolution of graphics hardware, software and content, largely pushed forward by
+the gaming industry has led to modern graphics processing units that are optimized for
+operating efficiently on 32-bit floating point numbers, vectors and matrices.
+In a standard computer graphics pipleline, $4x4$ matrices are used to represent coordinate
+transformations operating on 4-dimensional homogenious coordinate vectors, with their components stored as floating point numbers. 
+
+\subsubsection{Precision}
+
+\subsubsection{Exponent underflow and overflow}
+The exponent range $[-126, 127]$ in 32-bit IEEE754 floats gives a possible scale range of approximately 76 orders of magnitude (OM). Computations that yield exponents outside that range will cause exponent underflow or overflow, and result in loss of data. A straight-forward implementation of computing the length of a vector using the Pythagorean theorem would need to store squared length in a floating point value as an intermediate step, halfing the range of valid input exponents and limiting the input scale differences to 38 OM.
+
+The scale difference betweeen the Planck length and the diameter of the observable universe is approximately $62$ OM. While 32-bit floats are able to represent this scale difference, a convensional approach to computing lengths and normalizing vectors would break down.
+
+\subsection{Contributions}
 This work contributes to visualization of datasets with large scale differences by providing:
 \begin{itemize}
 \item A \emph{Precision-Adaptive Scene Graph} approach for representing objects and cameras to avoid presicion-related artifacts.
@@ -84,6 +98,8 @@ This work contributes to visualization of datasets with large scale differences 
 \item Minimal modifications on a conventional rendering pipeline.
 \item Interoperability with volumetric rendering and order-independent-transparency.
 \end{itemize}
+
+
 
 \section{Related work}
 The concept of \emph{Power Scaled Coordinates}, introduced by Hanson et al. \cite{hanson2000very},
@@ -93,16 +109,11 @@ The Power Scaled Coordinates method is based on floating point representation of
 
 Further work by Fu et al. \cite{fu2007transparently} elaborate more on the concept of Power Scales Coordinates and introduce a depth scaling scheme to cover a wider range of distances than what is possible with a fixed point depth buffer and a conventional near and far plane. The depth buffer range is divided into three regions, where small and huge depth values are remapped using logarithmic scales, while values in the mid-range are stored linearly. While this method may be beneficial for some specific type of scene content, the method does not provide a generic way to select appropriate threshold values, and the choice of three separate regions with different mapping does not necessarily provide better results than one single logarithmic mapping.
 
-The \emph{ScaleGraph} method, introduced by Klashed et al. \cite{KHECY10} as a part of the digital planetarium software Uniview, employs a scene graph structure with sub-scenes that the camera can belong to. The content of the current sub-scene is rendered in its local coordinate system, which maintains the precision of vertex coordinates, and allows for multiple regions in the universe to be represented with high precision. When rendering content outside the current sub-scene, objects are translated onto the bounding sphere of the scene, and rescaled to compensate for perspective effects. Vectors between sub-scenes are computed by traversing the scenegraph through the closest common ancestor in the tree, to avoid introducing precision errors caused by handling unnecessarily large numbers. By moving objects onto the bounding sphere of the current scene, object depths are mapped to a managable range. However, the method does not provide a general solution for depth sorting objects that are outside the current sub-scene. Furthermore, the work does not address stereoscopic rendering of objects across sub-scenes.
+The \emph{ScaleGraph} method, introduced by Klashed et al. \cite{KHECY10} as a part of the digital planetarium software Uniview, employs a scene graph structure with sub-scenes that the camera can belong to. The content of the current sub-scene is rendered in its local coordinate system, which maintains the precision of vertex coordinates, and allows for multiple regions in the universe to be represented with high precision. When rendering content outside the current sub-scene, objects are translated onto the bounding sphere of the scene, and rescaled to compensate for perspective effects. Vectors between sub-scenes are computed by traversing the scenegraph through the closest common ancestor in the tree, to avoid introducing precision errors caused by handling unnecessarily large numbers. By moving objects onto the bounding sphere of the current scene, object depths are mapped to a managable range. However, the method does not provide a general solution for depth sorting objects that are outside the current sub-scene. Furthermore, the work does not address stereoscopic rendering of objects across sub-scenes. 
 
-\section{Background}
-The co-evolution of graphics hardware, software and content, largely pushed forward by
-the gaming industry has led to modern graphics processing units that are optimized for
-operating efficiently on 32-bit floating point numbers, vectors and matrices.
-In a standard computer graphics pipleline, $4x4$ matrices are used to represent coordinate
-transformations operating on 4-dimensional homogenious coordinate vectors, with their components stored as floating point numbers. 
 
-\subsection{Floating point numbers}
+\section{Theoretical foundation}
+
 The widely used IEEE754 standard for representing 32-bit floating point numbers \cite{zuras2008ieee} makes it possible to express numbers in a much larger range than integer types. While a 32-bit signed integer type can only represent numbers in the range 
 $[-2^{31}, 2^{31} - 1]$, an IEEE754 float approximately support the range $[-2^{127}, 2^{127}]$.
 
@@ -119,8 +130,8 @@ v = \begin{cases}
 Only values $v$ that can be composed by these 32 bits are valid floating point numbers, and all other real values that result from computation need to be rounded before they are stored in this format. An upper bound of the absolute spacing between a floating point number $v$ and an adjacent one can be expressed as $\epsilon|v|$\cite{higham2002accuracy}, where the \emph{machine epsilon} $\epsilon$ is a constant given by $2^{-(n + 1)}$, and $n$ is the number of mantissa bits. Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, where the rounding error coefficient $u = \frac{\epsilon}{2}$.
 For IEEE754 float, $\epsilon = 2^{-24}\approx 5.96 \cdot 10^{-8}$, meaning that values are precise to about 7 significant figures in decimal notation.
 
-\subsubsection{Increasing the bit depth}
 An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits and 52 bits for the mantissa, which yields a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notaiton, this corresponds to a precision of 15 significant figures. Using quadruple precision (128-bits), it is possible push the number of significant figures to 34. Increasing the bit depth will naturally require more computational resources.
+
 
 \subsubsection{Interval arithmetic}
 To reason about the precision of various floating point operations, it is possible to use interval arithmetic as a mathematical tool to track possible rounding errors. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$. Using interval arithmetic, the interval can be rewritten as $v(1 + u[-1,1])$.
@@ -141,7 +152,8 @@ a \oslash b \equiv \frac{a}{b}(1 + u[-1, 1]) \\
 
 \subsubsection{Propagation of error intervals}
 When a result from one floating point operation is used in further computations,
-the rounding errors will propagate through the whole series of operations. 
+the rounding errors will propagate through the whole series of operations. This may lead to effects such as 
+\emph{catastrophic cancellation}, since expressions on the form $(a + b) - b$ may evaluate to $0$, for a sufficiently small $a$ and large $b$. In any rendering pipeline where e.g. matrix multiplications or vector additions result in this type of operations, there is a risk for floating point precision problems.
 
 We let $\mathds{E}$ represent the set of intervals that can be written in form of equation $cu[-1, 1]$, where c is a non-negative integer constant $c$, that is not a function of any floating point value. For any intervals $E_1, E_2 \in \mathds{E}$, there are intervals $E_3, E_4 \in \mathds{E}$, such that
 $E_1+E_2 \subseteq E_3$ and $E_1E_2 \subseteq E_4$.
@@ -164,49 +176,19 @@ a(1 + E_1) \odot b(1 + E_2) = \\
 \end{split}
 \end{equation}
 
-We conclude that for floating point sums $\osum_i x_i \equiv x_1 \oplus x_2 \oplus ... \oplus x_n$, equation \ref{eq:errortermsum} holds regardless of in which order terms are added.
+From equation \ref{eq:errortermadd}, we conclude that for floating point sums $\osum_i x_i \equiv x_1 \oplus x_2 \oplus ... \oplus x_n$, equation \ref{eq:errortermsum} holds regardless of in which order terms are added. 
 
 \begin{equation} \label{eq:errortermsum} 
 \osum_i x_i(1 + E_{1,i}) \subseteq \sum_i x_i(1 + E_{2, i})
 \end{equation}
 
-In floating point matrix multiplication, output components are computed as a sum of products as in equation \ref{eq:matrixmult}, where $m$ is the number of columns of A and the number of rows of B.
+The straight-forwared implementation of floating point matrix multiplication $A \otimes B$ is to compute matrix components as a sum of products using $\oplus$ and $\odot$. By applying equations \ref{eq:errortermmult} and \ref{eq:errortermsum}, we get equation \ref{eq:matrixmult} where $m$ is the number of columns of $A$ and the number of rows of $B$.
 
 \begin{equation} \label{eq:matrixmult} 
-(AB)_{ij} = \osum_{k}^mA_{ik}\odot B_{kj} \subseteq \sum_{k}^mA_{ik} B_{kj}(1 + E_{kj})
+(A \otimes B)_{ij} \equiv \osum_{k}^mA_{ik}\odot B_{kj} \subseteq \sum_{k}^mA_{ik} B_{kj}(1 + E_{kj})
 \end{equation}
 
 We observe that the maximum floating point error introduced to any individual component $(AB)_{ij}$ of a matrix product is governed by the sum of the absolute values of the products $A_{ik} B_{kj}$.
-
-
-\subsubsection{Catastrophic cancellation}
-When evaluating the expression $(a + b) - b$ using floating point artithmetic, the value of $(a + b)$ will be subject to rounding before $b$ is subtracted. Using interval arithmetic, equation \ref{eq:floataddsub} gives the possible values of the evaluated expression.
-
-\begin{equation} \label{eq:floataddsub}
-\begin{split}
-(a \oplus b) \ominus b \in
-\big((a + b)(1 + u[-1, 1]) - b\big)(1 + u[-1, 1]) = \\
-= a + u\big(2a + b + u(a + b)\big)[-1, 1]
-\end{split}
-\end{equation}
-
-The interval size of possible outputs contains a term with a factor of $b$, indicating that small values of $a$ and large values of $b$ will result in increasing relative rounding errors. The loss of precision caused by adding and subtracting the same large number from a smaller one is commonly referred to as \emph{catastrophic cancellation}. 
-In any rendering pipeline where e.g. matrix multiplications or vector additions result in this type of operations, there is a risk for floating point precision problems.
-
-A scalar multiplication followed by a division by the same number (the expression $(a \cdot b) / b$) will \emph{not} yield a similar loss of precision, as shown in equation \ref{eq:floatmult}, where the size of the output interval is independent from $b$.
-
-\begin{equation} \label{eq:floatmult}
-\begin{split}
-(a \odot b) \oslash b \in 
-\big((a \cdot b)(1 + u[-1, 1]) / b\big)(1 + u[-1, 1]) = \\
-= a + u(2a + u a)[-1, 1]
-\end{split}
-\end{equation}
-
-\subsubsection{Exponent underflow and overflow}
-The exponent range $[-126, 127]$ in 32-bit IEEE754 floats gives a possible scale range of approximately 76 orders of magnitude (OM). Computations that yield exponents outside that range will cause exponent underflow or overflow, and result in loss of data. A straight-forward implementation of computing the length of a vector using the Pythagorean theorem would need to store squared length in a floating point value as an intermediate step, halfing the range of valid input exponents and limiting the input scale differences to 38 OM.
-
-The scale difference betweeen the Planck length and the diameter of the observable universe is approximately $62$ OM. While 32-bit floats are able to represent this scale difference, a convensional approach to computing lengths and normalizing vectors would break down.
 
 \subsection{Coordinate transformations}
 In computer graphics software, scene content is commonly organized in a \emph{scene graph}, which allow that coordinate transformations are represented hierarchically. Each node in the graph may contain a transformation, representable as a 4x4 matrix, that affects all its children. In order to transform an object from its local \emph{model coordinate system} to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatenated to a \emph{model matrix} using matrix multiplication.
@@ -214,20 +196,72 @@ In computer graphics software, scene content is commonly organized in a \emph{sc
 A \emph{view matrix} is also commonly generated based on a camera position and rotation expressed in the world coordinate system, and then used to transform world coordinates to \emph{view coordinates}, with the camera in the origin, and the z-axis parallel to the view direction.
 
 To take perspective effects into account, coordinates are transformed into \emph{perspective space} using a \emph{projection matrix}. The transformation sets the fourth vector component to the depth of the coordinate. 
-Only content that satisfies the equation $-w \le x, y, z \le w$ is rendered. The vector is divided by $w$ to compute the \emph{normalized device coordinates (NDC)}. This last step results in that objects farther away from the camera appear smaller on the screen. The x and y in NDC determines the object's position on the screen, with $(-1, -1)$ representing the bottom left corner and $(1, 1)$ upper right one.
+Only content that satisfies the equation $-w \le x, y, z \le w$ is rendered. The vector is divided by $w$ to compute the \emph{normalized device coordinates (NDC)}. This last step results in that objects farther away from the camera appear smaller on the screen. The $x$ and $y$ in NDC determines the object's position on the screen, with $(-1, -1)$ representing the bottom left corner and $(1, 1)$ upper right one. 
 
-
-\subsubsection{NDC precision}
-Using column vectors, the NDC's $\mathbf{n}$ are derived by the model coordinates $\mathbf{x}$ in equation \ref{eq:mvp}.
+\subsection{NDC precision}
+Floating point rounding errors start to become visible when the possible error intervals in the normalized device coordinate system approach the size of a pixel. Using column vectors, the NDC's $\mathbf{n}$ are derived by the model coordinates $\mathbf{x}$ in equation \ref{eq:mvp}.
 
 \begin{align} \label{eq:mvp}
-\mathbf{p} = PVM\mathbf{x} \\
-\mathbf{n} = \frac{\mathbf{p}}{p_w}
+\mathbf{p} = P\otimes V \otimes M \otimes \mathbf{x} \\
+\mathbf{n} = \mathbf{p} \oslash {p_w}
 \end{align}
 
-Here, V is the view matrix, $M$ is the model matrix, and $\mathbf{x}$, $\mathbf{p}$ and $\mathbf{n}$ are homogenious coordinate vectors on the form $(x, y, z, w)^t$. The precision in normalized device coordinates depends on the collective effects of $M$, $V$, $P$ and the perspective division on $\mathbf{x}$. Using knowledge about floating point numbers as well as the properties of the matrices, it is possible to determine potential rounding errors in $\mathbf{n}$.
+Here, V is the view matrix, $M$ is the model matrix, $P$ is the projection matrix, and $\mathbf{x}$, $\mathbf{p}$ and $\mathbf{n}$ are homogenious coordinate vectors on the form $(x, y, z, w)^t$. The precision in normalized device coordinates depends on the collective effects of $M$, $V$, $P$ and the perspective division as they act on $\mathbf{x}$. 
 
-$M$ and $V$ are commonly composed from three types of transformations that are encoded in the scene graph: scaling, translation and rotation. A translation matrix $T$, a scaling matrix $S$ and a rotation matrix $R$ can be written as in equations \ref{eq:str-forms}, where $I$ is the identity matrix and $\mathbf{0}$ is the null vector.
+$M$ and $V$ are commonly composed from three types of transformations that are encoded in the scene graph: scaling, translation and rotation. We study the effect of applying scaling, translation and rotation on a generalized model matrix or view matrix A, composed of a translation vector $\mathbf{a}$ and a combined rotation/scaling 3x3-matrix $A'$, as given by equation \ref{eq:matrixa}. To observe how the matrices act on a coordinate vector, we can study the fourh column in A.
+\begin{equation} \label{eq:matrixa}
+A = \mleft(
+\begin{array}{c|c}
+  A' & \mathbf{a}\\
+  \hline
+  \mathbf{0} & 1 
+\end{array}
+\mright)
+\end{equation}
+
+\subsubsection{Scaling}
+
+Equation \ref{eq:scaling} describes a matrix multiplication between a scaling matrix $S$ and a matrix $A$. $S'$ is a diagonal matrix with one scaling component per dimension $x$, $y$ and $z$. 
+\begin{equation} \label{eq:scaling}
+S \otimes A = 
+\mleft(
+\begin{array}{c|c}
+  S' & \mathbf{0}\\
+  \hline
+  \mathbf{0} & 1 
+\end{array}\mright)
+\otimes
+\mleft(
+\begin{array}{c|c}
+  A' & \mathbf{a}\\
+  \hline
+  \mathbf{0} & 1 
+\end{array}
+\mright) =  
+\mleft(
+\begin{array}{c|c}
+  S' \otimes A' & S' \otimes \mathbf{a}\\
+  \hline
+  \mathbf{0} & 1 
+\end{array}\mright)
+\end{equation}
+
+Since the diagonal matrix components $S'_ij$ are $0$ for all $i \neq j$, the matrix components can be written as in equation \ref{eq:scalingconclusion}.
+
+\begin{align} \label{eq:scalingconclusion}
+(S' \otimes A')_{ij} &\subseteq S'_{ii}\,A'_{ij}(1 + E_{ij}) \\
+(S' \otimes \mathbf{a})_{i} &\subseteq S'_{ii}\,\mathbf{a}_i(1 + E_{j})
+\end{align}
+
+The rounding error introduced by a scaling matrix is proportional to the scaling factors in $S'$. Any error interval encoded in $A'$ and $\mathbf{a}$ will be scaled proportionally. We conclude that applying a scaling matrix to a matrix $A$ \emph{preserves the relative precision} of all components of $A$.
+
+\subsubsection{Translation}
+
+\subsubsection{Rotation}
+
+\subsubsection{Projection}
+
+A translation matrix $T$, a scaling matrix $S$ and a rotation matrix $R$ can be written as in equations \ref{eq:str-forms}, where $I$ is the identity matrix and $\mathbf{0}$ is the null vector.
 
 \begin{equation} \label{eq:str-forms}
 S = \mleft(
@@ -256,21 +290,7 @@ R = \mleft(
 $S'$ is a diagonal $3x3$-matrix with the scaling components for $x$, $y$ and $z$ respectively.
 While floating point matrix multiplacation implementations may differ in terms of order of operations, a possible version is the one described in equation \ref{eq:scaling}.
 
-
-\begin{equation} \label{eq:scaling}
-\mathbf{y}_c = S'_c \odot \mathbf{x}_c
-\end{equation}
-
-
 $https://www.opengl.org/registry/doc/GLSLangSpec.4.20.11.clean.pdf : page 92$
-
-
-\subsection{Interval arithmetic}
-To reason about the precision of various floating point operations, it is possible to use interval arithmetic as a mathematical tool to track possible rounding errors. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$. Using interval arithmetic, the interval can be rewritten as $v(1 + u[-1,1])$.
-
-
-
-
 
 
 \subsection{View Frustums}
