@@ -221,9 +221,9 @@ A = \mleft(
 
 \subsubsection{Scaling}
 
-Equation \ref{eq:scaling} describes a matrix multiplication between a scaling matrix $S$ and a matrix $A$. $S'$ is a diagonal matrix with one scaling component per dimension $x$, $y$ and $z$. 
+Equation \ref{eq:scaling} describes a floating point matrix multiplication of a scaling matrix $S$ and a matrix $A$. $S'$ is a diagonal matrix with one scaling component per dimension $x$, $y$ and $z$. 
 \begin{equation} \label{eq:scaling}
-S \otimes A = 
+\hat{S} = S \otimes A = 
 \mleft(
 \begin{array}{c|c}
   S' & \mathbf{0}\\
@@ -240,22 +240,57 @@ S \otimes A =
 \mright) =  
 \mleft(
 \begin{array}{c|c}
-  S' \otimes A' & S' \otimes \mathbf{a}\\
+  \hat{S}' & \hat{\mathbf{s}}\\ 
   \hline
   \mathbf{0} & 1 
 \end{array}\mright)
 \end{equation}
 
-Since the diagonal matrix components $S'_ij$ are $0$ for all $i \neq j$, the matrix components can be written as in equation \ref{eq:scalingconclusion}.
+\noindent Since the diagonal matrix components $S'_{ij}$ are $0$ for all $i \neq j$, the output matrix components $\hat{S}'_{ij}$ and $\hat{\mathbf{s}}_i $ can be written as in equation \ref{eq:scalingconclusion}.
 
 \begin{align} \label{eq:scalingconclusion}
-(S' \otimes A')_{ij} &\subseteq S'_{ii}\,A'_{ij}(1 + E_{ij}) \\
-(S' \otimes \mathbf{a})_{i} &\subseteq S'_{ii}\,\mathbf{a}_i(1 + E_{j})
+\hat{S}'_{ij} = (S' \otimes A')_{ij} &\subseteq S'_{ii}\,A'_{ij}(1 + E_{ij}) \\
+\hat{\mathbf{s}}_i = (S' \otimes \mathbf{a})_{i} &\subseteq S'_{ii}\,\mathbf{a}_i(1 + E_{j})
 \end{align}
 
-The rounding error introduced by a scaling matrix is proportional to the scaling factors in $S'$. Any error interval encoded in $A'$ and $\mathbf{a}$ will be scaled proportionally. We conclude that applying a scaling matrix to a matrix $A$ \emph{preserves the relative precision} of all components of $A$.
+The rounding error introduced by a scaling matrix $S$ is proportional to the scaling factors in $S'$. Any error interval encoded in $A'$ and $\mathbf{a}$ will be scaled proportionally. We conclude that applying a scaling matrix to a matrix $A$ \emph{preserves the relative precision} of all components of $A$.
 
 \subsubsection{Translation}
+In equation \ref{eq:translation}, a translation matrix $T$ is applied to $A$ using floating point matrix multiplication. $I$ denotes a 3x3 identity matrix, and $\mathbf{t}$ represents the translation vector. 
+
+\begin{equation} \label{eq:translation}
+\hat{T} = T \otimes A = 
+\mleft(
+\begin{array}{c|c}
+  I & \mathbf{t}\\
+  \hline
+  \mathbf{0} & 1 
+\end{array}\mright)
+\otimes
+\mleft(
+\begin{array}{c|c}
+  A' & \mathbf{a}\\
+  \hline
+  \mathbf{0} & 1 
+\end{array}
+\mright) =  
+\mleft(
+\begin{array}{c|c}
+  \hat{T}' & \hat{\mathbf{t}}\\
+  \hline
+  \mathbf{0} & 1 
+\end{array}\mright)
+\end{equation}
+
+where 
+
+\begin{align} \label{eq:translationconclusion}
+\hat{T}_{ij} = \hat{A'}_{ij}\\
+\hat{t}_i = t_i \oplus a_i \subseteq (t_i + a_i)(1 + E_i)
+\end{align}
+
+We note that the precision in $\hat{T}_{ij}$ is preserved from $A'$ when any translation matrix $T$ is applied. However, any error intervals encoded in $t_i$ and $a_j$ will propagate to $\hat{t}_i$, and will \emph{not} be scaled down even if $|\hat{t}_i|$ is orders of magnitude smaller than $|t_i|$ and $|a_i|$. This scenario \emph{may lead to catastrophic cancellation} in the term $\hat{t}_i$.
+
 
 \subsubsection{Rotation}
 
