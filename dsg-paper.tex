@@ -48,8 +48,28 @@
 \usepackage[utf8]{inputenc}
 
 \usepackage{amsmath}
+\usepackage{overlay}
 \usepackage{mleftright}
-\usepackage{ dsfont }
+\usepackage{dsfont}
+\usepackage{tikz}
+
+\newcommand\constructosum[3]{%
+    \begin{tikzpicture}[baseline=(char.base), inner sep=0, outer sep=0]
+        \draw (#1,0) circle (#2); 
+        \node (char) at (0,0) {$#3\sum$}; % Want to define a second symbol for inline...
+    \end{tikzpicture}%
+}
+
+\newcommand{\osum}{\mathop{\mathchoice
+        {\constructosum{-0.3ex}{0.1}{\displaystyle}}
+        {\constructosum{-0.3ex}{0.06}{\textstyle}}
+        {\constructosum{-0.2ex}{0.04}{\scriptstyle}}
+        {\constructosum{-0.15ex}{0.03}{\scriptscriptstyle}}
+    }\displaylimits
+}
+
+%\newcommand{\osum}[2]
+ %{\overlay{\circ}{\sum_{#1}^{#2}}}
 
 
 % For backwards compatibility to old LaTeX type font selection.

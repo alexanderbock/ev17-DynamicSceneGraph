@@ -10,8 +10,9 @@
 % instead of the author's name (and leave the affiliation blank) !!
 \author[E. Axelsson \& A. Bock \& J. Costa \& A. Ynnerman]
        {E. Axelsson$^{1}$,
-        A. Bock$^{1}$,
         J. Costa$^{2}$
+        A. Bock$^{1}$,
+        C. Silva$^{2}$
         and A. Ynnerman$^{1}$
 %        S. Spencer$^2$\thanks{Chairman Siggraph Publications Board}
         \\
@@ -86,7 +87,7 @@ This work contributes to visualization of datasets with large scale differences 
 
 \section{Related work}
 The concept of \emph{Power Scaled Coordinates}, introduced by Hanson et al. \cite{hanson2000very},
-addresses some of the challenges with multi-scale visualization. By using the fourth component of a homogenious coordinate vector to encode powers of ten, the proposed system can operate with floating point numbers close to unit scale. The method solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors. However, this is achieved by adding complexity in terms of an extra layer of logarithmic representation on top of regular floating point vectors, which already have the property of encoding scale logarithmically. 
+addresses some of the challenges with multi-scale visualization. The method uses four-dimensional floating point vectors where the first three components determine the direction of the vector, and the fourth encodes a scaling coeffient as a power of ten. The proposed system can operate with floating point numbers close to unit scale, which solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors.
 
 The Power Scaled Coordinates method is based on floating point representation of numbers, which yield high precision close to zero, and decreasing precision with larger values. Hence, the method achieves high precision close to the origin of the scene, but decreasing precision for coordinates further away. This is a viable solution for scenes where the high precision data is centered in one region. However, the challenge of representing mulitple regions in the virtual universe with high precision is not addressed in this work.
 
@@ -129,95 +130,53 @@ The IEEE754 standard requires that the result of operations $+$, $-$, $\cdot$ an
 
 \begin{equation} \label{eq:floatoperations}
 \begin{split}
-(a \oplus b) = (a + b)(1 + u[-1, 1]) \subseteq a + b + (a + b)u[-1, 1] \\
-(a \ominus b) = (a - b)(1 + u[-1, 1]) \subseteq a - b + (a + b)u[-1, 1] \\
-(a \odot b) = ab(1 + u[-1, 1]) \subseteq ab + abu[-1, 1] \\
-(a \oslash b) = \frac{a}{b}(1 + u[-1, 1]) \subseteq \frac{a}{b} + \frac{a}{b} u[-1, 1]
+a \oplus b \equiv (a + b)(1 + u[-1, 1]) \\
+a \ominus b \equiv (a - b)(1 + u[-1, 1]) \\
+a \odot b \equiv ab(1 + u[-1, 1]) \\
+a \oslash b \equiv \frac{a}{b}(1 + u[-1, 1]) \\
 \end{split}
 \end{equation}
 
+
+
+\subsubsection{Propagation of error intervals}
 When a result from one floating point operation is used in further computations,
-the rounding errors will propagate through the whole series of operations.
-By tracking upper bounds of these error sizes, we can show which type of series of operations that may lead to significant loss of presicion.
+the rounding errors will propagate through the whole series of operations. 
 
-\subsubsection{Error intervals}
-We introduce the notation $\mathds{E}(\lambda)$ to represent an error interval based on a vector $\lambda$ of non-negative integers $\lambda_i$ as in equation \ref{eq:errorterm}.
+We let $\mathds{E}$ represent the set of intervals that can be written in form of equation $cu[-1, 1]$, where c is a non-negative integer constant $c$, that is not a function of any floating point value. For any intervals $E_1, E_2 \in \mathds{E}$, there are intervals $E_3, E_4 \in \mathds{E}$, such that
+$E_1+E_2 \subseteq E_3$ and $E_1E_2 \subseteq E_4$.
 
-\begin{equation} \label{eq:errorterm}
-\mathds{E}(\lambda) = \sum_{i=0}^\infty( \lambda_i u^i [-1, 1])
-\end{equation}
+We let $E_i$ denote intervals that belong to $\mathds{E}$ and observe some properties of $\oplus$, and $\odot$ as they act on the two intervals $a(1 + E_1)$ and $b(1 + E_2)$.
 
-Based on interval arithmetic, we derive two properties of the error intervals.
-
-\begin{equation} \label{eq:errortermrules}
+\begin{equation} \label{eq:errortermadd} 
 \begin{split}
-\mathds{E}(\alpha) + \mathds{E}(\beta) = \mathds{E}(\alpha + \beta) \\ 
-\mathds{E}(\alpha) \mathds{E}(\beta) = \mathds{E}(\alpha * \beta) \\ 
-\end{split}
-\end{equation} 
-
-We also observe some properties of $\oplus$, and $\odot$ as they act on the two intervals $a(1 + \mathds{E}(\alpha))$ and $b( 1 + \mathds{E}(\beta))$. $u[-1,1]$ can be rewritten as $\mathds{E}(\delta)$, with all $\delta_i = 0$ except $\delta_1 = 1$.
-
-\begin{equation} \label{eq:errorterm3} 
-\begin{split}
-a(1 + \mathds{E}(\alpha)) \oplus b( 1 + \mathds{E}(\beta)) = \\
-= (a(1 + \mathds{E}(\alpha)) + b( 1 + \mathds{E}(\beta)))(1 + \mathds{E}(\delta)) = \\
-= (a + a\mathds{E}(\alpha) + b + b\mathds{E}(\beta))(1 + \mathds{E}(\delta)) = \\
-= a + a\mathds{E}(\alpha + \delta + (\delta * \delta)) + b + b\mathds{E}(\beta + \delta + (\delta * \delta))
+a(1 + E_1) \oplus b( 1 + E_2) = \\
+= (a(1 + E_1) + b( 1 + E_2))(1 + u[-1, 1]) \subseteq \\
+\subseteq a(1 + E_3) + b(1 + E_4)
 \end{split}
 \end{equation}
 
-\begin{equation} \label{eq:errorterm4} 
+\begin{equation} \label{eq:errortermmult} 
 \begin{split}
-a(1 + \mathds{E}(\alpha)) \odot b( 1 + \mathds{E}(\beta)) = \\
-= ab(1 + \mathds{E}(\alpha))(1 + \mathds{E}(\beta))(1 + \mathds{E}(\delta)) = \\
-ab + ab\mathds{E}(\alpha + \beta + \gamma + \alpha*\beta + \alpha*\gamma + \beta*\gamma + \alpha*\beta*\gamma)
+a(1 + E_1) \odot b(1 + E_2) = \\
+= ab(1 + E_1)(1 + E_2)(1 + u[-1, 1]) \subseteq \\
+\subseteq ab(1 + E_3)
 \end{split}
 \end{equation}
 
+We conclude that for floating point sums $\osum_i x_i \equiv x_1 \oplus x_2 \oplus ... \oplus x_n$, equation \ref{eq:errortermsum} holds regardless of in which order terms are added.
 
-
-
-
-\begin{equation} \label{eq:catastrophic-example}
-\begin{split}
-(a \oplus b) \ominus c = \big((a + b)(1 + u[-1, 1]) + c\big)(1 + u[-1, 1]) \subseteq \\
-(a + b + c + au[-1, 1] + bu[-1, 1])(1 + u[-1, 1]) \subseteq \\
-a + b + c + (|2au| + |2bu| + |cu| + |au^2| + |bu^2|)[-1, 1] \subseteq \\
-\subseteq a + b + c + \mathds{E}_u(a) + \mathds{E}_u(b) + \mathds{E}_u(c)
-\end{split}
+\begin{equation} \label{eq:errortermsum} 
+\osum_i x_i(1 + E_{1,i}) \subseteq \sum_i x_i(1 + E_{2, i})
 \end{equation}
 
-From equation \ref{eq:catastrophic-example}, we observe that the result of this specific floating point computation will be contained by an interval expressed with terms depending on $u$ and the input terms $a$, $b$ and $c$. 
+In floating point matrix multiplication, output components are computed as a sum of products as in equation \ref{eq:matrixmult}, where $m$ is the number of columns of A and the number of rows of B.
 
-
-Using this definition, we can rewrite equation \ref{eq:catastrophic-example} to 
-
-for some $n$ and $\lambda_i$.
-
-
-The positive integers $n$ and $c_i$, $i \in [1, n]$ will grow with the number of operations that involves the floating point number $x$. However, for our purposes, the number of operations will be orders of magnitude smaller than the scale differences of possible values of x. With this in mind, a few conclusions can be made about the properties of $\mathds{E}$.
-
-
-
-
-\begin{equation} \label{eq:errorterm4} 
-\begin{split}
-(a + E_u(a)) \ominus (b + \mathds{E}_u(b) = \\
-\big(((a + \mathds{E}_u(a)) - (b + \mathds{E}_u(b))\big)(1 + u[-1, 1]) \subseteq \\
-\subseteq a - b + \mathds{E}_u(|a| + |b|)
-\end{split}
+\begin{equation} \label{eq:matrixmult} 
+(AB)_{ij} = \osum_{k}^mA_{ik}\odot B_{kj} \subseteq \sum_{k}^mA_{ik} B_{kj}(1 + E_{kj})
 \end{equation}
 
-\begin{equation} \label{eq:errorterm5} 
-\begin{split}
-(a + E_u(a)) \odot (b + \mathds{E}_u(b) = \\
-\big((a + \mathds{E}_u(a))(b + \mathds{E}_u(b))\big)(1 + u[-1, 1]) \subseteq \\
-\subseteq ab + \mathds{E}_u(ab)
-\end{split}
-\end{equation}
-
-TODO: Division.
+We observe that the maximum floating point error introduced to any individual component $(AB)_{ij}$ of a matrix product is governed by the sum of the absolute values of the products $A_{ik} B_{kj}$.
 
 
 \subsubsection{Catastrophic cancellation}
