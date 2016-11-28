@@ -114,7 +114,7 @@ The \emph{ScaleGraph} method, introduced by Klashed et al. \cite{KHECY10} as a p
 
 \section{Theoretical foundation}
 
-The widely used IEEE754 standard for representing 32-bit floating point numbers \cite{zuras2008ieee} makes it possible to express numbers in a much larger range than integer types. While a 32-bit signed integer type can only represent numbers in the range 
+The widely used IEEE754 standard for representing 32-bit floating point numbers \cite{zuras2008ieee} enables the possibility to express numbers in a much larger range than integer types. While a 32-bit signed integer type can only represent numbers in the range 
 $[-2^{31}, 2^{31} - 1]$, an IEEE754 float approximately support the range $[-2^{127}, 2^{127}]$.
 
 In floating point numbers, values are represented as a sign, mantissa and exponent which gives the properties of high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range. The IEEE754 single precision floating point format uses 1 sign bit $s$, 8 exponent bits and 23 mantissa bits $\mathbf{m}_i$. Equation \ref{eq:floatingpoint} yields the value $v$ represented by $s$, $\mathbf{m}$ and the integer $e \in [-127, 128]$ which is encoded in the exponent bits. 
@@ -191,22 +191,24 @@ The straight-forwared implementation of floating point matrix multiplication $A 
 We observe that the maximum floating point error introduced to any individual component $(AB)_{ij}$ of a matrix product is governed by the sum of the absolute values of the products $A_{ik} B_{kj}$.
 
 \subsection{Coordinate transformations}
-In computer graphics software, scene content is commonly organized in a \emph{scene graph}, which allow that coordinate transformations are represented hierarchically. Each node in the graph may contain a transformation, representable as a 4x4 matrix, that affects all its children. In order to transform an object from its local \emph{model coordinate system} to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatenated to a \emph{model matrix} using matrix multiplication.
+In computer graphics software, scene content is commonly organized in a \emph{scene graph}, which allow that coordinate transformations are represented hierarchically. Each node in the graph may contain a transformation, representable as a 4x4 matrix, that affects all its children. Objects consist of vertices $\mathbf{x}$ represented as homogenious coordinates $(x, y, z, w)^t$, where $x$, $y$ and $z$ are the coordinates in a local coordinate system, and $w = 1$. In order to transform a vertex from its local \emph{model coordinate system} to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatenated to a \emph{model matrix} using matrix multiplication. This matrix is applied to the vertex $\mathbf{x}$ to aqcuire the world coordinates $\mathbf{w}$.
 
-A \emph{view matrix} is also commonly generated based on a camera position and rotation expressed in the world coordinate system, and then used to transform world coordinates to \emph{view coordinates}, with the camera in the origin, and the z-axis parallel to the view direction.
+A \emph{view matrix} is also commonly generated based on a camera position and rotation expressed in the world coordinate system, and then used to transform world coordinates to \emph{view coordinates}, with the camera in the origin, and the z-axis parallel to the view direction. This view matrix is multiplied with the world coordinate $\mathbf{w}$ and outputs the view coordinates $\mathbf{v}$.
 
-To take perspective effects into account, coordinates are transformed into \emph{perspective space} using a \emph{projection matrix}. The transformation sets the fourth vector component to the depth of the coordinate. 
-Only content that satisfies the equation $-w \le x, y, z \le w$ is rendered. The vector is divided by $w$ to compute the \emph{normalized device coordinates (NDC)}. This last step results in that objects farther away from the camera appear smaller on the screen. The $x$ and $y$ in NDC determines the object's position on the screen, with $(-1, -1)$ representing the bottom left corner and $(1, 1)$ upper right one. 
+To take perspective effects into account, view coordinates are transformed into \emph{clip coordinates} $\mathbf{c}$ using a \emph{projection matrix}.
+After that, content that does not satisfy the equation $-w \le x, y, z \le w$ will be subject to frustum culling, and will be discarded from rendering. The vector is divided by $w$ to compute the \emph{normalized device coordinates (NDC)}. This last step results in that objects farther away from the camera appear smaller on the screen. The $x$ and $y$ in NDC determines the object's position on the screen, with $(-1, -1)$ representing the bottom left corner and $(1, 1)$ upper right one. The $z$ component is commonly used for depth sorting: $z = 1$ represents the \emph{near plane} and and $z = -1$ represents the \emph{far plane}. It is common that z values are mapped into an integer buffer, which is used for depth sorting.
 
 \subsection{Coordinate precision}
-Floating point rounding errors start to become visible when the possible error intervals in the normalized device coordinate system approach the size of a pixel. Using column vectors, the NDC's $\mathbf{n}$ are derived by the model coordinates $\mathbf{x}$ in equation \ref{eq:mvp}.
+Rounding errors due to scale differences may give rise to two types of visual artifacts: If the errors in the x and y components of the normalized device coordinates approach the size of several pixel on the screen, there will be a \emph{visible displacement of vertices}. TODO: FIGURE. If the errors in z approach the resolution of the depth buffer, this will cause the effect known as \emph{z-fighting}, which is when an object that is in reality farther away from the camera is rendered in front of a closer one. TODO: FIGURE.
+
+Using column vectors, the NDC's $\mathbf{n}$ are derived from the model coordinates $\mathbf{x}$ in equation \ref{eq:mvp}.
 
 \begin{align} \label{eq:mvp}
-\mathbf{p} = P\otimes V \otimes M \otimes \mathbf{x} \\
-\mathbf{n} = \mathbf{p} \oslash {p_w}
+\mathbf{c} = P\otimes V \otimes M \otimes \mathbf{x} \\
+\mathbf{n} = \mathbf{c} \oslash {c_w}
 \end{align}
-
-Here, V is the view matrix, $M$ is the model matrix, $P$ is the projection matrix, and $\mathbf{x}$, $\mathbf{p}$ and $\mathbf{n}$ are homogenious coordinate vectors on the form $(x, y, z, w)^t$. The precision in normalized device coordinates depends on the collective effects of $M$, $V$, $P$ and the perspective division as they act on $\mathbf{x}$. 
+ 
+Here, V is the view matrix, $M$ is the model matrix, $P$ is the projection matrix, and $\mathbf{x}$, $\mathbf{c}$ and $\mathbf{n}$ are homogenious coordinate vectors on the form $(x, y, z, w)^t$. The precision in normalized device coordinates depends on the collective effects of $M$, $V$, $P$ and the perspective division as they act on $\mathbf{x}$. 
 
 $M$ and $V$ are commonly composed from three types of transformations that are encoded in the scene graph: scaling, translation and rotation. We study the effect of applying scaling, translation and rotation on a generalized model matrix or view matrix A, composed of a translation vector $\mathbf{a}$ and a combined rotation/scaling 3x3-matrix $A'$, as given by equation \ref{eq:matrixa}. To observe how the matrices act on a coordinate vector, we can study the fourh column in A.
 \begin{equation} \label{eq:matrixa}
@@ -327,6 +329,37 @@ The same analysis is performed for floating point rotation in equation \ref{eq:r
 When applying a rotation matrix to a general matrix $A$, the potential rounding error of any output component is dependent on the summed absolute value of all contributing products. For a general rotation matrix $R$ written on the same form as in \ref{eq:rotation}, all the components of $R'$ are in the interval $[-1, 1]$, which means that the maximum possible precision loss is governed by the largest value in $A$. When applying $R$ on a matrix or vector with both huge and close-to-zero components, the precision in the small components may be lost.
 
 \subsubsection{Projection}
+A typical matrix for symmetric perspective projection $P$ can be written as in equation \ref{eq:perspectiveprojection}, where
+$\theta_h$ and $\theta_v$ are the horizontal and vertical field of view, and $n$ and $f$ are the distances from the camera to the near and far planes.
+
+\begin{equation} \label{eq:perspectiveprojection}
+P = \mleft(
+\begin{array}{cccc}
+  \arctan(\frac{\theta_{h}}{2}) & 0 & 0 & 0\\
+  0 & \arctan(\frac{\theta_{v}}{2}) & 0 & 0\\
+  0 & 0 & -\frac{f+n}{f-n} & \frac{2fn}{f-n}\\
+  0 & 0 & -1 & 0
+\end{array}\mright)
+\end{equation}
+
+When $P$ is multiplied with a homogenious view coordinate vector $\mathbf{v} = (x, y, z, 1)^t$, the sums of products to compute the output x, y and w components will only consist of one non-zero term, which means that the relative precision is preserved. The z-component $c_z$ is given by equation \ref{eq:nearfar}.
+
+\begin{equation} \label{eq:nearfar}
+\begin{split}
+\lambda_1 = -\frac{f + n}{f - n} \\
+\lambda_2 = \frac{2fn}{f - n} \\
+c_z = \lambda_1 v_z + \lambda_2
+\end{split}
+\end{equation}
+
+To observe the effect of a huge scale difference between $f$ and $n$ on the precision of $c_z$,
+we study equation \ref{eq:nearfar} when $f \rightarrow \infty$ and $n \rightarrow 0$, and see that 
+$\lambda_1 \rightarrow -1$ and $\lambda_2 \rightarrow 0$ which means that $c_z \rightarrow -v_z$.
+As 
+
+
+
+
 
 $https://www.opengl.org/registry/doc/GLSLangSpec.4.20.11.clean.pdf : page 92$
 
@@ -350,6 +383,17 @@ TODO: mention double and quad precision.
 \section{Method}
 \subsection{Dynamic Scene Graph}
 
+
+
+\begin{equation} \label{eq:ourperspectiveprojection}
+P = \mleft(
+\begin{array}{cccc}
+  \arctan(\frac{\theta_{h}}{2}) & 0 & 0 & 0\\
+  0 & \arctan(\frac{\theta_{v}}{2}) & 0 & 0\\
+  0 & 0 & 0 & 0\\
+  0 & 0 & -1 & 0
+\end{array}\mright)
+\end{equation}
 
 \subsubsection{Dynamic camera attachment}
 
