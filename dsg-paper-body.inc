@@ -37,9 +37,7 @@
 \maketitle
 
 \begin{abstract}
-
-
-
+This paper addresses the challenges of interactively visualizing datasets with astronomical scale differences, including problems arising from limited numerical range and precision. We track the propagation of floating point precision errors throughout a convensional graphics pipeline using interval arithmetic. Sources of precision degradation leading to incorrect position of vertices in screen-space, as well as z-fighting are identified mathematically. A novel approach for rendering tiny and huge content distributed across a vast virtual universe is presented. Precision problems are avoided by reorganizing the scene graph dynamically and by traversing the it locally to compute model-view matrices. Our method operates without near and far planes while maintaining high depth precision. By providing interoperability with order-independent transparency, volume rendering and stereoscopy, the method is well suited for scientific visualization.
 \end{abstract}
 
 %-------------------------------------------------------------------------
@@ -51,44 +49,40 @@ while the Planck length, which is the length where quantum mechanical effects
 make it impossible to distinguish between two physical locations, is approximately 
 $10^{-35}$ meters.
 
-Comprehending the vast differences of scales in the known universe is needless 
-to say a huge challenge for us humans. Computer graphics and interactive visualization have
-proven to be immensively valuable tools for communicating scientific findings
-and contextualizing information. Notable examples of applications where huge scale differences are visualized 
-together include movie productions, such as \emph{Powers of Ten}\cite{powersOfTen} from 1977,
-All We Are [citation needed], as well as interactive software for digital planetariums,
-such as Uniview from Sciss, DigiStar from Evans and Sutherland, [citations and more examples].
+OpenSpace is an open source software project with the goal to interactively visualize the known universe and our ongoing efforts of further exploring the cosmos. It is designed for immersive environments to bring science to the public and to contextualize information such as sub-atomic particle simulations on Earth, micrometer-scale discoveries made by rovers the Martian surface and volumetric simulations of entire galaxies.
 
-Even in our virtual worlds, huge scale
-differences are difficult to represent, due to limitations in numerical precision
-in state-of-the-art hardware and software architectures. In movie productions and
-visualization software with limited interaction possibilities,
-producers and developers may use various compositing techniques to blend
-between large and small scenes, to account for the individual cases where a transition
-between scales is required. 
+While the universe may be infinte, our computers only have limited memory and computational resources, meaning that numbers can only be represented in finite ranges and with finite precision. An interactive system where the user should be able to seemlessly explore nanometer structures as well as clusters of galaxies requires that tiny details and huge scale ranges can be rendered simultaneously.
 
-Allowing the user to navigate around in a dataset with greater
-freedom requires a more general system that can handle scale differences automatically.
+\emph{TODO: Something about previous work: stereoscopic rendering.
 There are several challenges with developing such a system, where the most prominent
-one may be providing adequate numerical precision for all the components in the visualization pipeline. 
+one may be providing adequate numerical precision and range throughout all components in the visualization pipeline. 
 Another important aspect is adapting the eye-separation used for stereoscopic rendering to enhance depth perception and improve immersion. From the perspective of software development and content creation,
-it is desirable for this sort of system to facilitate creation of visualization content rather than introducing additional complexity.
+it is desirable for this sort of system to facilitate creation of visualization content rather than introducing additional complexity.}
+
+\subsection{Contributions}
+In this paper we first provide a thorough study of the sources of precision and range overflow problems in a conventional computer graphics pipeline. Second, we present our method for visualizing datasets with astronomical scale differences, providing:
+
+\begin{itemize}
+\item A \emph{Precision-Adaptive Scene Graph} approach for representing objects and cameras to avoid presicion-related artifacts.
+\item A method for rendering with wide depth range and precision without near and far planes.
+\item A scheme for seamless adaption of the eye-separation used for stereoscopic rendering.
+\item Minimal modifications on a conventional rendering pipeline.
+\item Interoperability with volumetric rendering and order-independent-transparency.
+\end{itemize}
 
 
 
-\subsection{Challenges}
+
+
+
 The co-evolution of graphics hardware, software and content, largely pushed forward by
 the gaming industry has led to modern graphics processing units that are optimized for
 operating efficiently on 32-bit floating point numbers, vectors and matrices.
 In a standard computer graphics pipleline, $4x4$ matrices are used to represent coordinate
 transformations operating on 4-dimensional homogenious coordinate vectors, with their components stored as floating point numbers. 
 
-\subsubsection{Precision}
 
-\subsubsection{Exponent underflow and overflow}
-The exponent range $[-126, 127]$ in 32-bit IEEE754 floats gives a possible scale range of approximately 76 orders of magnitude (OM). Computations that yield exponents outside that range will cause exponent underflow or overflow, and result in loss of data. A straight-forward implementation of computing the length of a vector using the Pythagorean theorem would need to store squared length in a floating point value as an intermediate step, halfing the range of valid input exponents and limiting the input scale differences to 38 OM.
 
-The scale difference betweeen the Planck length and the diameter of the observable universe is approximately $62$ OM. While 32-bit floats are able to represent this scale difference, a convensional approach to computing lengths and normalizing vectors would break down.
 
 \subsection{Contributions}
 This work contributes to visualization of datasets with large scale differences by providing:
@@ -102,6 +96,14 @@ This work contributes to visualization of datasets with large scale differences 
 
 
 \section{Related work}
+Computer graphics and interactive visualization have
+proven to be immensively valuable tools for communicating scientific findings
+and contextualizing information. Notable examples of applications where huge scale differences are visualized 
+together include movie productions, such as \emph{Powers of Ten}\cite{powersOfTen} from 1977,
+All We Are [citation needed], as well as interactive software for digital planetariums,
+such as Uniview from Sciss, DigiStar from Evans and Sutherland, [citations and more examples].
+
+
 The concept of \emph{Power Scaled Coordinates}, introduced by Hanson et al. \cite{hanson2000very},
 addresses some of the challenges with multi-scale visualization. The method uses four-dimensional floating point vectors where the first three components determine the direction of the vector, and the fourth encodes a scaling coeffient as a power of ten. The proposed system can operate with floating point numbers close to unit scale, which solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors.
 
@@ -133,6 +135,12 @@ For IEEE754 float, $\epsilon = 2^{-24}\approx 5.96 \cdot 10^{-8}$, meaning that 
 An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits and 52 bits for the mantissa, which yields a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notaiton, this corresponds to a precision of 15 significant figures. Using quadruple precision (128-bits), it is possible push the number of significant figures to 34. Increasing the bit depth will naturally require more computational resources.
 
 
+\subsubsection{Exponent underflow and overflow}
+The exponent range $[-126, 127]$ in 32-bit IEEE754 floats gives a possible scale range of approximately 76 orders of magnitude (OM). Computations that yield exponents outside that range will cause exponent underflow or overflow, and result in loss of data. A straight-forward implementation of computing the length of a vector using the Pythagorean theorem would need to store squared length in a floating point value as an intermediate step, halfing the range of valid input exponents and limiting the input scale differences to 38 OM.
+
+The scale difference betweeen the Planck length and the diameter of the observable universe is approximately $62$ OM. While 32-bit floats are able to represent this scale difference, a convensional approach to computing lengths and normalizing vectors would break down.
+
+
 \subsubsection{Interval arithmetic}
 To reason about the precision of various floating point operations, it is possible to use interval arithmetic as a mathematical tool to track possible rounding errors. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$. Using interval arithmetic, the interval can be rewritten as $v(1 + u[-1,1])$.
 
@@ -151,11 +159,10 @@ a \oslash b \equiv \frac{a}{b}(1 + u[-1, 1]) \\
 
 
 \subsubsection{Propagation of error intervals}
-When a result from one floating point operation is used in further computations,
-the rounding errors will propagate through the whole series of operations. This may lead to scenarios where expressions on the form $(a + b) - b$ may evaluate to $0$, for a sufficiently small $a$ and large $b$. This phenomena is known as 
+When a result from one floating point operation is used in further computations, rounding errors will propagate through the whole series of operations. This may lead to scenarios where expressions on the form $(a + b) - b$ may evaluate to $0$, for a sufficiently small $a$ and large $b$. This phenomena is known as 
 \emph{catastrophic cancellation}. In any rendering pipeline where e.g. matrix multiplications or vector additions result in this type of operations, there is a risk for floating point precision problems.
 
-We let $\mathds{E}$ represent the set of intervals that can be written in form of equation $cu[-1, 1]$, where c is a non-negative integer constant $c$, that is not a function of any floating point value. For any intervals $E_1, E_2 \in \mathds{E}$, there are intervals $E_3, E_4 \in \mathds{E}$, such that
+We let $\mathds{E}$ represent the set of intervals that can be written in form of equation $cu[-1, 1]$, where c is a non-negative integer constant $c$ that is not a function of any floating point value. For any intervals $E_1, E_2 \in \mathds{E}$, there are intervals $E_3, E_4 \in \mathds{E}$, such that
 $E_1+E_2 \subseteq E_3$ and $E_1E_2 \subseteq E_4$.
 
 We let $E_i$ denote intervals that belong to $\mathds{E}$ and observe some properties of $\oplus$, and $\odot$ as they act on the two intervals $a(1 + E_1)$ and $b(1 + E_2)$.
@@ -163,7 +170,7 @@ We let $E_i$ denote intervals that belong to $\mathds{E}$ and observe some prope
 \begin{equation} \label{eq:errortermadd} 
 \begin{split}
 a(1 + E_1) \oplus b( 1 + E_2) = \\
-= (a(1 + E_1) + b( 1 + E_2))(1 + u[-1, 1]) \subseteq \\
+= \big(a(1 + E_1) + b( 1 + E_2)\big)(1 + u[-1, 1]) \subseteq \\
 \subseteq a(1 + E_3) + b(1 + E_4)
 \end{split}
 \end{equation}
@@ -196,10 +203,10 @@ In computer graphics software, scene content is commonly organized in a \emph{sc
 A \emph{view matrix} is also commonly generated based on a camera position and rotation expressed in the world coordinate system, and then used to transform world coordinates to \emph{view coordinates}, with the camera in the origin, and the z-axis parallel to the view direction. This view matrix is multiplied with the world coordinate $\mathbf{w}$ and outputs the view coordinates $\mathbf{v}$.
 
 To take perspective effects into account, view coordinates are transformed into \emph{clip coordinates} $\mathbf{c}$ using a \emph{projection matrix}.
-After that, content that does not satisfy the equation $-w \le x, y, z \le w$ will be subject to frustum culling, and will be discarded from rendering. The vector is divided by $w$ to compute the \emph{normalized device coordinates (NDC)}. This last step results in that objects farther away from the camera appear smaller on the screen. The $x$ and $y$ in NDC determines the object's position on the screen, with $(-1, -1)$ representing the bottom left corner and $(1, 1)$ upper right one. The $z$ component is commonly used for depth sorting: $z = 1$ represents the \emph{near plane} and and $z = -1$ represents the \emph{far plane}. It is common that z values are mapped into an integer buffer, which is used for depth sorting.
+After that, content that does not satisfy the equation $-w \le x, y, z \le w$ will be subject to frustum culling, and will be discarded from rendering. The vector is divided by $w$ to compute the \emph{normalized device coordinates (NDC)}. This last step, called \emph{perspective division}, causes objects farther away from the camera to appear smaller on the screen. The $x$ and $y$ in NDC determines the object's position on the screen, with $(-1, -1)$ representing the bottom left corner and $(1, 1)$ upper right one. The $z$ component is commonly used for depth sorting: $z = 1$ represents the \emph{near plane} and and $z = -1$ represents the \emph{far plane}. It is common that z values are mapped into an integer buffer, which is used for depth sorting.
 
 \subsection{Coordinate precision}
-Rounding errors due to scale differences may give rise to two types of visual artifacts: If the errors in the x and y components of the normalized device coordinates approach the size of several pixel on the screen, there will be a \emph{visible displacement of vertices}. TODO: FIGURE. If the errors in z approach the resolution of the depth buffer, this will cause the effect known as \emph{z-fighting}, which is when an object that is in reality farther away from the camera is rendered in front of a closer one. TODO: FIGURE.
+Rounding errors due to scale differences may give rise to two types of visual artifacts: If errors in the x and y components of the normalized device coordinates approach the size of several pixel on the screen, there will be a \emph{visible displacement of vertices}. TODO: FIGURE. If the errors in z approach the resolution of the depth buffer, this will cause the effect known as \emph{z-fighting}, which is when an object that is in reality farther away from the camera is rendered in front of a closer one. TODO: FIGURE.
 
 Using column vectors, the NDC's $\mathbf{n}$ are derived from the model coordinates $\mathbf{x}$ in equation \ref{eq:mvp}.
 
@@ -342,7 +349,7 @@ P = \mleft(
 \end{array}\mright)
 \end{equation}
 
-When $P$ is multiplied with a homogenious view coordinate vector $\mathbf{v} = (x, y, z, 1)^t$, the sums of products to compute the output x, y and w components will only consist of one non-zero term, which means that the relative precision is preserved. The z-component $c_z$ is given by equation \ref{eq:nearfar}.
+When $P$ is multiplied with a homogenious view coordinate vector $\mathbf{v} = (x, y, z, 1)^t$, the sums of products to compute the output x, y and w components will only consist of one non-zero term, which means that the relative precision of these components is preserved. The z-component $c_z = (P\mathbf{v})_z$ is given by equation \ref{eq:nearfar}.
 
 \begin{equation} \label{eq:nearfar}
 \begin{split}
@@ -354,8 +361,8 @@ c_z = \lambda_1 v_z + \lambda_2
 
 To observe the effect of a huge scale difference between $f$ and $n$ on the precision of $c_z$,
 we study equation \ref{eq:nearfar} when $f \rightarrow \infty$ and $n \rightarrow 0$, and see that 
-$\lambda_1 \rightarrow -1$ and $\lambda_2 \rightarrow 0$ which means that $c_z \rightarrow -v_z$.
-As 
+$\lambda_1 \rightarrow -1$ and $\lambda_2 \rightarrow 0$ which means that $c_z \rightarrow -v_z = c_w$.
+The perspective division step would yield $n_z = 1$ for all vertices, giving them the exact same depth buffer value.
 
 
 
