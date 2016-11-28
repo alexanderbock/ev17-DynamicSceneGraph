@@ -152,8 +152,8 @@ a \oslash b \equiv \frac{a}{b}(1 + u[-1, 1]) \\
 
 \subsubsection{Propagation of error intervals}
 When a result from one floating point operation is used in further computations,
-the rounding errors will propagate through the whole series of operations. This may lead to effects such as 
-\emph{catastrophic cancellation}, since expressions on the form $(a + b) - b$ may evaluate to $0$, for a sufficiently small $a$ and large $b$. In any rendering pipeline where e.g. matrix multiplications or vector additions result in this type of operations, there is a risk for floating point precision problems.
+the rounding errors will propagate through the whole series of operations. This may lead to scenarios where expressions on the form $(a + b) - b$ may evaluate to $0$, for a sufficiently small $a$ and large $b$. This phenomena is known as 
+\emph{catastrophic cancellation}. In any rendering pipeline where e.g. matrix multiplications or vector additions result in this type of operations, there is a risk for floating point precision problems.
 
 We let $\mathds{E}$ represent the set of intervals that can be written in form of equation $cu[-1, 1]$, where c is a non-negative integer constant $c$, that is not a function of any floating point value. For any intervals $E_1, E_2 \in \mathds{E}$, there are intervals $E_3, E_4 \in \mathds{E}$, such that
 $E_1+E_2 \subseteq E_3$ and $E_1E_2 \subseteq E_4$.
@@ -185,7 +185,7 @@ From equation \ref{eq:errortermadd}, we conclude that for floating point sums $\
 The straight-forwared implementation of floating point matrix multiplication $A \otimes B$ is to compute matrix components as a sum of products using $\oplus$ and $\odot$. By applying equations \ref{eq:errortermmult} and \ref{eq:errortermsum}, we get equation \ref{eq:matrixmult} where $m$ is the number of columns of $A$ and the number of rows of $B$.
 
 \begin{equation} \label{eq:matrixmult} 
-(A \otimes B)_{ij} \equiv \osum_{k}^mA_{ik}\odot B_{kj} \subseteq \sum_{k}^mA_{ik} B_{kj}(1 + E_{kj})
+(A \otimes B)_{ij} \equiv \osum_{k = 1}^mA_{ik}\odot B_{kj} \subseteq \sum_{k = 1}^mA_{ik} B_{kj}(1 + E_{ijk})
 \end{equation}
 
 We observe that the maximum floating point error introduced to any individual component $(AB)_{ij}$ of a matrix product is governed by the sum of the absolute values of the products $A_{ik} B_{kj}$.
@@ -198,7 +198,7 @@ A \emph{view matrix} is also commonly generated based on a camera position and r
 To take perspective effects into account, coordinates are transformed into \emph{perspective space} using a \emph{projection matrix}. The transformation sets the fourth vector component to the depth of the coordinate. 
 Only content that satisfies the equation $-w \le x, y, z \le w$ is rendered. The vector is divided by $w$ to compute the \emph{normalized device coordinates (NDC)}. This last step results in that objects farther away from the camera appear smaller on the screen. The $x$ and $y$ in NDC determines the object's position on the screen, with $(-1, -1)$ representing the bottom left corner and $(1, 1)$ upper right one. 
 
-\subsection{NDC precision}
+\subsection{Coordinate precision}
 Floating point rounding errors start to become visible when the possible error intervals in the normalized device coordinate system approach the size of a pixel. Using column vectors, the NDC's $\mathbf{n}$ are derived by the model coordinates $\mathbf{x}$ in equation \ref{eq:mvp}.
 
 \begin{align} \label{eq:mvp}
@@ -285,45 +285,48 @@ In equation \ref{eq:translation}, a translation matrix $T$ is applied to $A$ usi
 where 
 
 \begin{align} \label{eq:translationconclusion}
-\hat{T}_{ij} = \hat{A'}_{ij}\\
+\hat{T}_{ij} = I \otimes \hat{A'}_{ij} = \hat{A'}_{ij}\\
 \hat{t}_i = t_i \oplus a_i \subseteq (t_i + a_i)(1 + E_i)
 \end{align}
 
-We note that the precision in $\hat{T}_{ij}$ is preserved from $A'$ when any translation matrix $T$ is applied. However, any error intervals encoded in $t_i$ and $a_j$ will propagate to $\hat{t}_i$, and will \emph{not} be scaled down even if $|\hat{t}_i|$ is orders of magnitude smaller than $|t_i|$ and $|a_i|$. This scenario \emph{may lead to catastrophic cancellation} in the term $\hat{t}_i$.
+We note that the precision in $\hat{T}_{ij}$ is preserved from $A'$ when any translation matrix $T$ is applied. However, any error intervals encoded in $t_i$ and $a_j$ will propagate to $\hat{t}_i$, and will \emph{not} be scaled down even if $|\hat{t}_i|$ is orders of magnitude smaller than $|t_i|$ and $|a_i|$. This scenario \emph{may lead to catastrophic cancellation} in the component $\hat{t}_i$.
 
 
 \subsubsection{Rotation}
+The same analysis is performed for floating point rotation in equation \ref{eq:rotation}.
 
-\subsubsection{Projection}
-
-A translation matrix $T$, a scaling matrix $S$ and a rotation matrix $R$ can be written as in equations \ref{eq:str-forms}, where $I$ is the identity matrix and $\mathbf{0}$ is the null vector.
-
-\begin{equation} \label{eq:str-forms}
-S = \mleft(
-\begin{array}{c|c}
-  S' & \mathbf{0}\\
-  \hline
-  \mathbf{0} & 1 
-\end{array}
-\mright),
-T = \mleft(
-\begin{array}{c|c}
-  I & \mathbf{t}\\
-  \hline
-  \mathbf{0} & 1 
-\end{array}
-\mright),
-R = \mleft(
+\begin{equation} \label{eq:rotation}
+\hat{R} = R \otimes A = 
+\mleft(
 \begin{array}{c|c}
   R' & \mathbf{0}\\
   \hline
   \mathbf{0} & 1 
+\end{array}\mright)
+\otimes
+\mleft(
+\begin{array}{c|c}
+  A' & \mathbf{a}\\
+  \hline
+  \mathbf{0} & 1 
 \end{array}
-\mright)
+\mright) =  
+\mleft(
+\begin{array}{c|c}
+  \hat{R}' & \hat{\mathbf{r}}\\
+  \hline
+  \mathbf{0} & 1 
+\end{array}\mright)
 \end{equation}
 
-$S'$ is a diagonal $3x3$-matrix with the scaling components for $x$, $y$ and $z$ respectively.
-While floating point matrix multiplacation implementations may differ in terms of order of operations, a possible version is the one described in equation \ref{eq:scaling}.
+\begin{align} \label{eq:rotationconclusion}
+\hat{R}'_{ij} = (R' \otimes A')_{ij} &\subseteq \sum_{k = 1}^3 R'_{ik}\,A'_{kj}(1 + E_{ijk}) \\
+\hat{\mathbf{r}}_i = (R' \otimes \mathbf{a})_{i} &\subseteq \sum_{k = 1}^3 R'_{ik}\,\mathbf{a}_k(1 + E_{ijk})
+\end{align}
+
+When applying a rotation matrix to a general matrix $A$, the potential rounding error of any output component is dependent on the summed absolute value of all contributing products. For a general rotation matrix $R$ written on the same form as in \ref{eq:rotation}, all the components of $R'$ are in the interval $[-1, 1]$, which means that the maximum possible precision loss is governed by the largest value in $A$. When applying $R$ on a matrix or vector with both huge and close-to-zero components, the precision in the small components may be lost.
+
+\subsubsection{Projection}
 
 $https://www.opengl.org/registry/doc/GLSLangSpec.4.20.11.clean.pdf : page 92$
 
