@@ -3,8 +3,8 @@
 % D.Fellner, v1.17, Sep 23, 2010
 
 
-\title[EG A software architecture for interactive visualization of datasets with astronomical scale differences]%
-      {A software architecture for interactive visualization of datasets with astronomical scale differences}
+\title[EG interactive visualization of datasets with astronomical scale differences]%
+      {Interactive visualization of datasets with astronomical scale differences}
 
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
@@ -37,7 +37,7 @@
 \maketitle
 
 \begin{abstract}
-This paper addresses the challenges of interactively visualizing datasets with astronomical scale differences, including problems arising from limited numerical range and precision. We track the propagation of floating point precision errors throughout a convensional graphics pipeline using interval arithmetic. Sources of precision degradation leading to incorrect position of vertices in screen-space, as well as z-fighting are identified mathematically. A novel approach for rendering tiny and huge content distributed across a vast virtual universe is presented. Precision problems are avoided by reorganizing the scene graph dynamically and by traversing it locally to compute model-view matrices. Our method operates without near and far planes while maintaining high depth precision. By providing interoperability with order-independent transparency, volume rendering and stereoscopy, the method is well suited for scientific visualization.
+This paper addresses the challenges of interactively visualizing datasets with astronomical scale differences, including problems arising from limited numerical range and precision. We track the propagation of floating point precision errors throughout a convensional graphics pipeline using interval arithmetic. Sources of precision degradation leading to incorrect position of vertices in screen-space, as well as z-fighting are identified mathematically. A novel approach for rendering tiny and huge content distributed across a vast virtual universe is presented. Precision problems are avoided by reorganizing the scene graph dynamically and by traversing it locally to compute model-view matrices. Our method operates without near and far planes while maintaining high depth precision. By providing interoperability with order-independent transparency, direct volume rendering and stereoscopy, the method is well suited for scientific visualization.
 \end{abstract}
 
 %-------------------------------------------------------------------------
@@ -49,18 +49,13 @@ while the Planck length, which is the length where quantum mechanical effects
 make it impossible to distinguish between two physical locations, is approximately 
 $10^{-35}$ meters.
 
-OpenSpace is an open source software project with the goal to interactively visualize the known universe and our ongoing efforts of further exploring the cosmos. It is designed for immersive environments to bring science to the public and to contextualize information such as sub-atomic particle simulations on Earth, micrometer-scale discoveries made by rovers the Martian surface and volumetric simulations of entire galaxies.
+\emph{OpenSpace} is an open source software project with the goal to interactively visualize the known universe and our ongoing efforts of further exploring the cosmos. It is designed for immersive environments to bring science to the public and to contextualize information such as sub-atomic particle simulations on Earth, micrometer-scale discoveries made by rovers the Martian surface and volumetric simulations of entire galaxies.
 
-While the universe may be infinte, our computers only have limited memory and computational resources, meaning that numbers can only be represented in finite ranges and with finite precision. An interactive system where the user should be able to seemlessly explore nanometer structures as well as clusters of galaxies requires that tiny details and huge scale ranges can be rendered simultaneously.
+Enabling seemless exploration of structures with these vast scale differences requires that coordinates can be expressed in huge value ranges, as well as with great precision. While the universe may be infinte, our computers have only limited memory and computational resources. Hence, numbers can only be represented in finite ranges and with finite precision. In a computer graphics pipeline this typically causes visual precision-related artifacts, such as displaced vertices or z-fighting, as well as problems due to underflow or overflow of the available value range, such as undesirable clipping of near and far geometry.
 
-\emph{TODO: Something about previous work: stereoscopic rendering.
-There are several challenges with developing such a system, where the most prominent
-one may be providing adequate numerical precision and range throughout all components in the visualization pipeline. 
-Another important aspect is adapting the eye-separation used for stereoscopic rendering to enhance depth perception and improve immersion. From the perspective of software development and content creation,
-it is desirable for this sort of system to facilitate creation of visualization content rather than introducing additional complexity.}
+Previous work in the visualization community has provided solutions some of these issues, such as the Power Scaled Coordinates \cite{hanson2000very}, and the ScaleGraph \cite{KHECY10}. However, while providing partial solutions to precision and range problems, the root cause of the precision issues have only been assessed shallowly.
 
-\subsection{Contributions}
-In this paper we first provide a thorough study of the sources of precision and range overflow problems in a conventional computer graphics pipeline. Second, we present our method for visualizing datasets with astronomical scale differences, providing:
+In this paper we provide a thorough study of the sources of precision errors and range overflow problems in a conventional computer graphics pipeline. Using interval arithmetic to possible track floating point rounding errors, we are able to identify which set of operations that may introduce problems. Using this information, we present and motivate our method for visualizing datasets with astronomical scale differences. Our contributions include:
 
 \begin{itemize}
 \item A \emph{Precision-Adaptive Scene Graph} approach for representing objects and cameras to avoid presicion-related artifacts.
@@ -71,9 +66,25 @@ In this paper we first provide a thorough study of the sources of precision and 
 \end{itemize}
 
 
+\section{Related work}
+Computer graphics and interactive visualization have
+proven to be immensively valuable tools for communicating scientific findings
+and contextualizing information. Notable examples of applications where huge scale differences are visualized 
+together include movie productions, such as \emph{Powers of Ten}\cite{powersOfTen} from 1977,
+All We Are [citation needed], as well as interactive software for digital planetariums,
+such as Uniview [citations], DigiStar [citations] and DigitalSky [citation]. 
+
+The concept of \emph{Power Scaled Coordinates}, introduced by Hanson et al. \cite{hanson2000very},
+addresses some of the challenges with multi-scale visualization. The method uses four-dimensional floating point vectors where the first three components determine the direction of the vector, and the fourth encodes a scaling coeffient as a power of ten. The proposed system can operate with floating point numbers close to unit scale, which solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors.
+
+The Power Scaled Coordinates method is based on floating point representation of numbers, which yield high precision close to zero, and decreasing precision with larger values. Hence, the method achieves high precision close to the origin of the scene, but decreasing precision for coordinates further away. This is a viable solution for scenes where the high precision data is centered in one region, such as solely close to Earth. However, the challenge of representing mulitple regions in the virtual universe with high precision is not addressed in this work.
+
+Further work by Fu et al. \cite{fu2007transparently} elaborate more on the concept of Power Scales Coordinates and introduce a depth buffer remapping scheme to cover a wider range of distances than what is possible with a fixed point depth buffer and a conventional near and far plane. The depth buffer range is divided into three regions, where small and huge depth values are remapped using logarithmic scales, while values in the mid-range are stored linearly. While this method may be beneficial for some specific type of scene content, the method does not provide a generic way to select appropriate threshold values, and the choice of three separate regions with different mapping does not necessarily provide better results than one single logarithmic mapping.
+
+The \emph{ScaleGraph} method, introduced by Klashed et al. \cite{KHECY10} as a part of the digital planetarium software Uniview, employs a scene graph structure with sub-scenes that the camera can belong to. The content of the current sub-scene is rendered in its local coordinate system, which maintains the precision of vertex coordinates, and allows for multiple regions in the universe to be represented with high precision. When rendering content outside the current sub-scene, objects are translated onto the bounding sphere of the scene, and rescaled to compensate for perspective effects. Vectors between sub-scenes are computed by traversing the scenegraph through the closest common ancestor in the tree, to avoid introducing precision errors caused by handling unnecessarily large numbers. By moving objects onto the bounding sphere of the current scene, object depths are mapped to a managable range. However, the method does not provide a general solution for depth sorting objects that are outside the current sub-scene. Furthermore, the work does not address stereoscopic rendering of objects across sub-scenes. 
 
 
-
+\section{Theoretical foundation}
 
 The co-evolution of graphics hardware, software and content, largely pushed forward by
 the gaming industry has led to modern graphics processing units that are optimized for
@@ -81,40 +92,7 @@ operating efficiently on 32-bit floating point numbers, vectors and matrices.
 In a standard computer graphics pipleline, $4x4$ matrices are used to represent coordinate
 transformations operating on 4-dimensional homogenious coordinate vectors, with their components stored as floating point numbers. 
 
-
-
-
-\subsection{Contributions}
-This work contributes to visualization of datasets with large scale differences by providing:
-\begin{itemize}
-\item A \emph{Precision-Adaptive Scene Graph} approach for representing objects and cameras to avoid presicion-related artifacts.
-\item A scheme for adaptive eye-separation for stereoscopic rendering.
-\item Minimal modifications on a conventional rendering pipeline.
-\item Interoperability with volumetric rendering and order-independent-transparency.
-\end{itemize}
-
-
-
-\section{Related work}
-Computer graphics and interactive visualization have
-proven to be immensively valuable tools for communicating scientific findings
-and contextualizing information. Notable examples of applications where huge scale differences are visualized 
-together include movie productions, such as \emph{Powers of Ten}\cite{powersOfTen} from 1977,
-All We Are [citation needed], as well as interactive software for digital planetariums,
-such as Uniview from Sciss, DigiStar from Evans and Sutherland, [citations and more examples].
-
-
-The concept of \emph{Power Scaled Coordinates}, introduced by Hanson et al. \cite{hanson2000very},
-addresses some of the challenges with multi-scale visualization. The method uses four-dimensional floating point vectors where the first three components determine the direction of the vector, and the fourth encodes a scaling coeffient as a power of ten. The proposed system can operate with floating point numbers close to unit scale, which solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors.
-
-The Power Scaled Coordinates method is based on floating point representation of numbers, which yield high precision close to zero, and decreasing precision with larger values. Hence, the method achieves high precision close to the origin of the scene, but decreasing precision for coordinates further away. This is a viable solution for scenes where the high precision data is centered in one region. However, the challenge of representing mulitple regions in the virtual universe with high precision is not addressed in this work.
-
-Further work by Fu et al. \cite{fu2007transparently} elaborate more on the concept of Power Scales Coordinates and introduce a depth scaling scheme to cover a wider range of distances than what is possible with a fixed point depth buffer and a conventional near and far plane. The depth buffer range is divided into three regions, where small and huge depth values are remapped using logarithmic scales, while values in the mid-range are stored linearly. While this method may be beneficial for some specific type of scene content, the method does not provide a generic way to select appropriate threshold values, and the choice of three separate regions with different mapping does not necessarily provide better results than one single logarithmic mapping.
-
-The \emph{ScaleGraph} method, introduced by Klashed et al. \cite{KHECY10} as a part of the digital planetarium software Uniview, employs a scene graph structure with sub-scenes that the camera can belong to. The content of the current sub-scene is rendered in its local coordinate system, which maintains the precision of vertex coordinates, and allows for multiple regions in the universe to be represented with high precision. When rendering content outside the current sub-scene, objects are translated onto the bounding sphere of the scene, and rescaled to compensate for perspective effects. Vectors between sub-scenes are computed by traversing the scenegraph through the closest common ancestor in the tree, to avoid introducing precision errors caused by handling unnecessarily large numbers. By moving objects onto the bounding sphere of the current scene, object depths are mapped to a managable range. However, the method does not provide a general solution for depth sorting objects that are outside the current sub-scene. Furthermore, the work does not address stereoscopic rendering of objects across sub-scenes. 
-
-
-\section{Theoretical foundation}
+\subsection{Floating point numbers}
 
 The widely used IEEE754 standard for representing 32-bit floating point numbers \cite{zuras2008ieee} enables the possibility to express numbers in a much larger range than integer types. While a 32-bit signed integer type can only represent numbers in the range 
 $[-2^{31}, 2^{31} - 1]$, an IEEE754 float approximately support the range $[-2^{127}, 2^{127}]$.
@@ -129,11 +107,12 @@ v = \begin{cases}
 \end{cases}
 \end{equation}
 
+
+\subsubsection{Precision limitations}
 Only values $v$ that can be composed by these 32 bits are valid floating point numbers, and all other real values that result from computation need to be rounded before they are stored in this format. An upper bound of the absolute spacing between a floating point number $v$ and an adjacent one can be expressed as $\epsilon|v|$\cite{higham2002accuracy}, where the \emph{machine epsilon} $\epsilon$ is a constant given by $2^{-(n + 1)}$, and $n$ is the number of mantissa bits. Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, where the rounding error coefficient $u = \frac{\epsilon}{2}$.
 For IEEE754 float, $\epsilon = 2^{-24}\approx 5.96 \cdot 10^{-8}$, meaning that values are precise to about 7 significant figures in decimal notation.
 
-An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits and 52 bits for the mantissa, which yields a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notaiton, this corresponds to a precision of 15 significant figures. Using quadruple precision (128-bits), it is possible push the number of significant figures to 34. Increasing the bit depth will naturally require more computational resources.
-
+An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits and 52 bits for the mantissa, which yields a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notaiton, this corresponds to a precision of 15 significant figures. Using quadruple precision (128-bits), it is possible push the number of significant figures to 34. Increasing the bit depth will naturally require more computational resources, and while the OpenGL Shading Language (GLSL) natively supports the doubles, there is no quad-presicion data type available as of GLSL 4.4 \cite{kessenich2014opengl}.
 
 \subsubsection{Exponent underflow and overflow}
 The exponent range $[-126, 127]$ in 32-bit IEEE754 floats gives a possible scale range of approximately 76 orders of magnitude (OM). Computations that yield exponents outside that range will cause exponent underflow or overflow, and result in loss of data. A straight-forward implementation of computing the length of a vector using the Pythagorean theorem would need to store squared length in a floating point value as an intermediate step, halfing the range of valid input exponents and limiting the input scale differences to 38 OM.
@@ -141,7 +120,7 @@ The exponent range $[-126, 127]$ in 32-bit IEEE754 floats gives a possible scale
 The scale difference betweeen the Planck length and the diameter of the observable universe is approximately $62$ OM. While 32-bit floats are able to represent this scale difference, a convensional approach to computing lengths and normalizing vectors would break down.
 
 
-\subsubsection{Interval arithmetic}
+\subsection{Interval arithmetic}
 To reason about the precision of various floating point operations, it is possible to use interval arithmetic as a mathematical tool to track possible rounding errors. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$. Using interval arithmetic, the interval can be rewritten as $v(1 + u[-1,1])$.
 
 
@@ -158,7 +137,7 @@ a \oslash b \equiv \frac{a}{b}(1 + u[-1, 1]) \\
 
 
 
-\subsubsection{Propagation of error intervals}
+\subsection{Propagation of error intervals}
 When a result from one floating point operation is used in further computations, rounding errors will propagate through the whole series of operations. This may lead to scenarios where expressions on the form $(a + b) - b$ may evaluate to $0$, for a sufficiently small $a$ and large $b$. This phenomena is known as 
 \emph{catastrophic cancellation}. In any rendering pipeline where e.g. matrix multiplications or vector additions result in this type of operations, there is a risk for floating point precision problems.
 
@@ -183,11 +162,15 @@ a(1 + E_1) \odot b(1 + E_2) = \\
 \end{split}
 \end{equation}
 
-From equation \ref{eq:errortermadd}, we conclude that for floating point sums $\osum_i x_i \equiv x_1 \oplus x_2 \oplus ... \oplus x_n$, equation \ref{eq:errortermsum} holds regardless of in which order terms are added. 
+Since $E$-terms are intervals on the form $cu[-1, 1]$, we can conclude from equation \ref{eq:errortermadd} that the output interval size of a floating point addition is proportional to sum of the absolute value of the terms. Equation \ref{eq:errortermmult} show that the output error interval size of a floating point mulitplication is proportional to the absolute value of the product. 
+
+By applying equation \ref{eq:errortermadd}, iteratively, we can also conclude that for floating point sums $\osum_i x_i \equiv x_1 \oplus x_2 \oplus ... \oplus x_n$, equation \ref{eq:errortermsum} holds regardless of in which order terms are added. 
 
 \begin{equation} \label{eq:errortermsum} 
 \osum_i x_i(1 + E_{1,i}) \subseteq \sum_i x_i(1 + E_{2, i})
 \end{equation}
+
+While several floating point addition will accumulate errors from all contributing terms, creating a risk for catastropic cancellation, floating point multiplication will scale the error proportionally to the factors. Multiplying an interval $a(1 + E)$ with a number with absolute value smaller than $1$ will hence shrink the absolute error interval proportionally. We can say that multiplication \emph{preserves the relative precision} of the factors.
 
 The straight-forwared implementation of floating point matrix multiplication $A \otimes B$ is to compute matrix components as a sum of products using $\oplus$ and $\odot$. By applying equations \ref{eq:errortermmult} and \ref{eq:errortermsum}, we get equation \ref{eq:matrixmult} where $m$ is the number of columns of $A$ and the number of rows of $B$.
 
@@ -387,7 +370,11 @@ TODO: mention double and quad precision.
 \subsection{Depth Sorting}
 
 
-\section{Method}
+\section{Implementation}
+
+
+
+
 \subsection{Dynamic Scene Graph}
 
 
