@@ -210,6 +210,8 @@ A = \mleft(
 \mright)
 \end{equation}
 
+After evaluating the possible effects of the elements used to construct model and view matrices, we continue with a similar analysis for the projection matrix, the perspective division and remapping of depths into integers.
+
 \subsubsection{Scaling}
 
 Equation \ref{eq:scaling} describes a floating point matrix multiplication of a scaling matrix $S$ and a matrix $A$. $S'$ is a diagonal matrix with one scaling component per dimension $x$, $y$ and $z$. 
@@ -276,7 +278,7 @@ In equation \ref{eq:translation}, a translation matrix $T$ is applied to $A$ usi
 where 
 
 \begin{align} \label{eq:translationconclusion}
-\hat{T}_{ij} = I \otimes \hat{A'}_{ij} = \hat{A'}_{ij}\\
+\hat{T}_{ij} = (I \otimes A')_{ij} = A'_{ij}(1 + E_{ij})\\
 \hat{t}_i = t_i \oplus a_i \subseteq (t_i + a_i)(1 + E_i)
 \end{align}
 
@@ -315,7 +317,7 @@ The same analysis is performed for floating point rotation in equation \ref{eq:r
 \hat{\mathbf{r}}_i = (R' \otimes \mathbf{a})_{i} &\subseteq \sum_{k = 1}^3 R'_{ik}\,\mathbf{a}_k(1 + E_{ijk})
 \end{align}
 
-When applying a rotation matrix to a general matrix $A$, the potential rounding error of any output component $A_{ij}$ will equal $\sum_{k = 1}^3 |R'_{ik}\,A'_{kj} E_{ijk}|$. For a general rotation matrix $R$ written on the same form as in \ref{eq:rotation}, all the components of $R'$ are in the interval $[-1, 1]$, which means that the maximum possible precision loss is governed by the values of A. When applying $R$ on a matrix or vector with both huge and close-to-zero components, the precision in the small components may be lost. However, for the most significant matrix components, the relative precision will be close to preserved. This means that when $R$ is used to transform the coordinate vector $\mathbf{a} = (x, y, z) = \mathbf{\hat{a}}|\mathbf{a}|$, neither the precision of the direction $\mathbf{a}$ nor the magnitude $|a|$ will be affected significantly.
+When applying a rotation matrix to a general matrix $A$, the potential rounding error of any output component $A_{ij}$ will equal $\sum_{k = 1}^3 |R'_{ik}\,A'_{kj} E_{ijk}|$. For a general rotation matrix $R$ written on the same form as in \ref{eq:rotation}, all the components of $R'$ are in the interval $[-1, 1]$, which means that the maximum possible precision loss is governed by the values of A. When applying $R$ on a matrix or vector with both huge and close-to-zero components, the precision in the small components may be lost. However, for the most significant matrix components, the relative precision will be close to preserved. This means that when $R$ is used to transform the coordinate vector $\mathbf{a} = (x, y, z) = \mathbf{\hat{a}}|\mathbf{a}|$, neither the precision of the direction $\mathbf{\hat{a}}$ nor the magnitude $|\mathbf{a}|$ will be affected significantly. The same is true for the column vectors in $A'$, which means that the significant properties of $A'$ are preserved in $\hat{R}'$
 
 \subsubsection{Projection}
 A typical matrix for symmetric perspective projection $P$ can be written as in equation \ref{eq:perspectiveprojection}, where
@@ -347,6 +349,9 @@ $\lambda_1 \rightarrow -1$ and $\lambda_2 \rightarrow 0$ which means that $c_z \
 The perspective division step would yield $n_z = 1$ for all vertices, giving them the exact same depth buffer value.
 
 \subsubsection{Perspective division}
+
+
+\subsubsection{Integer depth representation}
 
 \subsection{Sources of precision errors}
 A number of conclusions can be drawn from the previous section:
