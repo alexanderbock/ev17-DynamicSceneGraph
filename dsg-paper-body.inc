@@ -51,14 +51,14 @@ $10^{-35}$ meters.
 
 \emph{OpenSpace} is an open source software project with the goal to interactively visualize the known universe and our ongoing efforts of further space exploration. The software is designed for immersive environments to bring science to the public and to contextualize information such as sub-atomic particle simulations on Earth, micrometer-scale discoveries made by rovers the Martian surface and volumetric simulations of entire galaxies.
 
-Enabling seemless exploration of structures with these vast scale differences and distances requires that coordinates can be expressed in huge value ranges, as well as with great precision. While the universe may be infinte, our computers have only limited memory and computational resources. Hence, numbers can only be represented in finite ranges and with finite precision. In a computer graphics pipeline this may cause visual precision-related artifacts, such as displaced vertices or z-fighting, as well as problems due to underflow or overflow of the available value range, such as undesirable clipping of near and far geometry.
+Enabling seemless exploration of structures with these vast scale differences and distances requires that coordinates can be expressed in huge value ranges, as well as with great precision. While the universe may be infinte, our computers have only limited memory and computational resources. Hence, numbers can only be represented in finite ranges and with finite precision. In a computer graphics pipeline this may cause visual precision-related artifacts, such as displaced vertices or z-fighting. Furtherore, overflow of the available value ranges, may result in problems such as undesirable clipping of near and far geometry.
 
 Previous work by the visualization community has provided solutions some of these issues, such as the Power Scaled Coordinates \cite{hanson2000very} and the ScaleGraph \cite{KHECY10}. However the root cause of the precision issues have only been assessed shallowly, and only partial solutions to the problems of scale have been provided.
 
 In this paper we provide a thorough study of the sources of precision errors and range overflow problems in a conventional computer graphics pipeline. Using interval arithmetic to track possible floating point rounding errors, we are able to identify which set of operations that may introduce problems. Using this information, we present and motivate our method for visualizing datasets with astronomical scale differences and distances. Our contributions include:
 
 \begin{itemize}
-\item A \emph{Precision-Adaptive Scene Graph} approach for representing objects and cameras to avoid presicion-related artifacts.
+\item A \emph{Precision-Adaptive Scene Graph} approach for representing objects and cameras to avoid precision-related artifacts.
 \item A method for rendering with wide depth range and precision without near and far planes.
 \item A scheme for seamless adaption of the eye-separation used for stereoscopic rendering.
 \item Minimal modifications on a conventional rendering pipeline.
@@ -101,8 +101,8 @@ In floating point data types, values are represented as a sign, mantissa and exp
 
 \begin{equation} \label{eq:floatingpoint}
 v = \begin{cases}
-(-1)^s \cdot \sum_{i = 1}^{23}m_i\,2^{-i} \cdot 2^{-126}, & \text{for } e = -127 \\
-(-1)^s \cdot (1 + \sum_{i = 1}^{23}m_i\,2^{-i}) \cdot 2^e, & \text{for } -126 \leq e \leq 127 \\
+(-1)^s \sum_{i = 1}^{23}m_i\,2^{-i} 2^{-126}, & \text{for } e = -127 \\
+(-1)^s (1 + \sum_{i = 1}^{23}m_i\,2^{-i}) \cdot 2^e, & \text{for } -126 \leq e \leq 127 \\
 \text{Special numbers such as NaN and }\infty, & \text{for } e = 128
 \end{cases}
 \end{equation}
@@ -112,7 +112,7 @@ v = \begin{cases}
 Only values $v$ that can be composed by these 32 bits are valid floating point numbers. All other real values that result from computation need to be rounded before they are stored in this format. An upper bound of the absolute spacing between a floating point number $v$ and an adjacent one can be expressed as $\epsilon|v|$\cite{higham2002accuracy}, where the \emph{machine epsilon} $\epsilon$ is a constant given by $2^{-(n + 1)}$, and $n$ is the number of mantissa bits. Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, where the rounding error coefficient $u = \frac{\epsilon}{2}$.
 For IEEE754 float, $\epsilon = 2^{-24}\approx 5.96 \cdot 10^{-8}$, meaning that values are precise to about 7 significant figures in decimal notation.
 
-An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits and 52 bits for the mantissa, which yield a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notaiton, this corresponds to a precision of 15 significant figures. Using quadruple precision (128-bits), it is possible push the number of significant figures to 34. Increasing the bit depth will naturally require more computational resources, and while the OpenGL Shading Language (GLSL) natively supports the doubles, there is no quad-presicion data type available as of GLSL 4.4 \cite{kessenich2014opengl}.
+An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits and 52 bits for the mantissa, which yield a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notaiton, this corresponds to a precision of 15 significant figures. Using quadruple precision (128-bits), it is possible push the number of significant figures to 34. Increasing the bit depth will naturally require more computational resources, and while the OpenGL Shading Language (GLSL) natively supports the doubles, there is no quad-precision data type available as of GLSL 4.4 \cite{kessenich2014opengl}.
 
 \subsubsection{Exponent underflow and overflow}
 The exponent range $[-126, 127]$ in 32-bit IEEE754 floats gives a possible scale range of approximately 76 orders of magnitude (OM). Computations that yield exponents outside that range will cause exponent underflow or overflow, and result in loss of data. A straight-forward implementation of computing the length of a vector using the Pythagorean theorem would need to store squared length in a floating point value as an intermediate step, halfing the range of valid input exponents and limiting the input scale differences to 38 OM.
@@ -349,7 +349,7 @@ $\lambda_1 \rightarrow -1$ and $\lambda_2 \rightarrow 0$ which means that $c_z \
 The perspective division step would yield $n_z = 1$ for all vertices, giving them the exact same depth buffer value.
 
 \subsubsection{Perspective division}
-
+The perspective division, carried out to bring coordinates from clip space to normalized device coordinates will divide all vector components with the number stored in $w$. When using a perspective projcection matrix as described in equation \ref{eq:perspectiveprojection}, this means that all components will be divided with the view coordinates' $-z$. A floating point division will similarly to multiplication scale the 
 
 \subsubsection{Integer depth representation}
 
@@ -358,20 +358,22 @@ A number of conclusions can be drawn from the previous section:
 \begin{itemize}
 \item Large translation matrices acting on small vectors or translations may lead to significant loss of precision.
 \item Rotation matrices may cause loss of relative precision of small matrix compoents when applied to matrices with both small and huge numbers. 
-\item There is no significant loss of relative precision associated applying scaling matrices.
-\item Perspective matrices. TODO.
+\item There is no significant loss of relative precision associated with applying scaling matrices.
+\item Projection matrices. TODO.
+\item Perspective division. TODO.
 \item Integer depths. TODO.
 \end{itemize}
 
 
-\section{Implementation}
+\section{Method}
+
+\subsection{Precision Adaptive Scene Graph}
+
+\includegraphics{pluto-example.pdf}
 
 
 
-
-\subsection{Dynamic Scene Graph}
-
-
+We use the perspective matrix:
 
 \begin{equation} \label{eq:ourperspectiveprojection}
 P = \mleft(
@@ -383,7 +385,13 @@ P = \mleft(
 \end{array}\mright)
 \end{equation}
 
+We manually write the gl\_FragDepth to a floating point buffer using the distance to the fragment computed with the pythagorean theorem.
+
+Clipping is performed for all content with negative w.
+
 \subsubsection{Dynamic camera attachment}
+
+The camera 
 
 \subsubsection{Dynamic object attachment}
 
