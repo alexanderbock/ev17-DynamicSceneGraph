@@ -51,11 +51,11 @@ $10^{-35}$ meters.
 
 \emph{OpenSpace} is an open source software project with the goal to interactively visualize the known universe and our ongoing efforts of further space exploration. The software is designed for immersive environments to bring science to the public and to contextualize information such as sub-atomic particle simulations on Earth, micrometer-scale discoveries made by rovers the Martian surface and volumetric simulations of entire galaxies.
 
-Enabling seemless exploration of structures with these vast scale differences and distances requires that coordinates can be expressed in huge value ranges, as well as with great precision. While the universe may be infinte, our computers have only limited memory and computational resources. Hence, numbers can only be represented in finite ranges and with finite precision. In a computer graphics pipeline this may cause visual precision-related artifacts, such as displaced vertices or z-fighting. Furtherore, overflow of the available value ranges, may result in problems such as undesirable clipping of near and far geometry.
+When exploring structures with these vast scale differences and distances, objects and vertex positions need to be expressed in huge value ranges, as well as with great precision. Lack of precision and value range may cause visual precision-related artifacts, such as displaced vertices or z-fighting. Furtherore, overflow of the available value ranges, may result in problems such as undesirable clipping of near and far geometry.
 
 Previous work by the visualization community has provided solutions some of these issues, such as the Power Scaled Coordinates \cite{hanson2000very} and the ScaleGraph \cite{KHECY10}. However the root cause of the precision issues have only been assessed shallowly, and only partial solutions to the problems of scale have been provided.
 
-In this paper we provide a thorough study of the sources of precision errors and range overflow problems in a conventional computer graphics pipeline. Using interval arithmetic to track possible floating point rounding errors, we are able to identify which set of operations that may introduce problems. Using this information, we present and motivate our method for visualizing datasets with astronomical scale differences and distances. Our contributions include:
+In this paper we thoroughly explore the sources of precision errors and range overflow problems in a conventional computer graphics pipeline. Using interval arithmetic to track possible floating point rounding errors, we are able to identify which set of operations that may introduce problems. Using this information, we present and motivate our method for visualizing datasets with astronomical scale differences and distances. Our contributions include:
 
 \begin{itemize}
 \item A \emph{Precision-Adaptive Scene Graph} approach for representing objects and cameras to avoid precision-related artifacts.
@@ -74,45 +74,47 @@ together include movie productions, such as \emph{Powers of Ten}\cite{powersOfTe
 All We Are [citation needed], as well as interactive software for digital planetariums,
 such as Uniview [citations], DigiStar [citations] and DigitalSky [citation]. 
 
-The concept of \emph{Power Scaled Coordinates}, introduced by Hanson et al. \cite{hanson2000very},
+The concept of \emph{Power Scaled Coordinates}, introduced by Hanson et al. in \cite{hanson2000very},
 addresses some of the challenges with multi-scale visualization. The method uses four-dimensional floating point vectors where the first three components determine the direction of the vector, and the fourth encodes a scaling coeffient as a power of ten. The proposed system can operate with floating point numbers close to unit scale, which solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors.
 
 The Power Scaled Coordinates method is based on floating point representation of numbers, which yields high precision close to zero, and decreasing precision with larger values. Hence, the method achieves high precision close to the origin of the scene, but decreasing precision for coordinates further away. This is a viable solution for scenes where the high precision data is centered in one region, such as solely close to Earth. However, the challenge of representing mulitple regions in the virtual universe with high precision is not addressed in this work.
 
-Further work by Fu et al. \cite{fu2007transparently} elaborate more on the concept of Power Scales Coordinates and introduce a depth buffer remapping scheme to cover a wider range of distances than what is possible with a fixed point depth buffer and a conventional near and far plane. The depth buffer range is divided into three regions, where small and huge depth values are remapped using logarithmic scales, while values in the mid-range are stored linearly. While this method may be beneficial for some specific type of scene content, the method does not provide a generic way to select appropriate threshold values, and the choice of three separate regions with different mapping does not necessarily provide better results than one single logarithmic mapping.
+Fu et al. \cite{fu2007transparently} elaborate on the concept of Power Scales Coordinates and introduce a depth buffer remapping scheme to cover a wider range of distances than what is possible with a fixed point depth buffer and a conventional near and far plane. The depth buffer range is divided into three regions, where small and huge depth values are remapped using logarithmic scales, while values in the mid-range are stored linearly. While this method may be beneficial for some specific type of scene content, the method does not provide a generic way to select appropriate threshold values, and the choice of three separate regions with different mapping does not necessarily provide better results than one single logarithmic mapping.
 
-The \emph{ScaleGraph} method, introduced by Klashed et al. \cite{KHECY10} as a part of the digital planetarium software Uniview, employs a scene graph structure with sub-scenes that the camera can be attached to. The content of the current sub-scene is rendered in its local coordinate system, which maintains the precision of vertex coordinates, and allows for multiple regions in the universe to be represented with high precision. When rendering content outside the current sub-scene, objects are translated onto the bounding sphere of the scene, and rescaled to compensate for perspective effects. Vectors between sub-scenes are computed by traversing the scenegraph through the closest common ancestor in the tree, to avoid introducing precision errors caused by handling unnecessarily large numbers. By moving objects onto the bounding sphere of the current scene, object depths are mapped to a managable range. However, the method does not provide a general solution for depth sorting objects that are outside the current sub-scene. Furthermore, the work does not address stereoscopic rendering of objects across sub-scenes. 
+The \emph{ScaleGraph} method, introduced by Klashed et al. in \cite{KHECY10} as a part of the digital planetarium software Uniview, employs a scene graph structure with sub-scenes that the camera can be attached to. The content of the current sub-scene is rendered in its local coordinate system, which maintains the precision of vertex coordinates, and allows for multiple regions in the universe to be represented with high precision. When rendering content outside the current sub-scene, objects are translated onto the bounding sphere of the scene, and rescaled to compensate for perspective effects. Vectors between sub-scenes are computed by traversing the scenegraph through the closest common ancestor in the tree, to avoid introducing precision errors caused by handling unnecessarily large numbers. By moving objects onto the bounding sphere of the current scene, object depths are mapped to a managable range. However, the method does not provide a general solution for depth sorting objects that are outside the current sub-scene. Furthermore, the work does not address stereoscopic rendering of objects across sub-scenes. 
 
 
 \section{Theoretical foundation}
 
 The co-evolution of graphics hardware, software and content, largely pushed forward by
-the gaming industry has led to modern graphics processing units that are optimized for
-operating efficiently on 32-bit floating point numbers, vectors and matrices.
+the gaming industry, has led to modern graphics processing units that are optimized for
+operating efficiently on floating point numbers, vectors and matrices.
 In a standard computer graphics pipleline, $4x4$ matrices are used to represent coordinate
 transformations operating on 4-dimensional homogenious coordinate vectors, with their components stored as floating point numbers. 
 
 \subsection{Floating point numbers}
 
-The widely used IEEE754 standard for representing 32-bit floating point numbers \cite{zuras2008ieee} enables the possibility to express numbers in a much larger range than integer types. While a 32-bit signed integer type can only represent numbers in the range 
-$[-2^{31}, 2^{31} - 1]$, an IEEE754 float approximately support the range $[-2^{127}, 2^{127}]$.
+The widely used IEEE754 standard for representing 32-bit floating point numbers \cite{zuras2008ieee} enables the possibility to express numbers in a much larger range than what is possible using 32-bit integers. While a 32-bit signed integer type can only represent numbers in the range $[-2^{31}, 2^{31} - 1]$, an IEEE754 float approximately support the range $[-2^{127}, 2^{127}]$.
 
-In floating point data types, values are represented as a sign, mantissa and exponent which gives the properties of high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range. The IEEE754 single precision floating point format uses 1 sign bit, 8 exponent bits and 23 mantissa bits. Equation \ref{eq:floatingpoint} yields the value $v$ represented by the sign bit $s$, the mantissa bits $m_i$ and the integer $e \in [-127, 128]$ which is encoded in the exponent bits. 
+In floating point data types, values are represented as a sign, mantissa and exponent which results in high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range. The IEEE754 single precision floating point format uses 1 sign bit, 8 exponent bits and 23 mantissa bits. Equation \ref{eq:floatingpoint} yields the value $v$ represented by the sign bit $s$, the mantissa bits $m_i$ and the integer $e \in [-127, 128]$ which is encoded in the exponent bits. 
 
 \begin{equation} \label{eq:floatingpoint}
 v = \begin{cases}
 (-1)^s \sum_{i = 1}^{23}m_i\,2^{-i} 2^{-126}, & \text{for } e = -127 \\
-(-1)^s (1 + \sum_{i = 1}^{23}m_i\,2^{-i}) \cdot 2^e, & \text{for } -126 \leq e \leq 127 \\
+(-1)^s (1 + \sum_{i = 1}^{23}m_i\,2^{-i}) 2^e, & \text{for } -126 \leq e \leq 127 \\
 \text{Special numbers such as NaN and }\infty, & \text{for } e = 128
 \end{cases}
 \end{equation}
 
+Only values that can be composed by this set of bits are valid 32-bit floating point numbers. If a numbers' exponent is not in the range $[-126, 127]$ it will be stored as $\infty$ or $-\infty$. Real numbers within the range are rounded to the closest available floatnig point representaiton.
+
+An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits and 52 bits for the mantissa. Using 128-bits (quadruple precision), it is possible to further increase the precision and exponent range. Increasing the bit depth will naturally require more computational resources, and while the OpenGL Shading Language (GLSL) natively supports the doubles, there is no quad-precision data type available as of GLSL 4.4 \cite{kessenich2014opengl}. 
 
 \subsubsection{Precision limitations}
-Only values $v$ that can be composed by these 32 bits are valid floating point numbers. All other real values that result from computation need to be rounded before they are stored in this format. An upper bound of the absolute spacing between a floating point number $v$ and an adjacent one can be expressed as $\epsilon|v|$\cite{higham2002accuracy}, where the \emph{machine epsilon} $\epsilon$ is a constant given by $2^{-(n + 1)}$, and $n$ is the number of mantissa bits. Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, where the rounding error coefficient $u = \frac{\epsilon}{2}$.
+Due to the limited number of mantissa bits, numbers need to be rounded before they are stored in a floating point format. An upper bound of the absolute spacing between a floating point number $v$ and an adjacent one can be expressed as $\epsilon|v|$\cite{higham2002accuracy}, where the \emph{machine epsilon} $\epsilon$ is a constant given by $2^{-(n + 1)}$, and $n$ is the number of mantissa bits. Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, where the rounding error coefficient, $u = \frac{\epsilon}{2}$.
 For IEEE754 float, $\epsilon = 2^{-24}\approx 5.96 \cdot 10^{-8}$, meaning that values are precise to about 7 significant figures in decimal notation.
 
-An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits and 52 bits for the mantissa, which yield a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notaiton, this corresponds to a precision of 15 significant figures. Using quadruple precision (128-bits), it is possible push the number of significant figures to 34. Increasing the bit depth will naturally require more computational resources, and while the OpenGL Shading Language (GLSL) natively supports the doubles, there is no quad-precision data type available as of GLSL 4.4 \cite{kessenich2014opengl}.
+Double precision floating point numbers have a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notation, this corresponds to a precision of 15 significant figures. For quadruple precision the corresponding number is 34 significant figrues.
 
 \subsubsection{Exponent underflow and overflow}
 The exponent range $[-126, 127]$ in 32-bit IEEE754 floats gives a possible scale range of approximately 76 orders of magnitude (OM). Computations that yield exponents outside that range will cause exponent underflow or overflow, and result in loss of data. A straight-forward implementation of computing the length of a vector using the Pythagorean theorem would need to store squared length in a floating point value as an intermediate step, halfing the range of valid input exponents and limiting the input scale differences to 38 OM.
@@ -369,7 +371,7 @@ A number of conclusions can be drawn from the previous section:
 
 \subsection{Precision Adaptive Scene Graph}
 
-\includegraphics{pluto-example.pdf}
+\includegraphics[width=10cm,height=10cm,keepaspectratio]{scenegraph.png}
 
 
 
