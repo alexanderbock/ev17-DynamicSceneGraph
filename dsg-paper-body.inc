@@ -371,7 +371,7 @@ A number of conclusions can be drawn from the previous section:
 
 \subsection{Precision Adaptive Scene Graph}
 
-\includegraphics[width=10cm,height=10cm,keepaspectratio]{scenegraph.png}
+\includegraphics[width=10cm,height=10cm,keepaspectratio]{scenegraph.pdf}
 
 
 
