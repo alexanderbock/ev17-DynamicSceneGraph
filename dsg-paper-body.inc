@@ -3,12 +3,14 @@
 % D.Fellner, v1.17, Sep 23, 2010
 
 
-\title[EG Astronomical Scale Differences and Visualization]%
-      {Astronomical Scale Differences in Visualization}
+%\title[EG Astronomical Scale Differences and Visualization]%
+%      {Astronomical Scale Differences in Visualization}
+% How about this? ---abock
+\title[]{Dynamic Scene Graphs: A Method for Avoiding Floating Point Inaccuracies in Large Scale Astrovisualization}
 
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
-\author[E. Axelsson \& A. Bock \& J. Costa \& A. Ynnerman]
+\author[Axelsson \emph{et al.}]
        {E. Axelsson$^{1}$,
         J. Costa$^{2}$
         A. Bock$^{1}$,
@@ -37,17 +39,12 @@
 \maketitle
 
 \begin{abstract}
-This paper addresses the challenges of interactively visualizing datasets with astronomical scale differences, including problems arising from limited numerical range and precision. We track the propagation of floating point precision errors throughout a convensional graphics pipeline using interval arithmetic. Sources of precision degradation leading to incorrect position of vertices in screen-space, as well as z-fighting are identified mathematically. A novel approach for rendering tiny and huge content distributed across a vast virtual universe is presented. Precision problems are avoided by reorganizing the scene graph dynamically and by traversing it locally to compute precise model-view matrices. Our method operates without near and far planes while maintaining high depth precision. By providing interoperability with order-independent transparency, direct volume rendering and stereoscopy, our approach is well suited for scientific visualization.
+In this work, we address the challenges of limited numerical range and precision of floating point numbers when simultaneously visualizing astronomical objects with large size differences. Due to the limited precision of floating point numbers, it is impossible to represent comparatively small objects far away from the coordinate system origin. We propose a system that utilizies a dynamically assigned coordinate system origin in a scene graph to provide the highest possible numerical precision for salient objects. This makes it possible to interactively render, for example, surface structures on Mars and the Milky Way in a single pass. We track and quantify the propagation of numerical precision errors through the computer graphics pipeline using interval arithmetic for cases of large differences in scale. Sources of precision degradation, leading to incorrect object positions in screen-space and z-fighting, are identified mathematically. Our proposed method operates without near and far planes while maintaining high depth precision through the use of floating point depth buffers. By providing interoperability with order-independent transparency algorithms, direct volume rendering, and stereoscopy, our approach is well suited for scientific visualization.
 \end{abstract}
 
 %-------------------------------------------------------------------------
 \section{Introduction}
-Thanks to humanity's collective discoveries of the world around us,
-we are now aware of structures in the universe that are both tiny and huge.
-The observable universe has a diameter of approximately $10^{27}$ meters,
-while the Planck length, which is the length where quantum mechanical effects
-make it impossible to distinguish between two physical locations, is approximately 
-$10^{-35}$ meters.
+Thanks to humanity's collective discoveries of the surrounding world around us, we are now aware of structures in the universe that are both tiny and huge. The observable universe has a diameter of approximately $10^{27}$ meters, while the Planck length, which is the length where quantum mechanical effects make it impossible to distinguish between two physical locations, is approximately $10^{-35}$ meters.
 
 \emph{OpenSpace} is an open source software project with the goal to interactively visualize the known universe and our ongoing efforts of further space exploration. The software is designed for immersive environments to bring science to the public and to contextualize information such as sub-atomic particle simulations on Earth, micrometer-scale discoveries made by rovers the Martian surface and volumetric simulations of entire galaxies.
 
