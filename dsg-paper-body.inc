@@ -187,10 +187,18 @@ In computer graphics software, scene content is commonly organized in a \emph{sc
 A \emph{view matrix} is also commonly generated based on a camera position and rotation expressed in the world coordinate system, and then used to transform world coordinates to \emph{view coordinates}, with the camera in the origin, and the z-axis parallel to the view direction. This view matrix is multiplied with the world coordinate $\mathbf{w}$ and outputs the view coordinates $\mathbf{v}$.
 
 View coordinates are transformed into \emph{clip coordinates} $\mathbf{c}$ using a \emph{projection matrix}.
-After that, content that does not satisfy the equation $-w \le x, y, z \le w$ will be subject to frustum culling, and will be discarded from rendering. The vector is divided by $w$ to compute the \emph{normalized device coordinates (NDC)}. This last step, called \emph{perspective division}, causes objects farther away from the camera to appear smaller on the screen. The $x$ and $y$ in NDC determines the object's position on the screen, with $(-1, -1)$ representing the bottom left corner and $(1, 1)$ upper right one. The $z$ component is commonly used for depth sorting: $z = 1$ represents the \emph{near plane} and and $z = -1$ represents the \emph{far plane}. It is common that z values are mapped into integers, which are used for depth sorting.
+After that, content that does not satisfy the equation $-w \le x, y, z \le w$ will be subject to frustum culling, and will be discarded from rendering. The vector is divided by $w$ to compute the \emph{normalized device coordinates (NDC)}. This last step, called \emph{perspective division}, causes objects farther away from the camera to appear smaller on the screen. The $x$ and $y$ in NDC determines the object's position on the screen, with $(-1, -1)$ representing the bottom left corner and $(1, 1)$ upper right one.
+
+Depth sorting is commonly performed using a depth buffer, which stores a depth value for each pixel on the screen. Fragments are only rendered to if they are closer than the closest already rendered fragment at the same screen location. The depth value of a fragment is commonly derived from the $z$-component of the normalized device coordinates, whereas $z = 1$ represents the \emph{near plane} and and $z = -1$ represents the \emph{far plane}. If the depth buffer is not represented with 32-bit floating point numbers, the depth first needs to be converted to the appropriate type.
 
 \subsection{Coordinate precision}
-Rounding errors due to scale differences may give rise to two types of visual artifacts: If errors in the $x$ and $y$ components of the normalized device coordinates are in the same order as the size of the pixels on the screen, there will be a \emph{visible displacement of vertices}. TODO: FIGURE. If the errors in $z$ approach the resolution of the depth buffer, this will cause the effect known as \emph{z-fighting}, which is when an object that is in reality farther away from the camera is rendered in front of a closer one. TODO: FIGURE.
+Rounding errors in the graphcis pipeline may give rise to two types of visual artifacts:
+\begin{itemize}
+\item If errors in the $x$ and $y$ components of the normalized device coordinates are in the same order as the size of the pixels on the screen, there will be a \emph{visible displacement of vertices}. 
+\item If the rounding error of $z$ when stored in the depth buffer is larger than the $z$-difference of two adjacent fragments, there is a risk that the incorrect fragment is rendered on top, which is often referred to as \emph{z-fighting}.
+\end{itemize}
+
+By using interval arithmetics to trace the errors in $x$ and $y$ it is possible to predict vertex displacement issues. Similarly, the accumulated error interval of the z-component can be used to determine when there is a risk for z-fighting. In the following sections, we study the precision error implications of the coordinate operations in the conventional graphics pipeline to determine the set of circumstances in which precision problems may be introduced.
 
 Using column vectors, the NDC's $\mathbf{n}$ are derived from the model coordinates $\mathbf{x}$ in equation \ref{eq:mvp}.
 
@@ -212,7 +220,7 @@ A = \mleft(
 \mright)
 \end{equation}
 
-After evaluating the possible effects of the elements used to construct model and view matrices, we continue with a similar analysis for the projection matrix, the perspective division and remapping of depths into integers.
+After evaluating the possible effects of the scaling, translation and rotation, we continue with a similar analysis for the projection matrix, the perspective division and conversion of to depth buffer representation.
 
 \subsubsection{Scaling}
 
@@ -351,9 +359,13 @@ $\lambda_1 \rightarrow -1$ and $\lambda_2 \rightarrow 0$ which means that $c_z \
 The perspective division step would yield $n_z = 1$ for all vertices, giving them the exact same depth buffer value.
 
 \subsubsection{Perspective division}
-The perspective division, carried out to bring coordinates from clip space to normalized device coordinates will divide all vector components with the number stored in $w$. When using a perspective projcection matrix as described in equation \ref{eq:perspectiveprojection}, this means that all components will be divided with the view coordinates' $-z$. A floating point division will similarly to multiplication scale the 
+The perspective division, carried out to bring coordinates from clip space to normalized device coordinates will divide all vector components with the number stored in $w$. When using a perspective projection matrix as described in equation \ref{eq:perspectiveprojection}, all components will effectively be divided with the view coordinates' $-z$. Since floating point division preserves the relative precision, the absolute error interval will scale proportionally to the value itself.
 
-\subsubsection{Integer depth representation}
+What ultimately defines the 
+
+The output value will have a precision that 
+
+\subsubsection{Depth buffer representation}
 
 \subsection{Sources of precision errors}
 A number of conclusions can be drawn from the previous section:
@@ -366,8 +378,8 @@ A number of conclusions can be drawn from the previous section:
 \item Integer depths. TODO.
 \end{itemize}
 
-
 \section{Method}
+
 
 \subsection{Precision Adaptive Scene Graph}
 
