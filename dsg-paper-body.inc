@@ -50,7 +50,7 @@ Thanks to humanity's collective discoveries of the surrounding world around us, 
 
 When exploring structures with these vast scale differences and distances, objects and vertex positions need to be expressed in huge value ranges, as well as with great precision. Lack of precision and value range may cause visual precision-related artifacts, such as displaced vertices or z-fighting. Furtherore, overflow of the available value ranges, may result in problems such as undesirable clipping of near and far geometry.
 
-Previous work by the visualization community has provided solutions some of these issues, such as the Power Scaled Coordinates \cite{hanson2000very} and the ScaleGraph \cite{KHECY10}. However the root cause of the precision issues have only been assessed shallowly, and only partial solutions to the problems of scale have been provided.
+Previous work by the visualization community has provided solutions to some of these issues, such as the Power Scaled Coordinates \cite{hanson2000very} and the ScaleGraph \cite{KHECY10}. However the root cause of the precision issues have only been assessed shallowly, and only partial solutions to the problems of scale have been provided.
 
 In this paper we thoroughly explore the sources of precision errors and range overflow problems in a conventional computer graphics pipeline. Using interval arithmetic to track possible floating point rounding errors, we are able to identify which set of operations that may introduce problems. Using this information, we present and motivate our method for visualizing datasets with astronomical scale differences and distances. Our contributions include:
 
@@ -87,7 +87,7 @@ The co-evolution of graphics hardware, software and content, largely pushed forw
 the gaming industry, has led to modern graphics processing units that are optimized for
 operating efficiently on floating point numbers, vectors and matrices.
 In a standard computer graphics pipleline, $4x4$ matrices are used to represent coordinate
-transformations operating on 4-dimensional homogenious coordinate vectors, with their components stored as floating point numbers. 
+transformations operating on 4-dimensional homogenious coordinate vectors, with their components stored as floating point numbers. To understand the precision and range limitations of a graphics pipeline used in visualization, we need to base our reasoning on properties on floating point numbers and the operations that we perform on them.
 
 \subsection{Floating point numbers}
 
@@ -108,7 +108,7 @@ Only values that can be composed by this set of bits are valid 32-bit floating p
 An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits and 52 bits for the mantissa. Using 128-bits (quadruple precision), it is possible to further increase the precision and exponent range. Increasing the bit depth will naturally require more computational resources, and while the OpenGL Shading Language (GLSL) natively supports the doubles, there is no quad-precision data type available as of GLSL 4.4 \cite{kessenich2014opengl}. 
 
 \subsubsection{Precision limitations}
-Due to the limited number of mantissa bits, numbers need to be rounded before they are stored in a floating point format. An upper bound of the absolute spacing between a floating point number $v$ and an adjacent one can be expressed as $\epsilon|v|$\cite{higham2002accuracy}, where the \emph{machine epsilon} $\epsilon$ is a constant given by $2^{-(n + 1)}$, and $n$ is the number of mantissa bits. Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, where the rounding error coefficient, $u = \frac{\epsilon}{2}$.
+Due to the limited number of mantissa bits, numbers need to be rounded before they are stored in a floating point format. An upper bound of the absolute spacing between a floating point number $v$ and an adjacent one can be expressed as $\epsilon|v|$\cite{higham2002accuracy}, where the \emph{machine epsilon} $\epsilon$ is a constant given by $2^{-(n + 1)}$, and $n$ is the number of mantissa bits. Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, where the rounding error coefficient $u = \frac{\epsilon}{2}$.
 For IEEE754 float, $\epsilon = 2^{-24}\approx 5.96 \cdot 10^{-8}$, meaning that values are precise to about 7 significant figures in decimal notation.
 
 Double precision floating point numbers have a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notation, this corresponds to a precision of 15 significant figures. For quadruple precision the corresponding number is 34 significant figrues.
@@ -289,7 +289,7 @@ where
 \hat{t}_i = t_i \oplus a_i \subseteq (t_i + a_i)(1 + E_i)
 \end{align}
 
-We note that the precision in $\hat{T}_{ij}$ is preserved from $A'$ when any translation matrix $T$ is applied. However, any error intervals encoded in $t_i$ and $a_j$ will propagate to $\hat{t}_i$, and will \emph{not} be scaled down even if $|\hat{t}_i|$ is orders of magnitude smaller than $|t_i|$ and $|a_i|$. This scenario \emph{may lead to catastrophic cancellation} in the component $\hat{t}_i$.
+We note that the precision in $\hat{T}_{ij}$ is preserved from $A'$ when any translation matrix $T$ is applied. However, any error intervals encoded in $t_i$ and $a_i$ will propagate to $\hat{t}_i$, and will \emph{not} be scaled down even if $|\hat{t}_i|$ is orders of magnitude smaller than $|t_i|$ and $|a_i|$. This scenario \emph{may lead to catastrophic cancellation} in the component $\hat{t}_i$.
 
 
 \subsubsection{Rotation}
@@ -324,7 +324,7 @@ The same analysis is performed for floating point rotation in equation \ref{eq:r
 \hat{\mathbf{r}}_i = (R' \otimes \mathbf{a})_{i} &\subseteq \sum_{k = 1}^3 R'_{ik}\,\mathbf{a}_k(1 + E_{ijk})
 \end{align}
 
-When applying a rotation matrix to a general matrix $A$, the potential rounding error of any output component $A_{ij}$ will equal $\sum_{k = 1}^3 |R'_{ik}\,A'_{kj} E_{ijk}|$. For a general rotation matrix $R$ written on the same form as in \ref{eq:rotation}, all the components of $R'$ are in the interval $[-1, 1]$, which means that the maximum possible precision loss is governed by the values of A. When applying $R$ on a matrix or vector with both huge and close-to-zero components, the precision in the small components may be lost. However, for the most significant matrix components, the relative precision will be close to preserved. This means that when $R$ is used to transform the coordinate vector $\mathbf{a} = (x, y, z) = \mathbf{\hat{a}}|\mathbf{a}|$, neither the precision of the direction $\mathbf{\hat{a}}$ nor the magnitude $|\mathbf{a}|$ will be affected significantly. The same is true for the column vectors in $A'$, which means that the significant properties of $A'$ are preserved in $\hat{R}'$
+When applying a rotation matrix to a general matrix $A$, the potential rounding error of any output component $A_{ij}$ will equal $\sum_{k = 1}^3 |R'_{ik}\,A'_{kj} E_{ijk}|$. For a general rotation matrix $R$ written on the same form as in \ref{eq:rotation}, all the components of $R'$ are in the interval $[-1, 1]$, which means that the maximum possible precision loss is governed by the values of A. When applying $R$ on a matrix or vector with both huge and close-to-zero components, the precision in the small components may be lost. However, for the most significant matrix components, the relative precision will be close to preserved. This means that when $R$ is used to transform the coordinate vector $\mathbf{a} = (x, y, z)^t = \mathbf{\hat{a}}|\mathbf{a}|$, neither the precision of the direction $\mathbf{\hat{a}}$ nor the magnitude $|\mathbf{a}|$ will be affected significantly. The same is true for the column vectors in $A'$, which means that the significant properties of $A'$ are preserved in $\hat{R}'$
 
 \subsubsection{Projection}
 A typical matrix for symmetric perspective projection $P$ can be written as in equation \ref{eq:perspectiveprojection}, where
@@ -356,7 +356,7 @@ $\lambda_1 \rightarrow -1$ and $\lambda_2 \rightarrow 0$ which means that $c_z \
 The perspective division step would yield $n_z = 1$ for all vertices, giving them the exact same depth buffer value.
 
 \subsubsection{Perspective division}
-The perspective division, carried out to bring coordinates from clip space to normalized device coordinates will divide all vector components with the number stored in $w$. When using a perspective projection matrix as described in equation \ref{eq:perspectiveprojection}, all components will effectively be divided with the view coordinates' $-z$. Since floating point division preserves the relative precision, the absolute error interval will scale proportionally to the value itself.
+The perspective division, carried out to bring coordinates from clip space to normalized device coordinates will divide all vector components with the number stored in $w$. When using a perspective projection matrix as described in equation \ref{eq:perspectiveprojection}, all components will effectively be divided with the view coordinates' $-z$. Since floating point division preserves the relative precision, the absolute error interval will scale proportionally with the value itself.
 
 What ultimately defines the 
 
