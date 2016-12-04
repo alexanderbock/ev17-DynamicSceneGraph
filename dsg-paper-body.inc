@@ -362,11 +362,13 @@ $\lambda_1 \rightarrow -1$ and $\lambda_2 \rightarrow 0$ respectively, which mea
 The perspective division step would yield $n_z = 1$ for all vertices, giving them the exact same depth buffer value.
 
 \subsubsection{Perspective division}
+The perspective division, carried out to bring coordinates from clip space to normalized device coordinates will divide all vector components with the number stored in $w$. When using a perspective projection matrix as described in equation \ref{eq:perspectiveprojection}, all components will effectively be divided with the view coordinates' $-z$. Since floating point division preserves the relative precision, the absolute error interval will scale proportionally with the value itself.
 The perspective division, carried out to bring coordinates from clip space to normalized device coordinates will divide all vector components with the $w$-component. When using a perspective projection matrix as described in equation \ref{eq:perspectiveprojection}, all components will effectively be divided with the view coordinates' $-z$. Since floating point division preserves the relative precision, the absolute error interval will scale proportionally with the value itself.
 
 What ultimately defines the 
 
 The output value will have a precision that 
+
 
 \subsubsection{Depth buffer representation}
 
