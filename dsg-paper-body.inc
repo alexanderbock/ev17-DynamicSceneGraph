@@ -6,7 +6,7 @@
 %\title[EG Astronomical Scale Differences and Visualization]%
 %      {Astronomical Scale Differences in Visualization}
 % How about this? ---abock
-\title[]{Dynamic Scene Graphs: A Method for Avoiding Floating Point Inaccuracies in Large Scale Astrovisualization}
+\title[]{Dynamic Scene Graphs: Avoiding Floating Point Inaccuracies in Large Scale Astrovisualization}
 
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
@@ -39,7 +39,9 @@
 \maketitle
 
 \begin{abstract}
-In this work, we address the challenges of limited numerical range and precision of floating point numbers when simultaneously visualizing astronomical objects with large size differences \joncomment{Shouldn't it be distances too? The main purpose of the technique is to handle distances better, the sizes are just a plus from the technique, right?}. Due to the limited precision of floating point numbers, it is impossible to represent comparatively small objects far away from the coordinate system origin. We propose a system that utilizes a dynamically assigned coordinate system origin in a scene graph to provide the highest possible numerical precision for salient objects. This makes it possible to interactively render, for example, surface structures on Mars and the Milky Way in a single pass \joncomment{I agree with Emil in this one. Maybe we could say: ``...Mars and the Milky Way in the same scene.'' What do you guys think about this?}. We track and quantify the propagation of numerical precision errors through the computer graphics pipeline using interval arithmetic for cases of large differences in scale. Sources of precision degradation, leading to incorrect object positions in screen-space and z-fighting, are identified mathematically. Our proposed method operates without near and far planes while maintaining high depth precision through the use of floating point depth buffers. By providing interoperability with order-independent transparency algorithms, direct volume rendering, and stereoscopy, our approach is well suited for scientific visualization. \joncomment{Are we going to say that an implementation in OS will be available shortly?}
+In this work, we address the challenges of limited numerical range and precision of floating point numbers when simultaneously visualizing astronomical objects with large size differences \joncomment{Shouldn't it be distances too? The main purpose of the technique is to handle distances better, the sizes are just a plus from the technique, right?}. 
+Due to the limited precision of floating point numbers, it is impossible to represent comparatively small objects far away from the coordinate system origin. We propose a system that utilizes a dynamically assigned coordinate system origin in a scene graph to provide the highest possible numerical precision for salient objects. This makes it possible to interactively render, for example, surface structures on Mars and the Milky Way in a single pass \joncomment{I agree with Emil in this one. Maybe we could say: ``...Mars and the Milky Way in the same scene.'' What do you guys think about this?}. 
+We track and quantify the propagation of numerical precision errors through the computer graphics pipeline using interval arithmetic for cases of large differences in scale. Sources of precision degradation, leading to incorrect object positions in screen-space and z-fighting, are identified mathematically. Our proposed method operates without near and far planes while maintaining high depth precision through the use of floating point depth buffers. By providing interoperability with order-independent transparency algorithms, direct volume rendering, and stereoscopy, our approach is well suited for scientific visualization. \joncomment{Are we going to say that an implementation in OS will be available shortly?}
 \end{abstract}
 
 %-------------------------------------------------------------------------
@@ -360,7 +362,7 @@ $\lambda_1 \rightarrow -1$ and $\lambda_2 \rightarrow 0$ respectively, which mea
 The perspective division step would yield $n_z = 1$ for all vertices, giving them the exact same depth buffer value.
 
 \subsubsection{Perspective division}
-The perspective division, carried out to bring coordinates from clip space to normalized device coordinates will divide all vector components with the number stored in $w$. When using a perspective projection matrix as described in equation \ref{eq:perspectiveprojection}, all components will effectively be divided with the view coordinates' $-z$. Since floating point division preserves the relative precision, the absolute error interval will scale proportionally with the value itself.
+The perspective division, carried out to bring coordinates from clip space to normalized device coordinates will divide all vector components with the $w$-component. When using a perspective projection matrix as described in equation \ref{eq:perspectiveprojection}, all components will effectively be divided with the view coordinates' $-z$. Since floating point division preserves the relative precision, the absolute error interval will scale proportionally with the value itself.
 
 What ultimately defines the 
 
