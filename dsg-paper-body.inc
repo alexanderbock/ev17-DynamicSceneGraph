@@ -142,10 +142,10 @@ a \oslash b \equiv \frac{a}{b}(1 + u[-1, 1]) \\
 When a result from one floating point operation is used in further computations, rounding errors will propagate through the whole series of operations. This may lead to scenarios where expressions on the form $(a + b) - b$ may evaluate to $0$, for a sufficiently small $a$ and large $b$. This phenomena is known as 
 \emph{catastrophic cancellation}. In any rendering pipeline where e.g. matrix multiplications or vector additions result in this type of operations, there is a risk for floating point precision problems.
 
-We let $\mathds{E}$ represent the set of intervals \joncomment{What about: ``Let $\mathds{E}$ be the set of intervals...''} that can be written in form of equation $cu[-1, 1]$, where c is a non-negative constant $c$ that is not a function of any floating point value \joncomment{This part is a little weird in my point of view. Should it be: ``where $c$ is a non-negative constant that is not function of any...''?}. For any intervals $E_1, E_2 \in \mathds{E}$, there are intervals $E_3, E_4 \in \mathds{E}$, such that
+Let $\mathds{E}$ be the set of intervals that can be written in form of equation $cu[-1, 1]$, where c is a non-negative constant that is not a function of any floating point value. For any intervals $E_1, E_2 \in \mathds{E}$, there are intervals $E_3, E_4 \in \mathds{E}$, such that
 $E_1+E_2 \subseteq E_3$ and $E_1E_2 \subseteq E_4$.
 
-We let $E_i$ denote intervals that belong to $\mathds{E}$ and observe some properties of $\oplus$, and $\odot$ as they act on the two intervals $a(1 + E_1)$ and $b(1 + E_2)$.
+We let $E_i = c_iu[-1, 1] \in \mathds{E}$ and observe some properties of $\oplus$, and $\odot$ as they act on the two intervals $a(1 + E_1)$ and $b(1 + E_2)$.
 
 \begin{equation} \label{eq:errortermadd} 
 \begin{split}
@@ -159,14 +159,14 @@ a(1 + E_1) \oplus b( 1 + E_2) \\
 \begin{split}
 a(1 + E_1) \odot b(1 + E_2) \\
 = ab(1 + E_1)(1 + E_2)(1 + u[-1, 1]) \\
-\subseteq ab(1 + E_3)
+\subseteq ab(1 + E_5)
 \end{split}
 \end{equation}
 
-Since $E$-terms are intervals on the form $cu[-1, 1]$, we can conclude that equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_1u| + |bc_2u|$  \joncomment{Shouldn't it be $|ac_3u| + |bc_4u|$ in order to be consistent with the equation 3?}. Equation \ref{eq:errortermmult} may output a maximum rounding error of $|abc_3u|$. While several floating point additions will accumulate errors from all contributing terms, creating a risk for catastropic cancellation, floating point multiplication will scale the error proportionally to the factors. Multiplying an interval with a number with absolute value smaller than $1$ will hence shrink the absolute error interval proportionally. We can say that multiplication \emph{preserves the relative precision} of the factors \joncomment{Too strong affirmation?}.
+Since $E$-terms are intervals on the form $cu[-1, 1]$, we can conclude that equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_3u| + |bc_4u|$. Equation \ref{eq:errortermmult} may output a maximum rounding error of $|abc_5u|$. While several floating point additions will accumulate errors from all contributing terms, creating a risk for catastropic cancellation, floating point multiplication will scale the error proportionally to the factors. Multiplying an interval with a number with absolute value smaller than $1$ will hence shrink the absolute error interval proportionally. The relative precision $c_5u$ is independent of the size of the factors $a$ and $b$. \emilcomment{Is this a better claim?}.
 
 
-By applying equation \ref{eq:errortermadd}, iteratively, we can also conclude that for floating point sums $\osum_i x_i \equiv x_1 \oplus x_2 \oplus ... \oplus x_n$, equation \ref{eq:errortermsum} holds regardless of in which order terms are added. 
+By applying equation \ref{eq:errortermadd} iteratively, we can also conclude that for floating point sums $\osum_i x_i \equiv x_1 \oplus x_2 \oplus ... \oplus x_n$, equation \ref{eq:errortermsum} holds regardless of in which order terms are added, with $E_{1,i}, E_{2,i} \in \mathds{E}$.
 
 \begin{equation} \label{eq:errortermsum} 
 \osum_i x_i(1 + E_{1,i}) \subseteq \sum_i x_i(1 + E_{2, i})
