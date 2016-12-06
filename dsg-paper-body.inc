@@ -44,7 +44,7 @@ In this work, we address the challenges of limited numerical range and precision
 
 %-------------------------------------------------------------------------
 \section{Introduction}
-Through various means of scientific discovery, humanity now has collected detailed information and measurements of structures in the surrounding cosmos that range from the diminuitive to the unimaginably large. Everything we know and everything we can possibly know is constrained in size and distance by these two boundaries. The upper boundary is given by the size of the observable universe with a comoving diameter of about $10^{27}$ meter. The lower boundary is the Planck length, at which the structure of spacetime is dominated by quantum effects and the concept of locality loses physical meaning, with an approximate size of $10^{-35}$ meters. 
+Through various means of scientific discovery, humanity now has collected detailed information and measurements of structures in the surrounding cosmos that range from the diminutive to the unimaginably large. Everything we know and everything we can possibly know is constrained in size and distance by these two boundaries. The upper boundary is given by the size of the observable universe with a comoving diameter of about $10^{27}$ meter. The lower boundary is the Planck length, at which the structure of space-time is dominated by quantum effects and the concept of locality loses physical meaning, with an approximate size of $10^{-35}$ meters. 
 
 %Thanks to humanity's collective discoveries of the surrounding world, we are now aware of structures in the universe that are both tiny and huge. The observable universe has a diameter of approximately $10^{27}$ meters, while the Planck length, which is the length where quantum mechanical effects make it impossible to distinguish between two physical locations \joncomment{Maybe: ``...which is the length were the Heisenberg's uncertainty principle is present/observable, is...''}, is approximately $10^{-35}$ meters.
 
@@ -67,7 +67,7 @@ In this paper we thoroughly explore the sources of precision errors and range ov
 
 \section{Related work}
 Computer graphics and interactive visualization have
-proven to be immensively valuable tools for communicating scientific findings
+proven to be immensely valuable tools for communicating scientific findings
 and contextualizing information. Notable examples of applications where huge scale differences are visualized 
 together include movie productions, such as \emph{Powers of Ten}\cite{powersOfTen} from 1977,
 All We Are [citation needed], as well as interactive software for digital planetariums,
@@ -89,7 +89,7 @@ The co-evolution of graphics hardware, software and content, largely pushed forw
 the gaming industry, has led to modern graphics processing units that are optimized for
 operating efficiently on floating point numbers, vectors and matrices.
 In a standard computer graphics pipeline, $4x4$ matrices are used to represent coordinate
-transformations operating on 4-dimensional homogenious coordinate vectors, with their components stored as floating point numbers. To understand the precision and range limitations of a graphics pipeline used in visualization, we need to base our reasoning on properties on floating point numbers and the operations that we perform on them.
+transformations operating on 4-dimensional homogeneous coordinate vectors, with their components stored as floating point numbers. To understand the precision and range limitations of a graphics pipeline used in visualization, we need to base our reasoning on properties on floating point numbers and the operations that we perform on them.
 
 \subsection{Floating point numbers}
 
@@ -163,7 +163,7 @@ a(1 + E_1) \odot b(1 + E_2) \\
 \end{split}
 \end{equation}
 
-Since $E$-terms are intervals on the form $cu[-1, 1]$, we can conclude that equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_3u| + |bc_4u|$. Equation \ref{eq:errortermmult} may output a maximum rounding error of $|abc_5u|$. While several floating point additions will accumulate errors from all contributing terms, creating a risk for catastropic cancellation, floating point multiplication will scale the error proportionally to the factors. Multiplying an interval with a number with absolute value smaller than $1$ will hence shrink the absolute error interval proportionally. The relative precision $c_5u$ is independent of the size of the factors $a$ and $b$. \emilcomment{Is this a better claim?}.
+Since $E$-terms are intervals on the form $cu[-1, 1]$, we can conclude that equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_3u| + |bc_4u|$. Equation \ref{eq:errortermmult} may output a maximum rounding error of $|abc_5u|$. While several floating point additions will accumulate errors from all contributing terms, creating a risk for catastrophic cancellation, floating point multiplication will scale the error proportionally to the factors. Multiplying an interval with a number with absolute value smaller than $1$ will hence shrink the absolute error interval proportionally. The relative precision $c_5u$ is independent of the size of the factors $a$ and $b$. \emilcomment{Is this a better claim?}.
 
 
 By applying equation \ref{eq:errortermadd} iteratively, we can also conclude that for floating point sums $\osum_i x_i \equiv x_1 \oplus x_2 \oplus ... \oplus x_n$, equation \ref{eq:errortermsum} holds regardless of in which order terms are added, with $E_{1,i}, E_{2,i} \in \mathds{E}$.
@@ -172,9 +172,7 @@ By applying equation \ref{eq:errortermadd} iteratively, we can also conclude tha
 \osum_i x_i(1 + E_{1,i}) \subseteq \sum_i x_i(1 + E_{2, i})
 \end{equation}
 
-\joncomment{What are $E_{1,i}$ and $E_{2,i}$? They weren't defined before.}
-
-The straight-forwared implementation of floating point matrix multiplication $A \otimes B$ is to compute matrix components as a sum of products using $\oplus$ and $\odot$. By applying equations \ref{eq:errortermmult} and \ref{eq:errortermsum}, we get equation \ref{eq:matrixmult} where $m$ is the number of columns of $A$ and the number of rows of $B$.
+The straight-forward implementation of floating point matrix multiplication $A \otimes B$ is to compute matrix components as a sum of products using $\oplus$ and $\odot$. By applying equations \ref{eq:errortermmult} and \ref{eq:errortermsum}, we get equation \ref{eq:matrixmult} where $m$ is the number of columns of $A$ and the number of rows of $B$.
 
 \begin{equation} \label{eq:matrixmult} 
 (A \otimes B)_{ij} \equiv \osum_{k = 1}^mA_{ik}\odot B_{kj} \subseteq \sum_{k = 1}^mA_{ik} B_{kj}(1 + E_{ijk})
@@ -183,9 +181,9 @@ The straight-forwared implementation of floating point matrix multiplication $A 
 We observe that the maximum floating point error introduced to any individual component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} E_{ijk}|$.
 
 \subsection{Coordinate transformations}
-In computer graphics software, scene content is commonly organized in a \emph{scene graph}, which allows coordinate transformations to be represented hierarchically. Each node in the graph may contain a transformation, represented as a 4x4 matrix, that affects all its children. Objects consist of vertices $\mathbf{x}$ represented as homogeneous coordinates $(x, y, z, w)^t$, where $x$, $y$ and $z$ are the coordinates in a local coordinate system, and $w = 1$. In order to transform a vertex from its local \emph{model coordinate system} to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatenated to a final \emph{model matrix} using matrix multiplication. This final matrix is applied to the vertex $\mathbf{x}$ to acquire \joncomment{to yield?} the world coordinates $\mathbf{w}$.
+In computer graphics software, scene content is commonly organized in a \emph{scene graph}, which allows coordinate transformations to be represented hierarchically. Each node in the graph may contain a transformation, represented as a 4x4 matrix, that affects all its children. Objects consist of vertices $\mathbf{x}$ represented as homogeneous coordinates $(x, y, z, w)^t$, where $x$, $y$ and $z$ are the coordinates in a local coordinate system, and $w = 1$. In order to transform a vertex from its local \emph{model coordinate system} to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatenated to a final \emph{model matrix} using matrix multiplication. This final matrix is applied to the vertex $\mathbf{x}$ to acquire the world coordinates $\mathbf{w}$.
 
-A \emph{view matrix} is also commonly generated based on a camera position and rotation expressed in the world coordinate system, and then used to transform world coordinates to \emph{view coordinates}, with the camera in the origin, and the z-axis parallel to the view direction \joncomment{Not always parallel to z-axis, but I don't think it is too important here. I am sleepy...}. This view matrix is multiplied with the world coordinate $\mathbf{w}$ and outputs the view coordinates $\mathbf{v}$.
+A \emph{view matrix} is also commonly generated based on a camera position and rotation expressed in the world coordinate system, and then used to transform world coordinates to \emph{view coordinates}, with the camera in the origin, and the z-axis parallel to the view direction. This view matrix is multiplied with the world coordinate $\mathbf{w}$ and outputs the view coordinates $\mathbf{v}$.
 
 View coordinates are transformed into \emph{clip coordinates} $\mathbf{c}$ using a \emph{projection matrix}, in this case a perspective projection matrix.
 After that, content that does not satisfy the equation $-w \le x, y, z \le w$ will be subject to frustum culling, and will be discarded from rendering. The vector is divided by $w$ to compute the \emph{normalized device coordinates (NDC)}. This last step, commonly called \emph{perspective division}, causes objects farther away from the camera to appear smaller on the screen. The $x$ and $y$ in NDC determines the object's position on the screen, with $(-1, -1)$ representing the bottom left corner and $(1, 1)$ upper right one.
@@ -199,7 +197,7 @@ Rounding errors in the graphics pipeline may give rise to two types of visual ar
 \item If the rounding error of $z$ when stored in the depth buffer is larger than the $z$-difference of two adjacent fragments, there is a risk that the incorrect fragment is rendered on top, which is often referred to as \emph{z-fighting}.
 \end{itemize}
 
-By using interval arithmetics to trace the errors in $x$ and $y$ it is possible to predict vertex displacement issues. Similarly, the accumulated error interval of the z-component can be used to determine when there is a risk for z-fighting. In the following sections, we study the precision error implications of the coordinate operations in the conventional graphics pipeline to determine the set of circumstances in which precision problems may be introduced.
+By using interval arithmetic to trace the errors in $x$ and $y$ it is possible to predict vertex displacement issues. Similarly, the accumulated error interval of the z-component can be used to determine when there is a risk for z-fighting. In the following sections, we study the precision error implications of the coordinate operations in the conventional graphics pipeline to determine the set of circumstances in which precision problems may be introduced.
 
 Using column vectors, the NDC's $\mathbf{n}$ are derived from the model coordinates $\mathbf{x}$ in equation \ref{eq:mvp}.
 
@@ -208,7 +206,7 @@ Using column vectors, the NDC's $\mathbf{n}$ are derived from the model coordina
 \mathbf{n} = \mathbf{c} \oslash {c_w}
 \end{align}
  
-Here, $P$ is the projection matrix, V is the view matrix, $M$ is the model matrix, and $\mathbf{x}$, $\mathbf{c}$ and $\mathbf{n}$ are homogenious coordinate vectors on the form $(x, y, z, w)^t$. The precision in normalized device coordinates depends on the collective effects of $M$, $V$, $P$ and the perspective division as they act on $\mathbf{x}$. 
+Here, $P$ is the projection matrix, V is the view matrix, $M$ is the model matrix, and $\mathbf{x}$, $\mathbf{c}$ and $\mathbf{n}$ are homogeneous coordinate vectors on the form $(x, y, z, w)^t$. The precision in normalized device coordinates depends on the collective effects of $M$, $V$, $P$ and the perspective division as they act on $\mathbf{x}$. 
 
 $M$ and $V$ are commonly composed from three types of transformations that are encoded in the scene graph: scaling, translation and rotation. We study the effect of applying scaling, translation and rotation on a generalized model matrix or view matrix A, composed of a translation vector $\mathbf{a}$ and a combined rotation/scaling 3x3-matrix $A'$, as given by equation \ref{eq:matrixa}. To observe how the matrices act on a coordinate vector, we can study the fourh column in A.
 \begin{equation} \label{eq:matrixa}
@@ -257,7 +255,7 @@ Equation \ref{eq:scaling} describes a floating point matrix multiplication of a 
 \hat{\mathbf{s}}_i = (S' \otimes \mathbf{a})_{i} &\subseteq S'_{ii}\,\mathbf{a}_i(1 + E_{j})
 \end{align}
 
-The rounding error introduced by a scaling matrix $S$ is proportional to the scaling factors in $S'$. Any error interval encoded in $A'$ and $\mathbf{a}$ will be scaled proportionally. We conclude that applying a scaling matrix to a matrix $A$ \emph{preserves the relative precision} of all components of $A$. \joncomment{Maybe we can say: ``Thus, applying a scaling...''.}
+The rounding error introduced by a scaling matrix $S$ is proportional to the scaling factors in $S'$. Any error interval encoded in $A'$ and $\mathbf{a}$ will be scaled proportionally. We conclude that applying a scaling matrix to a matrix $A$ \emph{preserves the relative precision} of all components of $A$.
 
 \subsubsection{Translation}
 In equation \ref{eq:translation}, a translation matrix $T$ is applied to $A$ using floating point matrix multiplication. $I$ denotes a 3x3 identity matrix, and $\mathbf{t}$ represents the translation vector. 
@@ -293,7 +291,7 @@ where
 \hat{t}_i = t_i \oplus a_i \subseteq (t_i + a_i)(1 + E_i)
 \end{align}
 
-We note that the precision in $\hat{T}_{ij}$ is preserved from $A'$ when any translation matrix $T$ is applied. However, any error intervals encoded in $t_i$ and $a_i$ will propagate to $\hat{t}_i$, and will \emph{not} be scaled down even if $|\hat{t}_i|$ is orders of magnitude smaller than $|t_i|$ and $|a_i|$. This scenario \emph{may lead to catastrophic cancellation} in the component $\hat{t}_i$. \joncomment{Nice!}
+We note that the precision in $\hat{T}_{ij}$ is preserved from $A'$ when any translation matrix $T$ is applied. However, any error intervals encoded in $t_i$ and $a_i$ will propagate to $\hat{t}_i$, and will \emph{not} be scaled down even if $|\hat{t}_i|$ is orders of magnitude smaller than $|t_i|$ and $|a_i|$. This scenario \emph{may lead to catastrophic cancellation} in the component $\hat{t}_i$.
 
 
 \subsubsection{Rotation}
@@ -376,7 +374,7 @@ The output value will have a precision that
 A number of conclusions can be drawn from the previous section:
 \begin{itemize}
 \item Large translation matrices acting on small vectors or translations may lead to significant loss of precision.
-\item Rotation matrices may cause loss of relative precision of small matrix compoents when applied to matrices with both small and huge numbers. 
+\item Rotation matrices may cause loss of relative precision of small matrix components when applied to matrices with both small and huge numbers. 
 \item There is no significant loss of relative precision associated with applying scaling matrices.
 \item Projection matrices. TODO.
 \item Perspective division. TODO.
