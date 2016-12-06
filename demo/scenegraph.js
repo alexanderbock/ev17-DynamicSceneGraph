@@ -1,56 +1,42 @@
-import {Node, Circle, Translation, Camera, CoordinateSystem} from './nodes';
+import {Node, Circle, Translation, Rotation, Camera, CoordinateSystem} from './nodes';
 
 let rootNode = new Node('root');
 
+let sunTranslation = new Translation('sunTranslation', 0, 0);
+let earthOrbit = new Rotation('earthOrbit', 0);
+let cameraEarthOrbitCompensation = new Rotation('cameraEarthOrbitCompensation', 0);
+let earthTranslation = new Translation('earthTranslation', 200, 0);
+let sun = new Circle('sun', 30, 100);
+let earth = new Circle('earth', 15, 100);
+let moon = new Circle('moon', 7.5, 100);
+let moonTranslation = new Translation('moonTranslation', 70, 0);
+let moonOrbit = new Rotation('moonOrbit', 0);
+let cameraMoonOrbitCompensation = new Rotation('cameraMoonOrbitCompensation', 0);
+//let system = new CoordinateSystem('system', 100, 100);
+let cameraTranslation = new Translation('cameraTranslation', -50, 0);
+let camera = new Camera('camera');
 
-let ourMethod = new Translation('ourMethod', 400, 0);
-let naiveMethod = new Translation('naiveMethod', -400, 0);
+rootNode.addChild(sunTranslation);
 
+sunTranslation.addChild(sun);
+sunTranslation.addChild(earthOrbit);
+earthOrbit.addChild(earthTranslation);
 
-rootNode.addChild(ourMethod);
-rootNode.addChild(naiveMethod);
+cameraEarthOrbitCompensation.addChild(moonOrbit);
 
-let ourSunTranslation = new Translation('sunTranslation', 0, 0);
-let ourEarthTranslation = new Translation('earthTranslation', 200, 0);
-let ourSun = new Circle('sun', 40, 100);
-let ourEarth = new Circle('earth', 20, 100);
-let ourSystem = new CoordinateSystem('view', 100, 100);
+moonOrbit.addChild(moonTranslation);
+moonTranslation.addChild(cameraMoonOrbitCompensation);
+cameraMoonOrbitCompensation.addChild(moon);
 
-let naiveSunTranslation = new Translation('sunTranslation', 0, 0);
-let naiveEarthTranslation = new Translation('earthTranslation', 200, 0);
-let naiveSun = new Circle('sun', 40, 100);
-let naiveEarth = new Circle('earth', 20, 100);
-let naiveSystem = new CoordinateSystem('view', 100, 100);
-
-
-ourMethod.addChild(ourSunTranslation);
-
-ourSunTranslation.addChild(ourSun);
-ourSunTranslation.addChild(ourEarthTranslation);
-
-ourEarthTranslation.addChild(ourEarth);
-ourEarthTranslation.addChild(ourSystem);
-
-
-naiveMethod.addChild(naiveSunTranslation);
-
-naiveSunTranslation.addChild(naiveSun);
-naiveSunTranslation.addChild(naiveEarthTranslation);
-
-naiveEarthTranslation.addChild(naiveEarth);
-naiveSunTranslation.addChild(naiveSystem);
+earthTranslation.addChild(cameraEarthOrbitCompensation);
+cameraEarthOrbitCompensation.addChild(earth);
 
 
-let ourCamera = new Camera('ourCamera');
-ourEarthTranslation.addChild(ourCamera);
-
-let naiveCamera = new Camera('naiveCamera');
-naiveSunTranslation.addChild(naiveCamera);
+cameraEarthOrbitCompensation.addChild(cameraTranslation);
+cameraTranslation.addChild(camera);
 
 
-
-
-
+earth.takeCamera();
 /*
 for (let i = -7; i <= 7; i++) for (let j = -7; j <= 7; j++) {
   let trans = new Translation('trans' + (i+7) + ',' + (j+7), i * 50, j * 50);

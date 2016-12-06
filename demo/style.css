@@ -3,9 +3,42 @@ html {
 }
 
 .sun {
-	stroke: #ff4;
+	stroke: #fff;
+	fill: #fca903;
 }
 
 .earth {
-	stroke: #77f;
+	stroke: #fff;
+	fill: #2870b8;
+}
+
+.moon {
+	fill: #888;
+	stroke: #fff;
+}
+
+.camera {
+	fill: #fff;
+}
+
+svg {
+	float: left;
+}
+
+.mantissaBits {
+	padding: 10px;
+	color: #fff;
+	font: 24px 'Myriad Pro';
+}
+
+.options {
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.options * {
+	margin-left: auto;
+	margin-right: auto;
+	display: block;
 }
