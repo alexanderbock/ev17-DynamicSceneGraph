@@ -38,7 +38,7 @@ export default class extends React.Component {
 
     return (
     <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-              width="800px" height="600px" viewBox="-400 -300 800 600" enableBackground="new 0 0 800 600"
+              width="100%" height="100%" viewBox="-800 -600 1600 1200" enableBackground="new 0 0 800 600"
               xmlSpace="preserve">
           {svgElements}
     </svg>

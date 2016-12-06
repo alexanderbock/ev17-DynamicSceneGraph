@@ -3,9 +3,9 @@ html {
 }
 
 .sun {
-	fill: #ff4;
+	stroke: #ff4;
 }
 
 .earth {
-	fill: #77f;
+	stroke: #77f;
 }

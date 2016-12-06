@@ -10,7 +10,6 @@ function log2(value) {
 
 function fRound(value) {
   let mantissaBits = config.mantissaBits;
-  let exponentBits = config.exponentBits;
 
   let sign = Math.sign(value);
   let absValue = Math.abs(value);

@@ -3,6 +3,7 @@ import {glMatrix, vec2, vec3, vec4, mat2, mat3, mat4} from './glround';
 import React from 'react';
 import numeral from 'numeral';
 import drag from './drag';
+import config from './floatingpointconfig';
 
 let nextId = 0;
 
@@ -221,4 +222,92 @@ class Camera extends Node {
 }
 
 
-export {Node, Translation, Circle, Camera};
+class CoordinateGrid extends Node {
+  constructor(name) {
+    super(name);
+  }
+
+  render(camera) {
+    let lines = [];
+    let manBits = config.mantissaBits;
+    let expBits = config.exponentBits;
+    let maxExp = Math.pow(2, expBits - 1);
+    let minExp = -maxExp;
+
+    let x = 0;
+    for (let e = 6; e < 9; e++) {
+      let significand = 1;
+      for (let m = 0; m < Math.pow(2, manBits); m++) {
+        significand += Math.pow(2, -manBits);
+
+        x = significand * Math.pow(2, e);
+        //console.log(significand, -manBits, x, Math.pow(2, e));
+        let idPos = "x" + x;
+        let idNeg = "x-" + x;
+        lines.push(
+          <line key={idPos} x1={-x} x2={-x} y1={-400} y2={400} style={{stroke:'rgba(255,0,0, 0.5)', strokeWidth: 1}}/>
+        );
+        lines.push(
+          <line key={idNeg} x1={x} x2={x} y1={-400} y2={400} style={{stroke:'rgba(255,0,0, 0.5)', strokeWidth: 1}}/>
+        );
+      }
+    }
+
+    let y = 0;
+    for (let e = 6; e < 9; e++) {
+      let significand = 1;
+      for (let m = 0; m < Math.pow(2, manBits); m++) {
+        significand += Math.pow(2, -manBits);
+
+        y = significand * Math.pow(2, e);
+        //console.log(significand, -manBits, x, Math.pow(2, e));
+        let idPos = "y" + y;
+        let idNeg = "y-" + y;
+        lines.push(
+          <line key={idPos} y1={-x} y2={-x} x1={-400} x2={400} style={{stroke:'rgba(255,0,0, 0.5)', strokeWidth: 1}}/>
+        );
+        lines.push(
+          <line key={idNeg} y1={x} y2={x} x1={-400} x2={400} style={{stroke:'rgba(255,0,0, 0.5)', strokeWidth: 1}}/>
+        );
+      }
+    }
+
+
+    
+    let domElement = (
+      <g className={this._name}>
+        {lines}
+      </g>
+    );
+
+    return domElement;
+  }
+}
+
+class CoordinateSystem extends Node {
+  constructor(name, w, h) {
+    super(name);
+    this._w = w;
+    this._h = h;
+  } 
+
+  render(camera) {
+    let viewMatrix = camera.viewMatrix(this);
+    let vertex1 = vec3.fromValues(-this._w, 0, 1);
+    let vertex2 = vec3.fromValues(this._w, 0, 1);
+    let vertex3 = vec3.fromValues(0, -this._h, 1);
+    let vertex4 = vec3.fromValues(0, this._h, 1);
+
+    vec3.transformMat3(vertex1, vertex1, viewMatrix);
+    vec3.transformMat3(vertex2, vertex2, viewMatrix);
+    vec3.transformMat3(vertex3, vertex3, viewMatrix);
+    vec3.transformMat3(vertex4, vertex4, viewMatrix);
+    return (<g>
+      <line key={"x"} className={this._name} x1={vertex1[0]} y1={vertex1[1]} x2={vertex2[0]} y2={vertex2[1]} style={{stroke:'rgba(255,0,0, 0.5)', strokeWidth: 1}}/>
+      <line key={"y"} className={this._name} x1={vertex3[0]} y1={vertex3[1]} x2={vertex4[0]} y2={vertex4[1]} style={{stroke:'rgba(255,0,0, 0.5)', strokeWidth: 1}}/>
+    </g>);
+  }
+}
+
+
+export {Node, Translation, Circle, Camera, CoordinateGrid, CoordinateSystem};
