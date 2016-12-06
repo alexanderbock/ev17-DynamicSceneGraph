@@ -3,13 +3,19 @@ html {
 }
 
 .sun {
-	stroke: #ff4;
+	stroke: #fff;
+	fill: #fca903;
 }
 
 .earth {
-	stroke: #77f;
+	stroke: #fff;
+	fill: #2870b8;
 }
 
 .camera {
 	fill: #fff;
+}
+
+svg {
+	float: left;
 }

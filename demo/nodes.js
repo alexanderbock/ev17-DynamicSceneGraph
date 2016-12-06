@@ -20,7 +20,7 @@ class Node {
     this._children.forEach((c) => { return c.traverse(fn); });
   }
   
-  transformationFrom(other) {
+  transformationsFrom(other) {
     let thisDepth = this.depth();
     let otherDepth = other.depth();
 
@@ -55,10 +55,23 @@ class Node {
     let finalMatrix = mat3.create(); 
     mat3.multiply(finalMatrix, invTransformation, transformation);
 
-    return finalMatrix;
+    while (thisDepth >= 0) {
+      mat3.multiply(invTransformation, invTransformation, currentInvNode.inverseTransformation());
+      mat3.multiply(transformation, currentNode.transformation(), transformation);
+      thisDepth--;
+      otherDepth--;
+      currentNode = currentNode.parent();
+      currentInvNode = currentInvNode.parent();
+    }
+
+    return {
+      modelView: finalMatrix,
+      model: transformation,
+      view: invTransformation
+    }
   }
 
-  fTransformationFrom(other) {
+  fTransformationsFrom(other) {
     let thisDepth = this.depth();
     let otherDepth = other.depth();
 
@@ -93,7 +106,20 @@ class Node {
     let finalMatrix = fmat3.create(); 
     fmat3.multiply(finalMatrix, invTransformation, transformation);
 
-    return finalMatrix;
+    while (thisDepth >= 0) {
+      fmat3.multiply(invTransformation, invTransformation, currentInvNode.inverseTransformation());
+      fmat3.multiply(transformation, currentNode.transformation(), transformation);
+      thisDepth--;
+      otherDepth--;
+      currentNode = currentNode.parent();
+      currentInvNode = currentInvNode.parent();
+    }
+
+    return {
+      modelView: finalMatrix,
+      model: transformation,
+      view: invTransformation
+    }
   }
 
   parent() {
@@ -108,6 +134,13 @@ class Node {
     }
   }
 
+  rootNode() {
+     if (this._parent) {
+      return this._parent.rootNode();
+    } else {
+      return this;
+    }
+  }
 
   addChild(node) {
     let oldParent = node._parent;
@@ -255,21 +288,13 @@ class Circle extends Node {
     
   }
 
-  mouseDown(click) {
-    console.log(this);
-    drag.start((deltaX, deltaY) => {
-      let translation = this.parent();
-      let x = translation.x();
-      let y = translation.y();
-      translation.set(x + deltaX, y + deltaY);
-    });
+  takeCamera() {
+    let cameraTranslation = this.rootNode().getNodeByName('cameraTranslation');
+    cameraTranslation.set(- this._size - 30, 0);
+    this.addChild(cameraTranslation);
   }
 
-  mouseUp(click) {
-    drag.end();
-  }
-
-  render(camera, center) {
+  render(camera, center, method) {
     //if (this._name === 'sun') debugger;
 
     let size = this._size;
@@ -284,14 +309,26 @@ class Circle extends Node {
       verts.push(v);
     }
 
-    let viewMatrix = camera.viewMatrix(this);
-    let offsetMatrix = center.transformationFrom(camera);
+    let matrices = camera.matrices(this);
+    let viewMatrix = matrices.view;
+    let modelMatrix = matrices.model;
+    let modelViewMatrix = matrices.modelView;
+
+    let offsetMatrix = center.transformationsFrom(camera).modelView;
 
     let transformedVerts = [];
     for (let i = 0; i < verts.length; i++) {
       let transformedVert = fvec3.fromValues(0, 0, 0);
-      // In low precision: apply relative camera transformation.
-      fvec3.transformMat3(transformedVert, verts[i], viewMatrix);
+      if (method === 'ours') {
+        // In low precision: apply relative camera transformation.
+        fvec3.transformMat3(transformedVert, verts[i], modelViewMatrix);
+      } else if (method === 'separate') {
+        fvec3.transformMat3(transformedVert, verts[i], modelMatrix);
+        fvec3.transformMat3(transformedVert, transformedVert, viewMatrix);
+      } else if (method === 'merged') {
+        fmat3.multiply(modelViewMatrix, viewMatrix, modelMatrix);
+        fvec3.transformMat3(transformedVert, verts[i], modelViewMatrix);
+      }
 
       // In high precision: apply camera position. (bring it to visualization world space)
       vec3.transformMat3(transformedVert, transformedVert, offsetMatrix);
@@ -309,7 +346,7 @@ class Circle extends Node {
     let id = this._id;
 
     let domElement = (
-      <polygon key={id} onMouseDown={this.mouseDown.bind(this)} onMouseUp={this.mouseUp.bind(this)} className={this._name} points={vertString}/>
+      <polygon key={id} onClick={this.takeCamera.bind(this)} className={this._name} points={vertString}/>
     );
 
     return domElement;
@@ -321,12 +358,12 @@ class Camera extends Node {
     super(name);
   }
 
-  viewMatrix(node) {
-    return this.fTransformationFrom(node);
+  matrices(node) {
+    return this.fTransformationsFrom(node);
   }
 
-  render(camera, center) {
-    let offsetMatrix = center.transformationFrom(camera);
+  render(camera, center, method) {
+    let offsetMatrix = center.transformationsFrom(camera).modelView;
     let scaleMatrix = mat3.create();
     mat3.scale(scaleMatrix, scaleMatrix, vec2.fromValues(15, 15));
 
@@ -372,8 +409,8 @@ class CoordinateSystem extends Node {
   } 
 
   render(camera, center) {
-    let viewMatrix = camera.viewMatrix(this);
-    let offsetMatrix = center.transformationFrom(camera);
+    let viewMatrix = camera.matrices(this).modelView;
+    let offsetMatrix = center.transformationsFrom(camera).modelView;
 
     let vertex1 = fvec3.fromValues(-this._w, 0, 1);
     let vertex2 = fvec3.fromValues(this._w, 0, 1);

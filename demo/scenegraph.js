@@ -8,7 +8,7 @@ let cameraEarthOrbitCompensation = new Rotation('cameraEarthOrbitCompensation', 
 let earthTranslation = new Translation('earthTranslation', 200, 0);
 let sun = new Circle('sun', 40, 100);
 let earth = new Circle('earth', 20, 100);
-let system = new CoordinateSystem('system', 100, 100);
+//let system = new CoordinateSystem('system', 100, 100);
 let cameraTranslation = new Translation('cameraTranslation', -40, 0);
 let camera = new Camera('camera');
 
@@ -21,7 +21,7 @@ earthOrbit.addChild(earthTranslation);
 earthTranslation.addChild(cameraEarthOrbitCompensation);
 cameraEarthOrbitCompensation.addChild(earth);
 cameraEarthOrbitCompensation.addChild(cameraTranslation);
-cameraEarthOrbitCompensation.addChild(system);
+//cameraEarthOrbitCompensation.addChild(system);
 
 cameraTranslation.addChild(camera);
 
