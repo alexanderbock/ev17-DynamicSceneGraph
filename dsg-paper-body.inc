@@ -83,7 +83,7 @@ Fu et al. \cite{fu2007transparently} elaborate on the concept of Power Scales Co
 The \emph{ScaleGraph} method, introduced by Klashed et al. in \cite{KHECY10} as a part of the digital planetarium software Uniview, employs a scene graph structure with sub-scenes that the camera can be attached to. The content of the current sub-scene is rendered in its local coordinate system, which maintains the precision of vertex coordinates, and allows for multiple regions in the universe to be represented with high precision. When rendering content outside the current sub-scene, objects are translated onto the bounding sphere of the scene, and re-scaled to compensate for perspective effects. Vectors between sub-scenes are computed by traversing the scenegraph through the closest common ancestor in the tree, to avoid introducing precision errors caused by handling unnecessarily large numbers. By moving objects onto the bounding sphere of the current scene, object depths are mapped to a manageable range. However, the method does not provide a general solution for depth sorting objects that are outside the current sub-scene. Furthermore, the work does not address stereoscopic rendering of objects across sub-scenes. 
 
 
-\section{Theoretical foundation}
+\section{Theoretical foundation}\label{sec:theoretical}
 
 The co-evolution of graphics hardware, software and content, largely pushed forward by
 the gaming industry, has led to modern graphics processing units that are optimized for
@@ -383,11 +383,48 @@ A number of conclusions can be drawn from the previous section:
 
 \section{Method}
 
+Our method is based on the work of Klashed \etal \cite{KHECY10}. We also use a scenegraph to represent the hierarchical relationships between transformations and objects in a scene but, differently of their work, our method doesn't have a concept of sub-scene and as a result it doesn't require a re-scale process to compensate for perspective effects and mapping of depths to manageable ranges.
 
-\subsection{Precision Adaptive Scene Graph}
+\subsection{Precision Adaptive Scene Graph}\label{sec:scenegraph}
 
+
+In our implementation, the scenegraph of a scene is composed of three different types of nodes:
+\begin{enumerate}
+	\item The root node of the tree representing the whole scene in our 3-d space. It also can be used to represent the center of the universe.
+	\item Internal nodes representing an astronomic position \joncomment{Maybe a better name here.} (e.g. the barycenter of a celestial system) or a renderable entity (e.g. a celestial body, spacecraft, etc.).
+	\item The leaf nodes representing a renderable entity or the virtual camera of the system.
+\end{enumerate}
+
+Each node also stores the transformation matrix (which can be composed by rotation, translation and scale matrices as well) to be applied over the element in the node and a \textbf{node radius}. As usual in a scenegraph tree structure, the transformation matrix is inherited by all children of a node. A \textbf{node radius} is defined as a virtual sphere (bounding volume) centered on the node's spatial position which allows one to decide when another node's spatial position is in its influence sphere.
+
+Figure~\ref{fig:scenegraph} illustrates the schematic shape of a scenegraph for the scene in the figure. In the top drawing of Figure~\ref{fig:scenegraph} the item number 1 represents the node radius of the scene; item number 2 is another node radius in the scene, with items 4 and 5 inside it plus the virtual camera of the system; item 3 is another celestial body (for the sake of simplicity, let's consider this a heliocentric system so item 3 represents the Sun); item 4 is an orbiting element (this element could be another celestial body, a spacecraft, a satellite, etc.) of item 5, another celestial body. The virtual camera of the system is attached to the item 4 node. This scenegraph can be seen as a representation of the Sun in yellow, Earth in blue and Moon in gray. 
+
+\joncomment{Emil, do you think is possible to write some text aside the nodes in the bottom part of Figure~\ref{fig:scenegraph}? Like: badycenter, Moon, Sun, etc?} 
+Also in Figure~\ref{fig:scenegraph}, in the bottom right drawing, the representation of the scene as a scenegraph tree can be seen. In this example the virtual camera is focusing on item 4, the Moon. We call our scenegraph a dynamic scenegraph.
+
+\begin{figure}
 \includegraphics[width=10cm,height=10cm,keepaspectratio]{scenegraph.pdf}
+\caption{(to do)}
+\label{fig:scenegraph}
+\end{figure}
 
+In order to render the scene correctly, a commonly used scenegraph visits all nodes traversing the tree concatenating the transformation matrices throughout the path  from the root node to each of the leaf nodes. In this structure the root of the scenegraph is seen as the center of coordinates of the scene (the world coordinates).
+Considering the possible differences in size and distance when visualizing objects in universe and the classical way a scenegraph is traversed during a scene rendering, this approach can lead the precision problems in the final rendering of the scene, as discussed in section~\ref{sec:theoretical}, mainly because the amount of possible translation transformations performed between different nodes. A higher scenegraph may lead to higher errors (\joncomment{This is not always true. I think I will remove this last sentence.}).\joncomment{Should we say more about position and depth and catastrophic cancellation?}
+
+As we noted, traversing the scenegraph from root to leaf during each rendering pass will produce a catastrophic cancellation process when the dimensions considered are of order of magnitude. To avoid the catastrophic cancellation process, we traverse the scenegraph in a different way than the commonly used way, trying to minimizing the number of transformations executed.\joncomment{TO REVIEW.}
+
+In our dynamic scenegraph, the closest (in an euclidean space) node from the camera is the current center of the coordinates system for the scene (center of the world coordinates) and will be called from now on the current center node. In our example in Figure~\ref{fig:scenegraph} this node is the item 4 node (Moon). Thus, instead of applying all translations from the root node to item 4 node, we only apply the translations present in item 4 node, minimizing the chances of a catastrophic cancellation happens.
+
+When visiting other item nodes, for instance, the item 5 node, we initially find the common parent between the current center node and the item 5 node; the item 2 node. Instead of applying all translations from the root node to item 5 node, we only apply the translation from item 2 node to item 5 node (drawn as a blue arrow in Figure~\ref{fig:scenegraph}, and to obtain the final translation from the current center node, we subtract the translation from the item 2 node to the current center node (drawn as a red arrow in Figure~\ref{fig:scenegraph}). This procedure is equivalent to sum vector $\vec{v_1}$ from item 2 node to item 5 node to vector $\vec{v_2}$ from item 5 node to item 2 node. See Figure~\ref{fig:vectorsum}
+
+The same idea can be extended for the other nodes. For the item 3 node, its position related to the current center node can be obtained adding the vectors $\vec{v_2}$, $\vec{v_3}$ and $\vec{v_4}$ in Figure~\ref{fig:vectorsum}.
+
+
+\begin{figure}
+\includegraphics[width=10cm,height=10cm,keepaspectratio]{vectorsum.pdf}
+\caption{(to do)}
+\label{fig:vectorsum}
+\end{figure}
 
 
 We use the perspective matrix:
@@ -408,11 +445,41 @@ Clipping is performed for all content with negative w.
 
 \subsubsection{Dynamic camera attachment}
 
-The camera 
+The virtual camera in our system can move freely within 5 degrees of freedom (DOF). Considering only 3 DOF (3-d space movement), the camera can be close to any node in our dynamic scenegraph. Which means that once the camera is close to a node, this node must be the new current center node. This propriety of changing the current center node, and by consequence the scene's center of coordinate, based on the camera position is one of the factors contributing to the ``dynamic'' aspect of our scenegraph.
+
+In order to determine which node should be the new current center node, every time the camera is translated, its current position is tested against the node radius of the nodes in the dynamic scenegraph. If the camera is inside a node's node radius, the camera position is tested against its children nodes' node radius to determine which node should be the new current center node.
+
+\begin{algorithm}
+ \caption{Dynamic Camera Attachment Algorithm}
+ \begin{algorithmic}[1]
+ \renewcommand{\algorithmicrequire}{\textbf{Input:}}
+ \renewcommand{\algorithmicensure}{\textbf{Output:}}
+ \REQUIRE in
+ \ENSURE  out
+ \\ \textit{Initialization} :
+  \STATE first statement
+ \\ \textit{LOOP Process}
+  \FOR {$i = l-2$ to $0$}
+  \STATE statements..
+  \IF {($i \ne 0$)}
+  \STATE statement..
+  \ENDIF
+  \ENDFOR
+ \RETURN $P$
+ \end{algorithmic}
+ \end{algorithm}  
 
 \subsubsection{Dynamic object attachment}
 
+Not all nodes in our dynamic scenegraph are celestial bodies with known orbits, we can handle any of the three types defined in section~\ref{sec:scenegraph}. One possible type is a mission space probe. 
+
+Space probes like New Horizons~\cite{??} travels through the solar system capturing data...
+
+\joncomment{TODO: write about nodes that need to change parents.}
+
 \subsubsection{Model view matrix computation}
+
+How to calculate the final Model View Matrix...
 
 \subsection{Depth Sorting}
 
@@ -420,12 +487,13 @@ The camera
 
 \section{Result}
 
+\joncomment{OS Scenes?}
 
 %-------------------------------------------------------------------------
 \section{Conclusions}
 
 
-\section{Acknowledgements}
+\section{Acknowledgments}
 
 
 
