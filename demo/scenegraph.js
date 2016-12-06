@@ -1,4 +1,4 @@
-import {Node, Circle, Translation, Camera, CoordinateGrid, CoordinateSystem} from './nodes';
+import {Node, Circle, Translation, Camera, CoordinateSystem} from './nodes';
 
 let rootNode = new Node('root');
 
@@ -11,13 +11,13 @@ rootNode.addChild(ourMethod);
 rootNode.addChild(naiveMethod);
 
 let ourSunTranslation = new Translation('sunTranslation', 0, 0);
-let ourEarthTranslation = new Translation('earthTranslation', 100, 0);
+let ourEarthTranslation = new Translation('earthTranslation', 200, 0);
 let ourSun = new Circle('sun', 40, 100);
 let ourEarth = new Circle('earth', 20, 100);
 let ourSystem = new CoordinateSystem('view', 100, 100);
 
 let naiveSunTranslation = new Translation('sunTranslation', 0, 0);
-let naiveEarthTranslation = new Translation('earthTranslation', 100, 0);
+let naiveEarthTranslation = new Translation('earthTranslation', 200, 0);
 let naiveSun = new Circle('sun', 40, 100);
 let naiveEarth = new Circle('earth', 20, 100);
 let naiveSystem = new CoordinateSystem('view', 100, 100);
@@ -41,8 +41,12 @@ naiveEarthTranslation.addChild(naiveEarth);
 naiveSunTranslation.addChild(naiveSystem);
 
 
-let camera = new Camera();
-ourEarthTranslation.addChild(camera);
+let ourCamera = new Camera('ourCamera');
+ourEarthTranslation.addChild(ourCamera);
+
+let naiveCamera = new Camera('naiveCamera');
+naiveSunTranslation.addChild(naiveCamera);
+
 
 
 
@@ -56,4 +60,4 @@ for (let i = -7; i <= 7; i++) for (let j = -7; j <= 7; j++) {
 }*/
 
 
-export default {root: rootNode, camera: camera};
+export default rootNode;

@@ -1,5 +1,5 @@
 import React from 'react';
-import scenegraph from './scenegraph';
+import sceneGraph from './scenegraph';
 import config from './floatingpointconfig';
 
 export default class extends React.Component {
@@ -27,9 +27,18 @@ export default class extends React.Component {
 
   render() {
     let svgElements = [];
-    let camera = scenegraph.camera;
-    scenegraph.root.traverse((node) => {
-      svgElements.push(node.render(camera));
+
+    let ourMethod = sceneGraph.getNodeByName('ourMethod');
+    let ourCamera = sceneGraph.getNodeByName('ourCamera');
+    let naiveMethod = sceneGraph.getNodeByName('naiveMethod');
+    let naiveCamera = sceneGraph.getNodeByName('naiveCamera');
+
+    ourMethod.traverse((node) => {
+      svgElements.push(node.render(ourCamera));
+    });
+
+    naiveMethod.traverse((node) => {
+      svgElements.push(node.render(naiveCamera));
     });
 
     //config.mantissaBits = (Math.round(this._frame / 50) % 6) + 1;

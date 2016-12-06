@@ -1,5 +1,5 @@
-import fRound from './fround';
-import {glMatrix, vec2, vec3, vec4, mat2, mat3, mat4} from './glround';
+import {vec2 as fvec2, vec3 as fvec3, mat3 as fmat3} from './glround';
+import {vec2, vec3, mat3} from 'gl-matrix';
 import React from 'react';
 import numeral from 'numeral';
 import drag from './drag';
@@ -58,6 +58,44 @@ class Node {
     return finalMatrix;
   }
 
+  fTransformationFrom(other) {
+    let thisDepth = this.depth();
+    let otherDepth = other.depth();
+
+    let invTransformation = fmat3.create();
+    let transformation = fmat3.create();
+
+    let currentInvNode = this;
+    let currentNode = other;
+
+    while (thisDepth > otherDepth) {
+      fmat3.multiply(invTransformation, invTransformation, currentInvNode.fInverseTransformation());
+      thisDepth--;
+      currentInvNode = currentInvNode.parent();
+    }
+
+    while (otherDepth > thisDepth) {
+      fmat3.multiply(transformation, currentNode.fTransformation(), transformation);
+      otherDepth--;
+      currentNode = currentNode.parent();
+    }
+
+    while (currentNode !== currentInvNode) {
+      if (thisDepth < 0) { throw "no common parent."; }
+      fmat3.multiply(invTransformation, invTransformation, currentInvNode.fInverseTransformation());
+      fmat3.multiply(transformation, currentNode.fTransformation(), transformation);
+      thisDepth--;
+      otherDepth--;
+      currentNode = currentNode.parent();
+      currentInvNode = currentInvNode.parent();
+    }
+
+    let finalMatrix = fmat3.create(); 
+    fmat3.multiply(finalMatrix, invTransformation, transformation);
+
+    return finalMatrix;
+  }
+
   parent() {
     return this._parent;
   }
@@ -87,12 +125,20 @@ class Node {
       }
     }
   }
+  fTransformation() {
+    return fmat3.create();
+  }
+  fInverseTransformation() {
+    return fmat3.create();
+  }
+
   transformation() {
     return mat3.create();
   }
   inverseTransformation() {
     return mat3.create();
   }
+
 
   render() {
     let id = this._id;
@@ -125,16 +171,28 @@ class Translation extends Node {
   transformation() {
     let v = vec2.fromValues(this._x, this._y);
     let m = mat3.fromTranslation(mat3.create(), v);
-    let dummy = mat3.create();
-    m = mat3.multiply(m, dummy, m);
     return m;
   }
 
   inverseTransformation() {
-    let v = vec3.fromValues(-this._x, -this._y);
+    let v = vec2.fromValues(-this._x, -this._y);
     let m = mat3.fromTranslation(mat3.create(), v);
-    let dummy = mat3.create();
-    m = mat3.multiply(m, dummy, m);
+    return m;
+  }
+
+  fTransformation() {
+    let v = fvec2.fromValues(this._x, this._y);
+    let m = fmat3.fromTranslation(fmat3.create(), v);
+    let dummy = fmat3.create();
+    m = fmat3.multiply(m, dummy, m);
+    return m;
+  }
+
+  fInverseTransformation() {
+    let v = fvec3.fromValues(-this._x, -this._y);
+    let m = fmat3.fromTranslation(fmat3.create(), v);
+    let dummy = fmat3.create();
+    m = fmat3.multiply(m, dummy, m);
     return m;
   }
 
@@ -182,16 +240,22 @@ class Circle extends Node {
     let n = segments || 10;
     for (let i = 0; i <= n; i++) {  
       let angle = i / n * 2 * Math.PI;
-      let v = vec3.fromValues(size * Math.cos(angle), size * Math.sin(angle), 1.0);
-      vec3.add(v, v, vec3.fromValues(0, 0, 0));
+      let v = fvec3.fromValues(size * Math.cos(angle), size * Math.sin(angle), 1.0);
+      fvec3.add(v, v, fvec3.fromValues(0, 0, 0));
       verts.push(v);
     }
 
     let viewMatrix = camera.viewMatrix(this);
+    let offsetMatrix = camera.offsetMatrix(this);
+
     let transformedVerts = [];
     for (let i = 0; i < verts.length; i++) {
-      let transformedVert = vec3.fromValues(0, 0, 0);
-      vec3.transformMat3(transformedVert, verts[i], viewMatrix);
+      let transformedVert = fvec3.fromValues(0, 0, 0);
+      // In low precision: apply relative camera transformation.
+      fvec3.transformMat3(transformedVert, verts[i], viewMatrix);
+
+      // In high precision: apply camera position. (bring it to visualization world space)
+      vec3.transformMat3(transformedVert, transformedVert, offsetMatrix);
       transformedVerts.push(transformedVert);
     }
 
@@ -199,6 +263,8 @@ class Circle extends Node {
     transformedVerts.forEach((v) => {
       vertString += numeral(v[0]).format('0.0') + ',' + numeral(v[1]).format('0.0') + ' ';
     });
+
+
 
 
     let id = this._id;
@@ -217,70 +283,15 @@ class Camera extends Node {
   }
 
   viewMatrix(node) {
-    return this.transformationFrom(node);
-  }
-}
-
-
-class CoordinateGrid extends Node {
-  constructor(name) {
-    super(name);
+    return this.fTransformationFrom(node);
   }
 
-  render(camera) {
-    let lines = [];
-    let manBits = config.mantissaBits;
-    let expBits = config.exponentBits;
-    let maxExp = Math.pow(2, expBits - 1);
-    let minExp = -maxExp;
-
-    let x = 0;
-    for (let e = 6; e < 9; e++) {
-      let significand = 1;
-      for (let m = 0; m < Math.pow(2, manBits); m++) {
-        significand += Math.pow(2, -manBits);
-
-        x = significand * Math.pow(2, e);
-        //console.log(significand, -manBits, x, Math.pow(2, e));
-        let idPos = "x" + x;
-        let idNeg = "x-" + x;
-        lines.push(
-          <line key={idPos} x1={-x} x2={-x} y1={-400} y2={400} style={{stroke:'rgba(255,0,0, 0.5)', strokeWidth: 1}}/>
-        );
-        lines.push(
-          <line key={idNeg} x1={x} x2={x} y1={-400} y2={400} style={{stroke:'rgba(255,0,0, 0.5)', strokeWidth: 1}}/>
-        );
-      }
+  offsetMatrix() {
+    let ancestor = this;
+    while (ancestor.parent()) {
+      ancestor = ancestor.parent();
     }
-
-    let y = 0;
-    for (let e = 6; e < 9; e++) {
-      let significand = 1;
-      for (let m = 0; m < Math.pow(2, manBits); m++) {
-        significand += Math.pow(2, -manBits);
-
-        y = significand * Math.pow(2, e);
-        //console.log(significand, -manBits, x, Math.pow(2, e));
-        let idPos = "y" + y;
-        let idNeg = "y-" + y;
-        lines.push(
-          <line key={idPos} y1={-x} y2={-x} x1={-400} x2={400} style={{stroke:'rgba(255,0,0, 0.5)', strokeWidth: 1}}/>
-        );
-        lines.push(
-          <line key={idNeg} y1={x} y2={x} x1={-400} x2={400} style={{stroke:'rgba(255,0,0, 0.5)', strokeWidth: 1}}/>
-        );
-      }
-    }
-
-
-    
-    let domElement = (
-      <g className={this._name}>
-        {lines}
-      </g>
-    );
-
-    return domElement;
+    return ancestor.transformationFrom(this);
   }
 }
 
@@ -293,15 +304,24 @@ class CoordinateSystem extends Node {
 
   render(camera) {
     let viewMatrix = camera.viewMatrix(this);
-    let vertex1 = vec3.fromValues(-this._w, 0, 1);
-    let vertex2 = vec3.fromValues(this._w, 0, 1);
-    let vertex3 = vec3.fromValues(0, -this._h, 1);
-    let vertex4 = vec3.fromValues(0, this._h, 1);
+    let offsetMatrix = camera.offsetMatrix(this);
 
-    vec3.transformMat3(vertex1, vertex1, viewMatrix);
-    vec3.transformMat3(vertex2, vertex2, viewMatrix);
-    vec3.transformMat3(vertex3, vertex3, viewMatrix);
-    vec3.transformMat3(vertex4, vertex4, viewMatrix);
+    let vertex1 = fvec3.fromValues(-this._w, 0, 1);
+    let vertex2 = fvec3.fromValues(this._w, 0, 1);
+    let vertex3 = fvec3.fromValues(0, -this._h, 1);
+    let vertex4 = fvec3.fromValues(0, this._h, 1);
+
+    fvec3.transformMat3(vertex1, vertex1, viewMatrix);
+    fvec3.transformMat3(vertex2, vertex2, viewMatrix);
+    fvec3.transformMat3(vertex3, vertex3, viewMatrix);
+    fvec3.transformMat3(vertex4, vertex4, viewMatrix);
+
+    vec3.transformMat3(vertex1, vertex1, offsetMatrix);
+    vec3.transformMat3(vertex2, vertex2, offsetMatrix);
+    vec3.transformMat3(vertex3, vertex3, offsetMatrix);
+    vec3.transformMat3(vertex4, vertex4, offsetMatrix);
+
+
     return (<g>
       <line key={"x"} className={this._name} x1={vertex1[0]} y1={vertex1[1]} x2={vertex2[0]} y2={vertex2[1]} style={{stroke:'rgba(255,0,0, 0.5)', strokeWidth: 1}}/>
       <line key={"y"} className={this._name} x1={vertex3[0]} y1={vertex3[1]} x2={vertex4[0]} y2={vertex4[1]} style={{stroke:'rgba(255,0,0, 0.5)', strokeWidth: 1}}/>
@@ -310,4 +330,4 @@ class CoordinateSystem extends Node {
 }
 
 
-export {Node, Translation, Circle, Camera, CoordinateGrid, CoordinateSystem};
+export {Node, Translation, Circle, Camera, CoordinateSystem};
