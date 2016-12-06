@@ -33,10 +33,18 @@ export default class extends React.Component {
     let earth = sceneGraph.getNodeByName('earth');
     let sun = sceneGraph.getNodeByName('sun');
     let earthOrbit = sceneGraph.getNodeByName('earthOrbit');
+
     let cameraEarthOrbitCompensation = sceneGraph.getNodeByName('cameraEarthOrbitCompensation');
+
+    let moonOrbit = sceneGraph.getNodeByName('moonOrbit');
+    let cameraMoonOrbitCompensation = sceneGraph.getNodeByName('cameraMoonOrbitCompensation');    
+
     let camera = sceneGraph.getNodeByName('camera'); 
     earthOrbit.set(this._frame / 1000);
     cameraEarthOrbitCompensation.set(-this._frame / 1000)
+
+    moonOrbit.set(this._frame / 1000 * 12);
+    cameraMoonOrbitCompensation.set(-this._frame / 1000 * 12)
 
 
     let svgElements = [];
