@@ -9,3 +9,7 @@ html {
 .earth {
 	stroke: #77f;
 }
+
+.camera {
+	fill: #fff;
+}

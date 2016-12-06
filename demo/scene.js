@@ -1,6 +1,7 @@
 import React from 'react';
 import sceneGraph from './scenegraph';
 import config from './floatingpointconfig';
+import fRound from './fRound';
 
 export default class extends React.Component {
   constructor() {
@@ -26,19 +27,18 @@ export default class extends React.Component {
   }
 
   render() {
+    let earth = sceneGraph.getNodeByName('earth');
+    let sun = sceneGraph.getNodeByName('sun');
+    let earthOrbit = sceneGraph.getNodeByName('earthOrbit');
+    let cameraEarthOrbitCompensation = sceneGraph.getNodeByName('cameraEarthOrbitCompensation');
+    let camera = sceneGraph.getNodeByName('camera'); 
+    earthOrbit.set(this._frame / 100);
+    cameraEarthOrbitCompensation.set(-this._frame / 100)
+
+
     let svgElements = [];
-
-    let ourMethod = sceneGraph.getNodeByName('ourMethod');
-    let ourCamera = sceneGraph.getNodeByName('ourCamera');
-    let naiveMethod = sceneGraph.getNodeByName('naiveMethod');
-    let naiveCamera = sceneGraph.getNodeByName('naiveCamera');
-
-    ourMethod.traverse((node) => {
-      svgElements.push(node.render(ourCamera));
-    });
-
-    naiveMethod.traverse((node) => {
-      svgElements.push(node.render(naiveCamera));
+    sceneGraph.traverse((node) => {
+      svgElements.push(node.render(camera, cameraEarthOrbitCompensation));
     });
 
     //config.mantissaBits = (Math.round(this._frame / 50) % 6) + 1;
@@ -46,11 +46,13 @@ export default class extends React.Component {
 
 
     return (
-    <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-              width="100%" height="100%" viewBox="-800 -600 1600 1200" enableBackground="new 0 0 800 600"
-              xmlSpace="preserve">
-          {svgElements}
-    </svg>
+    <div>
+      <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                width="50%" height="50%" viewBox="-400 -300 800 600" enableBackground="new 0 0 800 600"
+                xmlSpace="preserve">
+            {svgElements}
+      </svg>
+    </div>
     );
   }
 };

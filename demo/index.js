@@ -4,7 +4,9 @@ import Scene from './scene'
 
 const content = ((
   <div>
-  	<Scene/>
+  	<Scene method='separateMatrices'/>
+  	<Scene method='mergedMatrices'/>
+  	<Scene method='ours'/>
   </div>
 ));
 
