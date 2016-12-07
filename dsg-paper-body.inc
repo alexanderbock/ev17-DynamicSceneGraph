@@ -288,10 +288,9 @@ In equation \ref{eq:translation}, a translation matrix $T$ is applied to $A$ usi
 where 
 
 \begin{align} \label{eq:translationconclusion}
-\hat{T}_{ij} = (I \otimes A')_{ij} = A'_{ij}(1 + [e_{ij}])\\
+\hat{T}_{ij} = (I \otimes A')_{ij} = A'_{ij}\\
 \hat{t}_i = t_i \oplus a_i \subseteq (t_i + a_i)(1 + [e_i])
 \end{align}
-
 We note that the precision in $\hat{T}_{ij}$ is preserved from $A'$ when any translation matrix $T$ is applied. However, any error intervals encoded in $t_i$ and $a_i$ will propagate to $\hat{t}_i$, and will \emph{not} be scaled down even if $|\hat{t}_i|$ is orders of magnitude smaller than $|t_i|$ and $|a_i|$. This scenario \emph{may lead to catastrophic cancellation} in the component $\hat{t}_i$.
 
 
