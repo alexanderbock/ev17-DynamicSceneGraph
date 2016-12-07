@@ -86,7 +86,7 @@ transformations operating on 4-dimensional homogeneous coordinate vectors with f
 
 \begin{figure}
 \includegraphics[width=8.4cm,height=8.4cm,keepaspectratio]{degradation-circles.pdf}
-\caption{(to do)}
+\caption{5 mantissa bits instead of 23. TODO: write more here}
 \label{fig:degradation-circles}
 \end{figure}
 
