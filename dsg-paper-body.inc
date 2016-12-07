@@ -425,6 +425,7 @@ The same idea can be extended for the other nodes. For the item 3 node, its posi
 \label{fig:vectorsum}
 \end{figure}
 
+\joncomment{Talk about the perspective effects.}
 
 We use the perspective matrix:
 
@@ -474,7 +475,7 @@ As stated before, not all nodes in the dynamic scenegraph are celestial bodies w
 
 Space probes like New Horizons~\cite{??} travels through the solar system capturing important scientific data that is later sent to Earth. Because of New Horizons' trajectory is given by a path from Earth to Pluto, a commonly used scenegraph would set New Horizon's node as a child of an existent node in the tree (Earth's node, e.g.) and when the New Horizons probe is rendered close to Pluto, the translations necessary to render that node will lead to an precision problem. Equivalently, setting Pluto's node as the New Horizons' node will generate precision problems when rendering New Horizons probe close to Earth.
 
-The solution to this problem is to have a dynamic node attachment, i.e., during the traveling of New Horizons probe its node changes the parent relationship with the other nodes in the dynamic scenegraph. This parent change (adoption), is done based on the checking of the moving node's position against the other node's node radius. If the moving node is inside a node radius, the children of this node are also tested against to determine the closest one which moving node is inside the node radius. The algorithm~\ref{alg:dynamicAdoption} represents this idea. \joncomment{Improve this paragraph.}
+The solution to this problem is to have a dynamic node attachment, i.e., during the traveling of New Horizons probe its node changes the parent relationship with the other nodes in the dynamic scenegraph. This parent changing (adoption), is done based on the checking of the moving node's position against the other node's node radius. If the moving node is inside a node radius, the children of this node are also tested against to determine the closest one which moving node is inside the node radius. The algorithm~\ref{alg:dynamicAdoption} represents this idea. \joncomment{Improve this paragraph.}
 
 \begin{algorithm}\label{alg:dynamicAdoption}
  \caption{Dynamic Node Attachment Algorithm - Node Adoption}
