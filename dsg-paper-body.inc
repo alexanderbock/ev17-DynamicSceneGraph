@@ -447,9 +447,9 @@ Clipping is performed for all content with negative w.
 
 The virtual camera in our system can move freely within 5 degrees of freedom (DOF). Considering only 3 DOF (3-d space movement), the camera can be close to any node in our dynamic scenegraph. Which means that once the camera is close to a node, this node must be the new current center node. This propriety of changing the current center node, and by consequence the scene's center of coordinate, based on the camera position is one of the factors contributing to the ``dynamic'' aspect of our scenegraph.
 
-In order to determine which node should be the new current center node, every time the camera is translated, its current position is tested against the node radius of the nodes in the dynamic scenegraph. If the camera is inside a node's node radius, the camera position is tested against its children nodes' node radius to determine which node should be the new current center node.
+In order to determine which node should be the new current center node, every time the camera is translated, its current position is tested against the node radius of the nodes in the dynamic scenegraph. If the camera is inside a node's node radius, the camera position is tested against its children nodes' node radius to determine which node should be the new current center node. This idea is represented by the algorithm~\ref{alg:dynamicCamera}.
 
-\begin{algorithm}
+\begin{algorithm}\label{alg:dynamicCamera}
  \caption{Dynamic Camera Attachment Algorithm}
  \begin{algorithmic}[1]
  \renewcommand{\algorithmicrequire}{\textbf{Input:}}
