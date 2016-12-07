@@ -414,7 +414,7 @@ As we noted, traversing the scenegraph from root to leaf during each rendering p
 
 In our dynamic scenegraph, the closest (in an euclidean space) node from the camera is the current center of the coordinates system for the scene (center of the world coordinates) and will be called from now on the current center node. In our example in Figure~\ref{fig:scenegraph} this node is the item 4 node (Moon). Thus, instead of applying all translations from the root node to item 4 node, we only apply the translations present in item 4 node, minimizing the chances of a catastrophic cancellation happens.
 
-When visiting other item nodes, for instance, the item 5 node, we initially find the common parent between the current center node and the item 5 node; the item 2 node. Instead of applying all translations from the root node to item 5 node, we only apply the translation from item 2 node to item 5 node (drawn as a blue arrow in Figure~\ref{fig:scenegraph}, and to obtain the final translation from the current center node, we subtract the translation from the item 2 node to the current center node (drawn as a red arrow in Figure~\ref{fig:scenegraph}). This procedure is equivalent to sum vector $\vec{v_1}$ from item 2 node to item 5 node to vector $\vec{v_2}$ from item 5 node to item 2 node. See Figure~\ref{fig:vectorsum}
+When visiting other item nodes, for instance, the item 5 node, we initially find the closest ancestor node between the current center node and the item 5 node; the item 2 node. Instead of applying all translations from the root node to item 5 node, we only apply the translation from item 2 node to item 5 node (drawn as a blue arrow in Figure~\ref{fig:scenegraph}, and to obtain the final translation from the current center node, we subtract the translation from the item 2 node to the current center node (drawn as a red arrow in Figure~\ref{fig:scenegraph}). This procedure is equivalent to sum vector $\vec{v_1}$ from item 2 node to item 5 node to vector $\vec{v_2}$ from item 5 node to item 2 node. See Figure~\ref{fig:vectorsum}
 
 The same idea can be extended for the other nodes. For the item 3 node, its position related to the current center node can be obtained adding the vectors $\vec{v_2}$, $\vec{v_3}$ and $\vec{v_4}$ in Figure~\ref{fig:vectorsum}.
 
@@ -466,15 +466,35 @@ In order to determine which node should be the new current center node, every ti
   \ENDFOR
  \RETURN $P$
  \end{algorithmic}
- \end{algorithm}  
+\end{algorithm}  
 
 \subsubsection{Dynamic object attachment}
 
-Not all nodes in our dynamic scenegraph are celestial bodies with known orbits, we can handle any of the three types defined in section~\ref{sec:scenegraph}. One possible type is a mission space probe. 
+As stated before, not all nodes in the dynamic scenegraph are celestial bodies with known orbits. The dynamic scenegraph can handle any of the three types defined in section~\ref{sec:scenegraph}. One possible type is a mission space probe. 
 
-Space probes like New Horizons~\cite{??} travels through the solar system capturing data...
+Space probes like New Horizons~\cite{??} travels through the solar system capturing important scientific data that is later sent to Earth. Because of New Horizons' trajectory is given by a path from Earth to Pluto, a commonly used scenegraph would set New Horizon's node as a child of an existent node in the tree (Earth's node, e.g.) and when the New Horizons probe is rendered close to Pluto, the translations necessary to render that node will lead to an precision problem. Equivalently, setting Pluto's node as the New Horizons' node will generate precision problems when rendering New Horizons probe close to Earth.
 
-\joncomment{TODO: write about nodes that need to change parents.}
+The solution to this problem is to have a dynamic node attachment, i.e., during the traveling of New Horizons probe its node changes the parent relationship with the other nodes in the dynamic scenegraph. This parent change (adoption), is done based on the checking of the moving node's position against the other node's node radius. If the moving node is inside a node radius, the children of this node are also tested against to determine the closest one which moving node is inside the node radius. The algorithm~\ref{alg:dynamicAdoption} represents this idea. \joncomment{Improve this paragraph.}
+
+\begin{algorithm}\label{alg:dynamicAdoption}
+ \caption{Dynamic Node Attachment Algorithm - Node Adoption}
+ \begin{algorithmic}[1]
+ \renewcommand{\algorithmicrequire}{\textbf{Input:}}
+ \renewcommand{\algorithmicensure}{\textbf{Output:}}
+ \REQUIRE in
+ \ENSURE  out
+ \\ \textit{Initialization} :
+  \STATE first statement
+ \\ \textit{LOOP Process}
+  \FOR {$i = l-2$ to $0$}
+  \STATE statements..
+  \IF {($i \ne 0$)}
+  \STATE statement..
+  \ENDIF
+  \ENDFOR
+ \RETURN $P$
+ \end{algorithmic}
+\end{algorithm}  
 
 \subsubsection{Model view matrix computation}
 
