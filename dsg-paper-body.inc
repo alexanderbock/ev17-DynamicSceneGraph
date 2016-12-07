@@ -124,60 +124,69 @@ The scale difference between the Planck length and the diameter of the observabl
 To reason about the precision of various floating point operations, it is possible to use interval arithmetic as a mathematical tool to track possible rounding errors. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$. Using interval arithmetic, the interval can be rewritten as $v(1 + u[-1,1])$.
 
 
-The IEEE754 standard requires that the result of operations $+$, $-$, $\cdot$ and $/$ acting on any two floating point numbers should be the same result as an infinitely precise computation followed by a rounding to the closest representable float.  Throughout the following sections, $\oplus$, $\ominus$, $\odot$ and $\oslash$ will be used to denote floating point addition, subtraction, multiplication and division. We define the operators to act on real numbers or intervals, and return  the intervals containing the numbers that may result from computation followed by rounding, as expressed in equation \ref{eq:floatoperations}.
+Throughout the following sections, $\oplus$, $\ominus$, $\odot$ and $\oslash$ will be used to denote floating point addition, subtraction, multiplication and division respectively. The IEEE754 standard requires that the result of each of these operations is identical to the result of an infinitely precise computation followed by a rounding to the closest representable float. The operators are commutaive, and yield the possible output intervals given two real number intervals $[x]$ and $[y]$ as described in equation \ref{eq:floatoperations}.
 
 \begin{equation} \label{eq:floatoperations}
 \begin{split}
-a \oplus b \equiv (a + b)(1 + u[-1, 1]) \\
-a \ominus b \equiv (a - b)(1 + u[-1, 1]) \\
-a \odot b \equiv ab(1 + u[-1, 1]) \\
-a \oslash b \equiv \frac{a}{b}(1 + u[-1, 1]) \\
+[x] \oplus [y] & \subseteq ([x] + [y])(1 + u[-1, 1]) \\
+[x] \ominus [y] & \subseteq ([x] - [y])(1 + u[-1, 1]) \\
+[x] \odot [y] & \subseteq [x][y](1 + u[-1, 1]) \\
+[x] \oslash [y] & \subseteq \frac{[x]}{[y]}(1 + u[-1, 1]) \\
 \end{split}
 \end{equation}
 
+For operations involving the degenerate intervals $[0, 0]$ and $[1, 1]$, we observe some special cases:
+\begin{equation} \label{eq:floatspecialcases}
+\begin{split}
+[x] \odot [0, 0] & = [0, 0] \\
+[x] \odot [1, 1] & = [x] \\
+[x] \oplus [0, 0] & = [x]
+\end{split}
+\end{equation}
 
 
 \subsection{Propagation of error intervals}
 When a result from one floating point operation is used in further computations, rounding errors will propagate through the whole series of operations. This may lead to scenarios where expressions on the form $(a + b) - b$ may evaluate to $0$, for a sufficiently small $a$ and large $b$. This phenomena is known as 
 \emph{catastrophic cancellation}. In any rendering pipeline where e.g. matrix multiplications or vector additions result in this type of operations, there is a risk for floating point precision problems.
 
-Let $\mathds{E}$ be the set of intervals that can be written in form of equation $cu[-1, 1]$, where c is a non-negative constant that is not a function of any floating point value. For any intervals $E_1, E_2 \in \mathds{E}$, there are intervals $E_3, E_4 \in \mathds{E}$, such that
-$E_1+E_2 \subseteq E_3$ and $E_1E_2 \subseteq E_4$.
+Let $\mathds{E}$ be the set of intervals that can be written in form of equation $cu[-1, 1]$, where c is a non-negative constant that is not a function of any floating point value. For any intervals $[e_1], [e_2] \in \mathds{E}$, there are intervals $[e_3], [e_4] \in \mathds{E}$, such that
+$[e_1]+[e_2] \subseteq [e_3]$ and $[e_1e_2] \subseteq [e_4]$.
 
-We let $E_i = c_iu[-1, 1] \in \mathds{E}$ and observe some properties of $\oplus$, and $\odot$ as they act on the two intervals $a(1 + E_1)$ and $b(1 + E_2)$.
+We let $[e_i] = c_iu[-1, 1] \in \mathds{E}$ and observe some properties of $\oplus$, and $\odot$ as they act on the two intervals $a(1 + [e_1])$ and $b(1 + [e_2])$.
 
 \begin{equation} \label{eq:errortermadd} 
 \begin{split}
-a(1 + E_1) \oplus b( 1 + E_2) \\
-= \big(a(1 + E_1) + b( 1 + E_2)\big)(1 + u[-1, 1]) \\
-\subseteq a(1 + E_3) + b(1 + E_4)
+a(1 + [e_1]) \oplus b( 1 + [e_2]) \\
+\subseteq \big(a(1 + [e_1]) + b( 1 + [e_2])\big)(1 + u[-1, 1]) \\
+\subseteq a(1 + [e_3]) + b(1 + [e_4])
 \end{split}
 \end{equation}
 
 \begin{equation} \label{eq:errortermmult} 
 \begin{split}
-a(1 + E_1) \odot b(1 + E_2) \\
-= ab(1 + E_1)(1 + E_2)(1 + u[-1, 1]) \\
-\subseteq ab(1 + E_5)
+a(1 + [e_1]) \odot b(1 + [e_2]) \\
+\subseteq ab(1 + [e_1])(1 + [e_2])(1 + u[-1, 1]) \\
+\subseteq ab(1 + [e_5])
 \end{split}
 \end{equation}
 
-Since $E$-terms are intervals on the form $cu[-1, 1]$, we can conclude that equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_3u| + |bc_4u|$. Equation \ref{eq:errortermmult} may output a maximum rounding error of $|abc_5u|$. While several floating point additions will accumulate errors from all contributing terms, creating a risk for catastrophic cancellation, floating point multiplication will scale the error proportionally to the factors. Multiplying an interval with a number with absolute value smaller than $1$ will hence shrink the absolute error interval proportionally. The relative precision $c_5u$ is independent of the size of the factors $a$ and $b$. \emilcomment{Is this a better claim?}.
+Since $[e]$-terms are intervals on the form $cu[-1, 1]$, we can conclude that equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_3u| + |bc_4u|$. Equation \ref{eq:errortermmult} may output a maximum rounding error of $|abc_5u|$. While several floating point additions will accumulate errors from all contributing terms, creating a risk for catastrophic cancellation, floating point multiplication will scale the error proportionally to the factors. Multiplying an interval with a number with absolute value smaller than $1$ will hence shrink the absolute error interval proportionally. The relative precision $c_5u$ is independent of the size of the factors $a$ and $b$. \emilcomment{Is this a better claim?}.
 
 
-By applying equation \ref{eq:errortermadd} iteratively, we can also conclude that for floating point sums $\osum_i x_i \equiv x_1 \oplus x_2 \oplus ... \oplus x_n$, equation \ref{eq:errortermsum} holds regardless of in which order terms are added, with $E_{1,i}, E_{2,i} \in \mathds{E}$.
+By applying equation \ref{eq:errortermadd} iteratively, we can also conclude that for floating point sums $\osum_i x_i = x_1 \oplus x_2 \oplus ... \oplus x_n$, equation \ref{eq:errortermsum} holds regardless of in which order terms are added, with $[e_i], [e'_i] \in \mathds{E}$.
 
 \begin{equation} \label{eq:errortermsum} 
-\osum_i x_i(1 + E_{1,i}) \subseteq \sum_i x_i(1 + E_{2, i})
+\osum_i x_i(1 + [e_i]) \subseteq \sum_i x_i(1 + [e'_i])
 \end{equation}
 
 The straight-forward implementation of floating point matrix multiplication $A \otimes B$ is to compute matrix components as a sum of products using $\oplus$ and $\odot$. By applying equations \ref{eq:errortermmult} and \ref{eq:errortermsum}, we get equation \ref{eq:matrixmult} where $m$ is the number of columns of $A$ and the number of rows of $B$.
 
 \begin{equation} \label{eq:matrixmult} 
-(A \otimes B)_{ij} \equiv \osum_{k = 1}^mA_{ik}\odot B_{kj} \subseteq \sum_{k = 1}^mA_{ik} B_{kj}(1 + E_{ijk})
+(A \otimes B)_{ij} \subseteq \osum_{k = 1}^mA_{ik}\odot B_{kj} \subseteq \sum_{k = 1}^mA_{ik} B_{kj}(1 + [e_{ijk}])
 \end{equation}
 
-We observe that the maximum floating point error introduced to any individual component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} E_{ijk}|$.
+\noindent We observe that the maximum floating point error introduced to any individual component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$.
+
 
 \subsection{Coordinate transformations}
 In computer graphics software, scene content is commonly organized in a \emph{scene graph}, which allows coordinate transformations to be represented hierarchically. Each node in the graph may contain a transformation, represented as a 4x4 matrix, that affects all its children. Objects consist of vertices $\mathbf{x}$ represented as homogeneous coordinates $(x, y, z, w)^t$, where $x$, $y$ and $z$ are the coordinates in a local coordinate system, and $w = 1$. In order to transform a vertex from its local \emph{model coordinate system} to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatenated to a final \emph{model matrix} using matrix multiplication. This final matrix is applied to the vertex $\mathbf{x}$ to acquire the world coordinates $\mathbf{w}$.
@@ -250,8 +259,8 @@ Equation \ref{eq:scaling} describes a floating point matrix multiplication of a 
 \noindent Since the diagonal matrix components $S'_{ij}$ are $0$ for all $i \neq j$, the output matrix components $\hat{S}'_{ij}$ and $\hat{\mathbf{s}}_i $ can be written as in equation \ref{eq:scalingconclusion}.
 
 \begin{align} \label{eq:scalingconclusion}
-\hat{S}'_{ij} = (S' \otimes A')_{ij} &\subseteq S'_{ii}\,A'_{ij}(1 + E_{ij}) \\
-\hat{\mathbf{s}}_i = (S' \otimes \mathbf{a})_{i} &\subseteq S'_{ii}\,\mathbf{a}_i(1 + E_{j})
+\hat{S}'_{ij} = (S' \otimes A')_{ij} &\subseteq S'_{ii}\,A'_{ij}(1 + [e_{ij}]) \\
+\hat{\mathbf{s}}_i = (S' \otimes \mathbf{a})_{i} &\subseteq S'_{ii}\,\mathbf{a}_i(1 + [e_{j}])
 \end{align}
 
 The rounding error introduced by a scaling matrix $S$ is proportional to the scaling factors in $S'$. Any error interval encoded in $A'$ and $\mathbf{a}$ will be scaled proportionally. We conclude that applying a scaling matrix to a matrix $A$ \emph{preserves the relative precision} of all components of $A$.
@@ -286,8 +295,8 @@ In equation \ref{eq:translation}, a translation matrix $T$ is applied to $A$ usi
 where 
 
 \begin{align} \label{eq:translationconclusion}
-\hat{T}_{ij} = (I \otimes A')_{ij} = A'_{ij}(1 + E_{ij})\\
-\hat{t}_i = t_i \oplus a_i \subseteq (t_i + a_i)(1 + E_i)
+\hat{T}_{ij} = (I \otimes A')_{ij} = A'_{ij}(1 + [e_{ij}])\\
+\hat{t}_i = t_i \oplus a_i \subseteq (t_i + a_i)(1 + [e_i])
 \end{align}
 
 We note that the precision in $\hat{T}_{ij}$ is preserved from $A'$ when any translation matrix $T$ is applied. However, any error intervals encoded in $t_i$ and $a_i$ will propagate to $\hat{t}_i$, and will \emph{not} be scaled down even if $|\hat{t}_i|$ is orders of magnitude smaller than $|t_i|$ and $|a_i|$. This scenario \emph{may lead to catastrophic cancellation} in the component $\hat{t}_i$.
@@ -321,11 +330,11 @@ The same analysis is performed for floating point rotation in equation \ref{eq:r
 \end{equation}
 
 \begin{align} \label{eq:rotationconclusion}
-\hat{R}'_{ij} = (R' \otimes A')_{ij} &\subseteq \sum_{k = 1}^3 R'_{ik}\,A'_{kj}(1 + E_{ijk}) \\
-\hat{\mathbf{r}}_i = (R' \otimes \mathbf{a})_{i} &\subseteq \sum_{k = 1}^3 R'_{ik}\,\mathbf{a}_k(1 + E_{ijk})
+\hat{R}'_{ij} = (R' \otimes A')_{ij} &\subseteq \sum_{k = 1}^3 R'_{ik}\,A'_{kj}(1 + [e_{ijk}]) \\
+\hat{\mathbf{r}}_i = (R' \otimes \mathbf{a})_{i} &\subseteq \sum_{k = 1}^3 R'_{ik}\,\mathbf{a}_k(1 + [e_{ijk}])
 \end{align}
 
-When applying a rotation matrix to a general matrix $A$, the potential rounding error of any output component $A_{ij}$ will be equal to $\sum_{k = 1}^3 |R'_{ik}\,A'_{kj} E_{ijk}|$. For a general rotation matrix $R$ written on the same form as in \ref{eq:rotation}, all the components of $R'$ are in the interval $[-1, 1]$, which means that the maximum possible precision loss is governed by the values of A. When applying $R$ on a matrix or vector with both huge and close-to-zero components, the precision in the small components may be lost. However, for the most significant matrix components, the relative precision will be close to preserved. This means that when $R$ is used to transform the coordinate vector $\mathbf{a} = (x, y, z)^t = \mathbf{\hat{a}}|\mathbf{a}|$, neither the precision of the direction $\mathbf{\hat{a}}$ nor the magnitude $|\mathbf{a}|$ will be affected significantly. The same is true for the column vectors in $A'$, which means that the significant properties of $A'$ are preserved in $\hat{R}'$
+When applying a rotation matrix to a general matrix $A$, the potential rounding error of any output component $A_{ij}$ will be equal to $\sum_{k = 1}^3 |R'_{ik}\,A'_{kj} [e_{ijk}]|$. For a general rotation matrix $R$ written on the same form as in \ref{eq:rotation}, all the components of $R'$ are in the interval $[-1, 1]$, which means that the maximum possible precision loss is governed by the values of A. When applying $R$ on a matrix or vector with both huge and close-to-zero components, the precision in the small components may be lost. However, for the most significant matrix components, the relative precision will be close to preserved. This means that when $R$ is used to transform the coordinate vector $\mathbf{a} = (x, y, z)^t = \mathbf{\hat{a}}|\mathbf{a}|$, neither the precision of the direction $\mathbf{\hat{a}}$ nor the magnitude $|\mathbf{a}|$ will be affected significantly. The same is true for the column vectors in $A'$, which means that the significant properties of $A'$ are preserved in $\hat{R}'$
 
 \subsubsection{Projection}
 A typical matrix for symmetric perspective projection $P$ can be written as in equation \ref{eq:perspectiveprojection}, where
