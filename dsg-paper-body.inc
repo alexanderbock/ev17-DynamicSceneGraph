@@ -57,13 +57,12 @@ Previous work by the visualization community has provided solutions to some of t
 In this paper we thoroughly explore the sources of precision errors and range overflow problems in a conventional computer graphics pipeline. Using interval arithmetic to track floating point rounding errors, we are able to identify which set of operations that may introduce precision problems. Using this information, we present and motivate our method for visualizing datasets with astronomical scale differences and distances. Our contributions include:
 
 \begin{itemize}
-\item A \emph{Precision-Adaptive Scene Graph} approach for representing objects and cameras to avoid precision-related artifacts.
+\item A \emph{Dynamic Scene Graph} approach for representing objects and cameras to avoid precision-related artifacts.
 \item A general method for rendering with wide depth range and precision without near and far planes.
 \item A scheme for seamless adaption of the eye-separation used for stereoscopic rendering.
-%\item Minimal modifications on a conventional rendering pipeline.
-\item Interoperability with volumetric rendering and order-independent-transparency.
 \end{itemize}
 
+\noindent Our method is applicable to any visualization tool that uses scene graphs to represent objects, and is compatible with techniques for volumetric rendering as well as order-independent-transparency.
 
 \section{Related work}
 Computer graphics and interactive visualization have
