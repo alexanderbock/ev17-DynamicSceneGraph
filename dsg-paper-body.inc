@@ -84,6 +84,12 @@ operating efficiently on floating point numbers, vectors, and matrices.
 In a standard computer graphics pipeline, $4x4$ matrices are used to represent coordinate
 transformations operating on 4-dimensional homogeneous coordinate vectors with floating point components. In order to understand the precision and range limitations of the graphics pipeline used in visualization, we need to base our reasoning on properties on floating point numbers and the operations that we perform on them.
 
+\begin{figure}
+\includegraphics[width=8.4cm,height=8.4cm,keepaspectratio]{degradation-circles.pdf}
+\caption{(to do)}
+\label{fig:degradation-circles}
+\end{figure}
+
 \subsection{Floating point numbers}
 The widely used IEEE754 standard for representing 32-bit floating point numbers \cite{zuras2008ieee} enables the possibility to express numbers in a much larger range than what is possible using 32-bit integers. While a 32-bit signed integer type can only represent numbers in the range $[-2^{31},\, 2^{31} - 1]$, an IEEE754 single precision floating point number approximately supports the range $[-2^{127},\, 2^{127}]$.
 

@@ -1,7 +1,8 @@
 import React from 'react';
 import { render } from 'react-dom';
-import Scene from './scene'
-import FloatingPointOptions from './floatingpointoptions'
+import Scene from './scene';
+import Circles from './circles';
+import FloatingPointOptions from './floatingpointoptions';
 
 const content = ((
   <div>
@@ -9,6 +10,7 @@ const content = ((
   	<Scene method='merged'/>
   	<Scene method='ours'/>
   	<FloatingPointOptions/>
+  	<Circles method = 'merged'/>
   </div>
 ));
 
