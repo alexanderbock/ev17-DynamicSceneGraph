@@ -10,17 +10,11 @@
 
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
-\author[Axelsson \emph{et al.}]
-       {E. Axelsson$^{1}$,
-        J. Costa$^{2}$
-        A. Bock$^{1}$,
-        C. Silva$^{2}$
-        and A. Ynnerman$^{1}$
-%        S. Spencer$^2$\thanks{Chairman Siggraph Publications Board}
+\author[Axelsson \emph{et al.}]{Emil Axelsson$^{1}$, Jonathas Costa$^{2}$, Alexander Bock$^{1}$, Cl\'audio Silva$^{2}$, and Anders Ynnerman$^{1}$
         \\
 % For Computer Graphics Forum: Please use the abbreviation of your first name.
-         $^1$Linköping University\\
-         $^2$New York University
+         $^1$ Linköping University\\
+         $^2$ New York University
        }
 
 % ------------------------------------------------------------------------
@@ -39,72 +33,71 @@
 \maketitle
 
 \begin{abstract}
-In this work, we address the challenges of limited numerical range and precision of floating point numbers when simultaneously visualizing astronomical objects with huge scale differences, both in size as well as distance. Due to the limited precision of floating point numbers, it is impossible to represent comparatively small objects far away from the coordinate system origin. We propose a system that utilizes a dynamically assigned coordinate system origin in a scene graph to provide the highest possible numerical precision for all salient objects. This makes it possible to interactively render, for example, surface structures on Mars and the Milky Way simultaneously. We track and quantify the propagation of numerical precision errors through the computer graphics pipeline using interval arithmetic for cases of large differences in scale. Furthermore, we identify sources of precision degradation, leading to incorrect object positions in screen-space and z-fighting, mathematically. Our proposed method operates without near and far planes while maintaining high depth precision through the use of floating point depth buffers. By providing interoperability with order-independent transparency algorithms, direct volume rendering, and stereoscopy, our approach is well suited for scientific visualization. We provide the mathematical background, a thorough description of the method, and a reference implementation.
+In this work, we address the challenges of limited numerical range and precision of floating point numbers when simultaneously visualizing astronomical objects with huge scale differences, both in size and distance. Due to the limited precision of floating point numbers, it is impossible to represent comparatively small objects far away from the coordinate system origin. We propose a system that utilizes a dynamically assigned coordinate system origin in a scene graph to provide the highest possible numerical precision for all salient objects. This makes it possible to interactively render, for example, surface structures on Mars and the Milky Way simultaneously. We track and quantify the propagation of numerical precision errors through the computer graphics pipeline using interval arithmetic for cases of large differences in scale. Furthermore, we identify sources of precision degradation, leading to incorrect object positions in screen-space and z-fighting, mathematically. Our proposed method operates without near and far planes while maintaining high depth precision through the use of floating point depth buffers. By providing interoperability with order-independent transparency algorithms, direct volume rendering, and stereoscopy, our approach is well suited for scientific visualization. We provide the mathematical background, a thorough description of the method, and a reference implementation.
 \end{abstract}
 
 %-------------------------------------------------------------------------
 \section{Introduction}
-Through various means of scientific discovery, humanity now has collected detailed information and measurements of structures in the surrounding cosmos that range from the diminutive to the unimaginably large. Everything we know and everything we can possibly know is constrained in size and distance by these two boundaries. The upper boundary is given by the size of the observable universe with a comoving diameter of about $10^{27}$ meter. The lower boundary is the Planck length, at which the structure of space-time is dominated by quantum effects and the concept of locality loses physical meaning, with an approximate size of $10^{-35}$ meters. 
+Maybe one of the biggest achievements of mankind is the ability to observe and collect data about the surrounding cosmos. This includes observations ranging from the diminutive to the unimaginably large. Everything we know and everything we can possibly know is constrained in size and distance by two limits. The upper limit is given by the size of the observable universe with a comoving diameter of about $10^{27}$ meters. The lower limit is the Planck length, at which the structure of space-time is dominated by quantum effects and the concept of locality loses physical meaning, with an approximate size of $10^{-35}$ meters. These two limits pose absolute limits to the resolution that a software system dealing data of any size has to support. While impressive, this tremendous range of scales over roughly 60 orders of magnitude generates many challenges to visualization system operating across such scales. Besides the issue of crossing different abstraction levels for the visualization, one challenge not immediately obvious is related to the precision of floating point numbers. Following a na\"ive approach using a conventional computer graphics pipeline object locations cannot be described with the necessary precision, for example when viewing models of space craft at the edge of our solarsystem, or watching micrometer-scaled scans on the surface of Mars. 
+
+%Through various means of scientific discovery, humanity now has collected detailed information and measurements of structures in the surrounding cosmos that range from the diminutive to the unimaginably large. Everything we know and everything we can possibly know is constrained in size and distance by two boundaries. The upper boundary is given by the size of the observable universe with a comoving diameter of about $10^{27}$ meters. The lower boundary is the Planck length, at which the structure of space-time is dominated by quantum effects and the concept of locality loses physical meaning, with an approximate size of $10^{-35}$ meters. These two boundaries pose absolute limits to the resolution that a software system dealing data of any size has to support.
 
 %Thanks to humanity's collective discoveries of the surrounding world, we are now aware of structures in the universe that are both tiny and huge. The observable universe has a diameter of approximately $10^{27}$ meters, while the Planck length, which is the length where quantum mechanical effects make it impossible to distinguish between two physical locations \joncomment{Maybe: ``...which is the length were the Heisenberg's uncertainty principle is present/observable, is...''}, is approximately $10^{-35}$ meters.
 
-\emph{OpenSpace} is an open source software project with the goal of interactively visualizing and contextualizing our knowledge of the known universe and our ongoing efforts of exploration. The software framework is designed for immersive environments to the public dissemination of science and to contextualize information such as sub-atomic particle simulations on Earth, micrometer-scale discoveries made by rovers the Martian surface, or volumetric simulations of entire galaxies. To fully utilize the potential of these immersive environments, for example planetariums and virtual reality headsets, the software needs to support stereoscopic rendering.
-
-When virtually exploring datasets with these vast scale differences and distances, the location of objects need to be expressed in huge value ranges with great precision. Current computer hardware is limited to hardware accelerated computations of single and double precision floating point numbers, which are insufficient to represent microscopic objects and cosmological distances. This lack of precision causes visual rendering artifacts, such as displaced vertices or z-fighting, and generate problems when displaying volumetric content. Furthermore, overflow and underflow of the available value ranges results in undesirable clipping of near and far geometry.
+When virtually exploring datasets with these vast scale differences and distances, the location of objects need to be expressed in huge value ranges with great precision. Current computer hardware is limited to hardware accelerated computations of single and double precision floating point numbers, which are insufficient to represent microscopic objects and cosmological distances simulteanously. This lack of precision causes visual rendering artifacts, such as displaced vertices or z-fighting, and generate problems when displaying volumetric content. Furthermore, overflow and underflow of the available value ranges results in undesirable clipping of near and far geometry.
 
 Previous work by the visualization community has provided solutions to some of these issues, such as the Power Scaled Coordinates by Hanson~\etal~\cite{hanson2000very} and the ScaleGraph by Klashed~\etal~\cite{KHECY10}. However, only partial solutions to the precision issues have been provided thus far and the root cause of these problems remains unsolved.
 
-In this paper we thoroughly explore the sources of precision errors and range overflow problems in a conventional computer graphics pipeline. Using interval arithmetic to track floating point rounding errors, we are able to identify which set of operations that may introduce precision problems. Using this information, we present and motivate our method for visualizing datasets with astronomical scale differences and distances. Our contributions include:
+In this work, we propose a general framework, a dynamic scene graph, to deal with multiple scales or varying sizes within one application. The concept is applicable to large variety of settings. This framework is constructed by analyzing the sources of precision errors and range overflow problems in a conventional computer graphics pipeline. Using interval arithmetic to track floating point rounding errors, we are able to identify which set of operations that may introduce precision problems. We combine this information with the observation that high detail is only required for close objects, we present and motivate our method for visualizing datasets with astronomical scale and distance differences. This techniques relies on a dynamic update and traversal of a scene graph whereby cameras automatically attach and detach to the closest object of interest. This object of interest is then used as a new coordinate origin and, thus, provided the highest possible numerical precision. 
+
+The dynamic scene graph has been implemented in the \emph{OpenSpace} project. OpenSpace is an open source software project with the goal of interactively visualizing and contextualizing our knowledge of the known universe and our ongoing efforts of exploration. The software framework is designed for immersive environments to the public dissemination of science and to contextualize information if all possible scales, such as sub-atomic particle simulations on Earth, micrometer-scale discoveries made by rovers the Martian surface, or volumetric simulations of entire galaxies. In order to fully utilize the potential of these immersive environments, for example planetariums or virtual reality headsets, the software needs to support high-fidelity stereoscopic rendering and the ability to render on multipipeline architectures, such as power walls. However, our method is applicable to any visualization tool that uses scene graphs to represent objects, and is compatible with techniques for volumetric rendering as well as order-independent transparency techniques.
+
+In summary, our contributions include:
 
 \begin{itemize}
-\item A \emph{Dynamic Scene Graph} approach for representing objects and cameras to avoid precision-related artifacts.
-\item A general method for rendering with wide depth range and precision without near and far planes.
+\item A \emph{Dynamic Scene Graph} approach for representing objects and cameras to avoid precision-related rendering artifacts.
+\item A general method for rendering objects with a wide depth range and precision without the explicit need for near and far planes.
 \item A scheme for seamless adaption of the eye-separation used for stereoscopic rendering.
 \end{itemize}
-
-\noindent Our method is applicable to any visualization tool that uses scene graphs to represent objects, and is compatible with techniques for volumetric rendering as well as order-independent-transparency.
 
 \section{Related work}
 Computer graphics and interactive visualization have
 proven to be immensely valuable tools for communicating scientific findings
 and contextualizing information. Notable examples of applications where huge scale differences are visualized 
-together include movie productions, such as \emph{Powers of Ten}\cite{powersOfTen} from 1977,
+together include movie productions, such as \emph{Powers of Ten} by Eames~\cite{powersOfTen} from 1977,
 All We Are [citation needed], as well as interactive software for digital planetariums,
-such as Uniview [citations], DigiStar [citations] and DigitalSky [citation]. 
+such as Uniview [citations], DigiStar [citations], DigitalSky [citation], or free software such as Celestia [citations] or SpaceEngine.
 
-The concept of \emph{Power Scaled Coordinates}, introduced by Hanson et al. in \cite{hanson2000very},
-addresses some of the challenges with multi-scale visualization. The method uses four-dimensional floating point vectors where the first three components determine the direction of the vector, and the fourth encodes a scaling coefficient as a power of ten. The proposed system can operate with floating point numbers close to unit scale, which solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors.
+The concept of \emph{Power Scaled Coordinates}, introduced by Hanson~\etal ,
+addresses some of the challenges with multi-scale visualization~\cite{hanson2000very}. The method uses four-dimensional floating point vectors where the first three components determine the direction of the vector, and the fourth encodes a scaling coefficient as a power of ten. The proposed system can operate with floating point numbers close to unit scale, which solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors.
 
-The Power Scaled Coordinates method is based on floating point representation of numbers, which yields high precision close to zero, and decreasing precision with larger values. Hence, the method achieves high precision close to the origin of the scene, but decreasing precision for coordinates further away. This is a viable solution for scenes where the high precision data is centered in one region, such as solely close to Earth. However, the challenge of representing multiple regions in the virtual universe with high precision is not addressed in this work.
+\alexcomment{Duplicate of the previous section?} The Power Scaled Coordinates method is based on floating point representation of numbers, which yields high precision close to zero, and decreasing precision with larger values. Hence, the method achieves high precision close to the origin of the scene, but decreasing precision for coordinates further away. This is a viable solution for scenes where the high precision data is centered in one region, such as solely close to Earth. However, the challenge of representing multiple regions in the virtual universe with high precision is not addressed in this work.
 
-Fu et al. \cite{fu2007transparently} elaborate on the concept of Power Scales Coordinates and introduce a depth buffer remapping scheme to cover a wider range of distances than what is possible with a fixed point depth buffer and a conventional near and far plane. The depth buffer range is divided into three regions, where small and huge depth values are remapped using logarithmic scales, while values in the mid-range are stored linearly. While this method may be beneficial for some specific type of scene content, the method does not provide a generic way to select appropriate threshold values, and the choice of three separate regions with different mapping does not necessarily provide better results than one single logarithmic mapping.
+Fu~\etal \cite{fu2007transparently} elaborate on the concept of Power Scales Coordinates and introduce a depth buffer remapping scheme to cover a wider range of distances than what is possible with a fixed point depth buffer and a conventional near and far plane. The depth buffer range is divided into three regions, where small and huge depth values are remapped using logarithmic scales, while values in the mid-range are stored linearly. While this method may be beneficial for some specific type of scene content, the method does not provide a generic way to select appropriate threshold values, and the choice of three separate regions with different mapping does not necessarily provide better results than one single logarithmic mapping.
 
-The \emph{ScaleGraph} method, introduced by Klashed et al. in \cite{KHECY10} as a part of the digital planetarium software Uniview, employs a scene graph structure with sub-scenes that the camera can be attached to. The content of the current sub-scene is rendered in its local coordinate system, which maintains the precision of vertex coordinates, and allows for multiple regions in the universe to be represented with high precision. When rendering content outside the current sub-scene, objects are translated onto the bounding sphere of the scene, and re-scaled to compensate for perspective effects. Vectors between sub-scenes are computed by traversing the scenegraph through the closest common ancestor in the tree, to avoid introducing precision errors caused by handling unnecessarily large numbers. By moving objects onto the bounding sphere of the current scene, object depths are mapped to a manageable range. However, the method does not provide a general solution for depth sorting objects that are outside the current sub-scene. Furthermore, the work does not address stereoscopic rendering of objects across sub-scenes. 
-
+The \emph{ScaleGraph} method, introduced by Klashed~\etal \cite{KHECY10} as a part of the digital planetarium software Uniview, employs a scene graph structure with sub-scenes that the camera can be attached to. The content of the current sub-scene is rendered in its local coordinate system, which maintains the precision of vertex coordinates, and allows multiple regions in the universe to be represented with high relative precision. When rendering content outside the current sub-scene, objects are translated onto the bounding sphere of the scene and scaled to compensate for perspective effects. Vectors between sub-scenes are computed by traversing the scenegraph through the closest common ancestor in the tree, to avoid introducing precision errors caused by handling unnecessarily large numbers. By moving objects onto the bounding sphere of the current scene, object depths are mapped to a manageable range. However, the method does not provide a general solution for depth sorting objects that are outside the current sub-scene. Furthermore, the work does not address stereoscopic rendering of objects across sub-scenes. The traversal of sub-scenes in this work formed the bases for our algorihtm of the dynamic traversal of a scene graph.
 
 \section{Theoretical foundation}\label{sec:theoretical}
-
-The co-evolution of graphics hardware, software and content, largely pushed forward by
+The co-evolution of graphics hardware, software, and content, largely pushed forward by
 the gaming industry, has led to modern graphics processing units that are optimized for
-operating efficiently on floating point numbers, vectors and matrices.
+operating efficiently on floating point numbers, vectors, and matrices.
 In a standard computer graphics pipeline, $4x4$ matrices are used to represent coordinate
-transformations operating on 4-dimensional homogeneous coordinate vectors, with their components stored as floating point numbers. To understand the precision and range limitations of a graphics pipeline used in visualization, we need to base our reasoning on properties on floating point numbers and the operations that we perform on them.
+transformations operating on 4-dimensional homogeneous coordinate vectors, with their components stored as floating point numbers. In order to understand the precision and range limitations of the graphics pipeline used in visualization, we need to base our reasoning on properties on floating point numbers and the operations that we perform on them.
 
 \subsection{Floating point numbers}
+The widely used IEEE754 standard for representing 32-bit floating point numbers \cite{zuras2008ieee} enables the possibility to express numbers in a much larger range than what is possible using 32-bit integers. While a 32-bit signed integer type can only represent numbers in the range $[-2^{31},\, 2^{31} - 1]$, an IEEE754 single precision floating point number approximately supports the range $[-2^{127},\, 2^{127}]$.
 
-The widely used IEEE754 standard for representing 32-bit floating point numbers \cite{zuras2008ieee} enables the possibility to express numbers in a much larger range than what is possible using 32-bit integers. While a 32-bit signed integer type can only represent numbers in the range $[-2^{31}, 2^{31} - 1]$, an IEEE754 float approximately support the range $[-2^{127}, 2^{127}]$.
-
-In floating point data types, values are represented as a sign, mantissa and exponent which results in high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range. The IEEE754 single precision floating point format uses 1 sign bit, 8 exponent bits and 23 mantissa bits. Equation \ref{eq:floatingpoint} yields the value $v$ represented by the sign bit $s$, the mantissa bits $m_i$ and the integer $e \in [-127, 128]$ which is encoded in the exponent bits. 
+In floating point data types, values are represented as a sign, a mantissa, and an exponent. This representation has the attributes of resulting in high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range. The IEEE754 single precision floating point format uses 1 sign bit, 8 exponent bits, and 23 mantissa bits. Equation \ref{eq:floatingpoint} yields the value $v$ represented by the sign bit $s$, the mantissa bits $m_i$, and the integer $e \in [-127, 128]$ which is encoded in the exponent bits. 
 
 \begin{equation} \label{eq:floatingpoint}
 v = \begin{cases}
 (-1)^s \sum_{i = 1}^{23}m_i\,2^{-i} 2^{-126}, & \text{for } e = -127 \\
 (-1)^s (1 + \sum_{i = 1}^{23}m_i\,2^{-i}) 2^e, & \text{for } -126 \leq e \leq 127 \\
-\text{Special numbers such as NaN and }\infty, & \text{for } e = 128
+\text{Special numbers such as NaN or }\infty, & \text{for } e = 128
 \end{cases}
 \end{equation}
 
-Only values that can be composed by this set of bits are valid 32-bit floating point numbers. If a numbers' exponent is not in the range $[-126, 127]$ it will be stored as $\infty$ or $-\infty$. Real numbers within the range are rounded to the closest available floating point representation.
+\noindent Only values that can be composed by this set of bits are valid 32-bit floating point numbers. If exponent of a number is not in the range $[-126, 127]$ it will be stored as $\infty$ or $-\infty$ \alexcomment{Picking up on the word "stored". Should it be "represented"?}. One critical characteristic of IEEE754 floating point numbers $\mathbb{R}_f$ \alexcomment{Is there a better symbol for this?} is their inability to represent all possible numbers $\mathbb{R}$. All numbers $\mathbb{R}_f \setminus \mathbb{R}$ that are not representable are rounded to their closeset \alexcomment{is this correct?} representable number in $\mathbb{R}_f$.
 
 An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits and 52 bits for the mantissa. Using 128-bits (quadruple precision), it is possible to further increase the precision and exponent range. Increasing the bit depth will naturally require more computational resources, and while the OpenGL Shading Language (GLSL) natively supports the doubles, there is no quad-precision data type available as of GLSL 4.4 \cite{kessenich2014opengl}. 
 
@@ -423,7 +416,7 @@ As we noted, traversing the scenegraph from root to leaf during each rendering p
 
 In our dynamic scenegraph, the closest (in an euclidean space) node from the camera is the current center of the coordinates system for the scene (center of the world coordinates) and will be called from now on the current center node. In our example in Figure~\ref{fig:scenegraph} this node is the item 4 node (Moon). Thus, instead of applying all translations from the root node to item 4 node, we only apply the translations present in item 4 node, minimizing the chances of a catastrophic cancellation happens.
 
-When visiting other item nodes, for instance, the item 5 node, we initially find the common parent between the current center node and the item 5 node; the item 2 node. Instead of applying all translations from the root node to item 5 node, we only apply the translation from item 2 node to item 5 node (drawn as a blue arrow in Figure~\ref{fig:scenegraph}, and to obtain the final translation from the current center node, we subtract the translation from the item 2 node to the current center node (drawn as a red arrow in Figure~\ref{fig:scenegraph}). This procedure is equivalent to sum vector $\vec{v_1}$ from item 2 node to item 5 node to vector $\vec{v_2}$ from item 5 node to item 2 node. See Figure~\ref{fig:vectorsum}
+When visiting other item nodes, for instance, the item 5 node, we initially find the closest ancestor node between the current center node and the item 5 node; the item 2 node. Instead of applying all translations from the root node to item 5 node, we only apply the translation from item 2 node to item 5 node (drawn as a blue arrow in Figure~\ref{fig:scenegraph}, and to obtain the final translation from the current center node, we subtract the translation from the item 2 node to the current center node (drawn as a red arrow in Figure~\ref{fig:scenegraph}). This procedure is equivalent to sum vector $\vec{v_1}$ from item 2 node to item 5 node to vector $\vec{v_2}$ from item 5 node to item 2 node. See Figure~\ref{fig:vectorsum}
 
 The same idea can be extended for the other nodes. For the item 3 node, its position related to the current center node can be obtained adding the vectors $\vec{v_2}$, $\vec{v_3}$ and $\vec{v_4}$ in Figure~\ref{fig:vectorsum}.
 
@@ -434,6 +427,7 @@ The same idea can be extended for the other nodes. For the item 3 node, its posi
 \label{fig:vectorsum}
 \end{figure}
 
+\joncomment{Talk about the perspective effects.}
 
 We use the perspective matrix:
 
@@ -455,9 +449,9 @@ Clipping is performed for all content with negative w.
 
 The virtual camera in our system can move freely within 5 degrees of freedom (DOF). Considering only 3 DOF (3-d space movement), the camera can be close to any node in our dynamic scenegraph. Which means that once the camera is close to a node, this node must be the new current center node. This propriety of changing the current center node, and by consequence the scene's center of coordinate, based on the camera position is one of the factors contributing to the ``dynamic'' aspect of our scenegraph.
 
-In order to determine which node should be the new current center node, every time the camera is translated, its current position is tested against the node radius of the nodes in the dynamic scenegraph. If the camera is inside a node's node radius, the camera position is tested against its children nodes' node radius to determine which node should be the new current center node.
+In order to determine which node should be the new current center node, every time the camera is translated, its current position is tested against the node radius of the nodes in the dynamic scenegraph. If the camera is inside a node's node radius, the camera position is tested against its children nodes' node radius to determine which node should be the new current center node. This idea is represented by the algorithm~\ref{alg:dynamicCamera}.
 
-\begin{algorithm}
+\begin{algorithm}\label{alg:dynamicCamera}
  \caption{Dynamic Camera Attachment Algorithm}
  \begin{algorithmic}[1]
  \renewcommand{\algorithmicrequire}{\textbf{Input:}}
@@ -475,15 +469,35 @@ In order to determine which node should be the new current center node, every ti
   \ENDFOR
  \RETURN $P$
  \end{algorithmic}
- \end{algorithm}  
+\end{algorithm}  
 
 \subsubsection{Dynamic object attachment}
 
-Not all nodes in our dynamic scenegraph are celestial bodies with known orbits, we can handle any of the three types defined in section~\ref{sec:scenegraph}. One possible type is a mission space probe. 
+As stated before, not all nodes in the dynamic scenegraph are celestial bodies with known orbits. The dynamic scenegraph can handle any of the three types defined in section~\ref{sec:scenegraph}. One possible type is a mission space probe. 
 
-Space probes like New Horizons~\cite{??} travels through the solar system capturing data...
+Space probes like New Horizons~\cite{??} travels through the solar system capturing important scientific data that is later sent to Earth. Because of New Horizons' trajectory is given by a path from Earth to Pluto, a commonly used scenegraph would set New Horizon's node as a child of an existent node in the tree (Earth's node, e.g.) and when the New Horizons probe is rendered close to Pluto, the translations necessary to render that node will lead to an precision problem. Equivalently, setting Pluto's node as the New Horizons' node will generate precision problems when rendering New Horizons probe close to Earth.
 
-\joncomment{TODO: write about nodes that need to change parents.}
+The solution to this problem is to have a dynamic node attachment, i.e., during the traveling of New Horizons probe its node changes the parent relationship with the other nodes in the dynamic scenegraph. This parent changing (adoption), is done based on the checking of the moving node's position against the other node's node radius. If the moving node is inside a node radius, the children of this node are also tested against to determine the closest one which moving node is inside the node radius. The algorithm~\ref{alg:dynamicAdoption} represents this idea. \joncomment{Improve this paragraph.}
+
+\begin{algorithm}\label{alg:dynamicAdoption}
+ \caption{Dynamic Node Attachment Algorithm - Node Adoption}
+ \begin{algorithmic}[1]
+ \renewcommand{\algorithmicrequire}{\textbf{Input:}}
+ \renewcommand{\algorithmicensure}{\textbf{Output:}}
+ \REQUIRE in
+ \ENSURE  out
+ \\ \textit{Initialization} :
+  \STATE first statement
+ \\ \textit{LOOP Process}
+  \FOR {$i = l-2$ to $0$}
+  \STATE statements..
+  \IF {($i \ne 0$)}
+  \STATE statement..
+  \ENDIF
+  \ENDFOR
+ \RETURN $P$
+ \end{algorithmic}
+\end{algorithm}  
 
 \subsubsection{Model view matrix computation}
 
