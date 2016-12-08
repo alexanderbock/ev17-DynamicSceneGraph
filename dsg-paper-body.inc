@@ -33,7 +33,7 @@
 \teaser{
   \centering
   \fbox{\includegraphics[width=\linewidth]{figure/teaser2.png}}
-  \caption{Accurate rendering of a real scale model of the New Horizons space craft taking measurements on Pluto. The model of $\approx 2\,m$ size is shown in its correct location relative to Pluto, which is about $6\cdot 10^{12}$\,m from the coordinate system origin with the stars of the constellation Ophiucus ($\approx 10^{18}$ m) in their correct 3D positions}
+  \caption{Accurate rendering of a real scale model of the New Horizons space craft taking measurements on Pluto. The model of $\approx 2\,m$ size is shown in its correct location relative to Pluto, which is about $6\cdot 10^{12}$\,m from the coordinate system origin with the stars of the constellation Ophiucus ($\approx 10^{18}$ m) in their correct 3D positions. High precision is required for computing the correct location of images on the surface of Pluto as well as correctly rendering the shadow cylinders of both Pluto and its moon, Charon.}
 \label{fig:teaser}
 }
 
@@ -57,7 +57,7 @@ Previous work by the visualization community has provided solutions to some of t
 
 In this work, we propose a general framework, a dynamic scene graph, to deal with the traversal of large scales and varying sizes. The concept is applicable to a variety of application domains with large scale differences and not limited to astronomical data. This framework is constructed by analyzing the sources of precision errors and range overflow problems in a conventional computer graphics pipeline. Using interval arithmetic to track floating point rounding errors, we are able to identify which set of operations may introduce precision problems. We combine this information with the observation that high detail is only required for close objects to build our framework for visualizing datasets with astronomical scale and distance differences. This technique relies on a dynamic update and traversal of a scene graph whereby cameras automatically attach and detach to the closest object of interest. This object of interest is then used as a new coordinate origin and, thus, provides the highest possible numerical precision for salient objects.
 
-The dynamic scene graph has been implemented in the \emph{OpenSpace} project. OpenSpace is an open source software project with the goal of interactively visualizing and contextualizing our knowledge of the known universe and our ongoing efforts of exploration. The software framework is designed for immersive environments to the public dissemination of science and to contextualize information if all possible scales, such as sub-atomic particle simulations on Earth, micrometer-scale discoveries made by rovers the Martian surface, or volumetric simulations of entire galaxies. In order to fully utilize the potential of these immersive environments, for example planetariums or virtual reality headsets, the software needs to support high-fidelity stereoscopic rendering and the ability to render on multipipeline architectures, such as power walls. However, our method is applicable to any visualization tool that uses scene graphs to represent objects, and is compatible with techniques for volumetric rendering as well as order-independent transparency techniques.
+The dynamic scene graph has been implemented in the \emph{OpenSpace} project. OpenSpace is an open source software project with the goal of interactively visualizing and contextualizing our knowledge of the known universe and our ongoing efforts of exploration. The software framework is designed for immersive environments to the public dissemination of science and to contextualize information if all possible scales, such as sub-atomic particle simulations on Earth, micrometer-scale discoveries made by rovers the Martian surface, or volumetric simulations of entire galaxies. In order to fully utilize the potential of these immersive environments, for example planetariums or virtual reality headsets, the software needs to support high-fidelity stereoscopic rendering and the ability to render on multipipeline architectures, such as power walls~\cite{liu20013}. However, our method is applicable to any visualization tool that uses scene graphs to represent objects, and is compatible with techniques for volumetric rendering as well as order-independent transparency techniques.
 
 In summary, our contributions include:
 
@@ -73,7 +73,7 @@ proven to be immensely valuable tools for communicating scientific findings
 and contextualizing information. Notable examples of applications where huge scale differences are visualized 
 together include movie productions, such as \emph{Powers of Ten} by Eames~\cite{powersOfTen} from 1977,
 All We Are [citation needed], as well as interactive software for digital planetariums,
-such as Uniview [citations], DigiStar [citations], DigitalSky [citation], or free software such as Celestia [citations] or SpaceEngine.
+such as Uniview~\cite{KHECY10}, DigiStar~\cite{ES16} or DigitalSky~\cite{Sky16}. The usefulness of planetariums as immersive visualization environments as been recognized~\cite{magnor2010progress}.
 
 The concept of \emph{Power Scaled Coordinates}, introduced by Hanson~\etal ,
 addresses some of the challenges with multi-scale visualization~\cite{hanson2000very}. The method uses four-dimensional floating point vectors where the first three components determine the direction of the vector, and the fourth encodes a scaling coefficient as a power of ten. The proposed system can operate with floating point numbers close to unit scale, which solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors.
@@ -88,7 +88,7 @@ The \emph{ScaleGraph} method, introduced by Klashed~\etal \cite{KHECY10} as a pa
 The co-evolution of graphics hardware, software, and content, largely pushed forward by
 the gaming industry, has led to modern graphics processing units that are optimized for
 operating efficiently on floating point numbers, vectors, and matrices.
-In a standard computer graphics pipeline, $4x4$ matrices are used to represent coordinate
+In a standard computer graphics pipeline, $4 \times 4$ matrices are used to represent coordinate
 transformations operating on 4-dimensional homogeneous coordinate vectors with floating point components. In order to understand the precision and range limitations of the graphics pipeline used in visualization, we need to base our reasoning on properties on floating point numbers and the operations that we perform on them.
 
 \begin{figure}
@@ -110,27 +110,29 @@ v = \begin{cases}
 \end{cases}
 \end{equation}
 
-\noindent Only values that can be composed by this set of bits are valid 32-bit floating point numbers. If exponent of a number is not in the range $[-126, 127]$ it will be represented as $\infty$ or $-\infty$. One critical characteristic of valid IEEE754 floating point numbers $\mathbb{R}_f$ \alexcomment{Is there a better symbol for this?} is their inability to represent all possible numbers $\mathbb{R}$. All numbers $\mathbb{R} \setminus \mathbb{R}_f$ that are not representable are rounded to their closest \alexcomment{is this correct? or is it always rounding down?} representable number in $\mathbb{R}_f$. This characteristic is at the heart of the problem of floating point inaccuracies.
+\noindent Only values that can be composed by this set of bits are valid 32-bit floating point numbers. If exponent of a number is not in the range $[-126, 127]$ it will be represented as $\infty$ or $-\infty$. One critical characteristic of valid IEEE754 floating point numbers $\mathds{R}_f$ \alexcomment{Is there a better symbol for this?} is their inability to represent all possible numbers $\mathds{R}$. All numbers $\mathds{R} \setminus \mathds{R}_f$ that are not representable are rounded to their closest representable number in $\mathds{R}_f$. This characteristic is at the heart of the problem of floating point inaccuracies.
 
 An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits, and 52 bits for the mantissa. Using 128-bits (quadruple precision), it is possible to further increase the precision and exponent range. Increasing the bit depth will naturally require more computational resources, and might lack common hardware support, thus making their usage infeasible for real-time visualization.
 
+\subsubsection{Exponent underflow and overflow}
+The exponent range $[-126, 127]$ in 32-bit IEEE754 floats provides a possible scale range of approximately 76 orders of magnitude (OM). Computations that yield exponents outside that range will cause exponent underflow or overflow and result in loss of data. This range is insufficient for representing astronomical data as a straight-forward computation of the length of a vector using the Pythagorean theorem requires storing of the squared length in a floating point value as an intermediate step, thus halving the range of valid input exponents and limiting the input scale differences to 38 OM.
+
+\alexcomment{What are the numbers for double? Otherwise people might argue that the range for doubles is enough}
+%The scale difference between the Planck length and the diameter of the observable universe is approximately $62$ OM. While 32-bit floats are able to represent this scale difference, a conventional approach to computing lengths and normalizing vectors would break down.
+
 \subsubsection{Precision limitations}
-Due to the limited number of mantissa bits, values need to be rounded in order to be represented as floating point numbers. An upper bound of the absolute spacing between a floating point number $v$ and an adjacent one can be expressed as $\epsilon|v|$\cite{higham2002accuracy}, where the \emph{machine epsilon} $\epsilon$ is a constant given by $2^{-(n + 1)}$, and $n$ is the number of mantissa bits. Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, where the rounding error coefficient $u = \frac{\epsilon}{2}$.
-For IEEE754 float, $\epsilon = 2^{-24}\approx 5.96 \cdot 10^{-8}$, meaning that values are precise to about 7 significant figures in decimal notation.
+Due to the limited number of mantissa bits, values need to be rounded in order to be represented as floating point numbers. An upper bound of the absolute spacing between a floating point number $v$ and adjacent numbers can be expressed as $\epsilon|v|$\cite{higham2002accuracy}, where the \emph{machine epsilon} $\epsilon$ is a constant given by $2^{-(n + 1)}$ where $n$ is the number of mantissa bits. Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, with the rounding error coefficient $u = \frac{\epsilon}{2}$.
+For IEEE754 float, $\epsilon$ is $2^{-24}\,\approx
+\, 5.96 \cdot 10^{-8}$, meaning that values are precise to about 7 significant figures in decimal notation.
 
 Double precision floating point numbers have a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notation, this corresponds to a precision of 15 significant figures. For quadruple precision the corresponding number is 34 significant figures.
 
-\subsubsection{Exponent underflow and overflow}
-The exponent range $[-126, 127]$ in 32-bit IEEE754 floats gives a possible scale range of approximately 76 orders of magnitude (OM). Computations that yield exponents outside that range will cause exponent underflow or overflow, and result in loss of data. A straight-forward implementation of computing the length of a vector using the Pythagorean theorem would need to store squared length in a floating point value as an intermediate step, halving the range of valid input exponents and limiting the input scale differences to 38 OM.
-
-The scale difference between the Planck length and the diameter of the observable universe is approximately $62$ OM. While 32-bit floats are able to represent this scale difference, a conventional approach to computing lengths and normalizing vectors would break down.
-
+Since the precision limitations are inherently dependent on the size of the numbers involved, the precision of mathematical operations is heavily dependent on the size and ordering of their arguments as small numbers might be below the $\epsilon\left|v\right|$ of the larger numbers.
 
 \subsection{Interval arithmetic}
-To reason about the precision of various floating point operations, it is possible to use interval arithmetic as a mathematical tool to track possible rounding errors. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$. Using interval arithmetic, the interval can be rewritten as $v(1 + u[-1,1])$.
+In order to reason about the precision of the different floating point operations, it is possible to use interval arithmetic as a mathematical tool to track potential sources of rounding error~\cite{Hickey2001}. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$. Using interval arithmetic, the interval can be rewritten as $v(1 + u[-1,1])$.
 
-
-Throughout the following sections, $\oplus$, $\ominus$, $\odot$ and $\oslash$ will be used to denote floating point addition, subtraction, multiplication and division respectively. The IEEE754 standard requires that the result of each of these operations is identical to the result of an infinitely precise computation followed by a rounding to the closest representable float. The operators are commutative, and yield the possible output intervals given two real number intervals $[x]$ and $[y]$ as described in equation \ref{eq:floatoperations}.
+For the remainder of the following sections, $\oplus$, $\ominus$, $\odot$, and $\oslash$ will be used to denote floating point addition, subtraction, multiplication, and division respectively. The IEEE754 standard requires that the result of each of these operations is identical to the result of an infinitely precise computation followed by a rounding to the closest representable float. The operators are commutative and yield the possible output intervals given two real number intervals $[x]$ and $[y]$ as described in Equation \ref{eq:floatoperations}.
 
 \begin{equation} \label{eq:floatoperations}
 \begin{split}
@@ -150,15 +152,14 @@ For operations involving the degenerate intervals $[0, 0]$ and $[1, 1]$, we obse
 \end{split}
 \end{equation}
 
-
 \subsection{Propagation of error intervals}
-When a result from one floating point operation is used in further computations, rounding errors will propagate through the whole series of operations. This may lead to scenarios where expressions on the form $(a + b) - b$ may evaluate to $0$, for a sufficiently small $a$ and large $b$. This phenomena is known as 
-\emph{catastrophic cancellation}. In any rendering pipeline where e.g. matrix multiplications or vector additions result in this type of operations, there is a risk for floating point precision problems.
+When a result from one floating point operation is used in further computations, rounding errors will propagate and compound through the whole series of operations. This, for example, may lead to scenarios where expressions on the form $(a + b) - b$ may evaluate to $0$, for a sufficiently small $a$ and large $b$. This phenomena is known as 
+\emph{catastrophic cancellation}~\cite{Cuyt2001}. In any rendering pipeline where, for example, matrix multiplications or vector additions result in this type of operations there is a risk for floating point precision problems.
 
 Let $\mathds{E}$ be the set of intervals that can be written in form of equation $cu[-1, 1]$, where c is a non-negative constant that is not a function of any floating point value. For any intervals $[e_1], [e_2] \in \mathds{E}$, there are intervals $[e_3], [e_4] \in \mathds{E}$, such that
 $[e_1]+[e_2] \subseteq [e_3]$ and $[e_1e_2] \subseteq [e_4]$.
 
-We let $[e_i] = c_iu[-1, 1] \in \mathds{E}$ and observe some properties of $\oplus$, and $\odot$ as they act on the two intervals $a(1 + [e_1])$ and $b(1 + [e_2])$.
+We let $[e_i] = c_iu[-1, 1] \in \mathds{E}$ and observe properties of $\oplus$ and $\odot$ when applied to the two intervals $a(1 + [e_1])$ and $b(1 + [e_2])$.
 
 \begin{equation} \label{eq:errortermadd} 
 \begin{split}
@@ -176,31 +177,30 @@ a(1 + [e_1]) \odot b(1 + [e_2]) \\
 \end{split}
 \end{equation}
 
-Since $[e]$-terms are intervals on the form $cu[-1, 1]$, we can conclude that equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_3u| + |bc_4u|$. Equation \ref{eq:errortermmult} may output a maximum rounding error of $|abc_5u|$. While several floating point additions will accumulate errors from all contributing terms, creating a risk for catastrophic cancellation, floating point multiplication will scale the error proportionally to the factors. Multiplying an interval with a number with absolute value smaller than $1$ will hence shrink the absolute error interval proportionally. The relative precision $c_5u$ is independent of the size of the factors $a$ and $b$. \emilcomment{Is this a better claim?}.
+\noindent Since $[e]$-terms are intervals on the form $cu[-1, 1]$, we can conclude that Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_3u| + |bc_4u|$. Equation \ref{eq:errortermmult} has a maximum rounding error of $|abc_5u|$. That means that while several floating point additions will accumulate errors from all contributing terms, creating a risk for catastrophic cancellation, floating point multiplication will scale the error proportionally to the factors. Multiplying an interval with a number with absolute value smaller than $1$ will hence shrink the absolute error interval proportionally. The relative precision $c_5u$ is independent of the size of the factors $a$ and $b$. \emilcomment{Is this a better claim?}.
 
-
-By applying equation \ref{eq:errortermadd} iteratively, we can also conclude that for floating point sums $\osum_i x_i = x_1 \oplus x_2 \oplus ... \oplus x_n$, equation \ref{eq:errortermsum} holds regardless of in which order terms are added, with $[e_i], [e'_i] \in \mathds{E}$.
+By applying Equation~\ref{eq:errortermadd} iteratively, we can also conclude that for floating point sums $\osum_i x_i = x_1 \oplus x_2 \oplus ... \oplus x_n$, Equation~\ref{eq:errortermsum} holds regardless of the order of operations,with $[e_i], [e'_i] \in \mathds{E}$. \alexcomment{What does this equation mean? What is the relationship between $e$ and $e'$?}
 
 \begin{equation} \label{eq:errortermsum} 
 \osum_i x_i(1 + [e_i]) \subseteq \sum_i x_i(1 + [e'_i])
 \end{equation}
 
-The straight-forward implementation of floating point matrix multiplication $A \otimes B$ is to compute matrix components as a sum of products using $\oplus$ and $\odot$. By applying equations \ref{eq:errortermmult} and \ref{eq:errortermsum}, we get equation \ref{eq:matrixmult} where $m$ is the number of columns of $A$ and the number of rows of $B$.
+A straight-forward floating point matrix multiplication $A \otimes B$ is calculated through a sum of products using $\oplus$ and $\odot$. By applying Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get Equation~\ref{eq:matrixmult} where $m$ is the number of columns of $A$ and the number of rows of $B$.
 
 \begin{equation} \label{eq:matrixmult} 
 (A \otimes B)_{ij} \subseteq \osum_{k = 1}^mA_{ik}\odot B_{kj} \subseteq \sum_{k = 1}^mA_{ik} B_{kj}(1 + [e_{ijk}])
 \end{equation}
 
-\noindent We observe that the maximum floating point error introduced to any individual component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$.
-
+\noindent We observe that the maximum floating point error introduced to any individual component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$. \alexcomment{And this means that \dots  This needs some connection to 3.4}
 
 \subsection{Graphics pipeline operations}
-Having observed how error intervals originate and propagate through various floating point operations, we proceed by studying the operations performed in the graphics pipeline to identify sources of precision problems of vertex transormations as well as fragment shading operations.
+Having observed how error intervals originate and propagate through various floating point operations, we can studying the operations performed in the graphics pipeline to identify sources of precision problems of vertex transormations as well as fragment shading operations.
 
 \subsubsection{Vertex transformations}
-In computer graphics software, scene content is commonly organized in a \emph{scene graph}, which allows coordinate transformations to be represented hierarchically. Each node in the graph may contain a transformation, represented as a 4x4 matrix, that affects all its children. Objects consist of vertices $\mathbf{x}$ represented as homogeneous coordinates $(x, y, z, w)^t$, where $x$, $y$ and $z$ are the coordinates in a local coordinate system, and $w = 1$. In order to transform a vertex from its local \emph{model coordinate system} to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatenated to a final \emph{model matrix} using matrix multiplication. This final matrix is applied to the vertex $\mathbf{x}$ to acquire the world coordinates $\mathbf{w}$.
+\alexcomment{I think we should cut a bit on this part. It's a bit too long for the value that it has. It is a visualization conference, so we can expect people to know all of this}
+In computer graphics, content is commonly organized in a \emph{scene graph} that allows coordinate transformations to be represented hierarchically. Each node in the graph may contain a transformation, represented as a $4\times 4$ matrix, that affects all children. Objects consist of vertices $\mathbf{x}$ represented as homogeneous coordinates $(x, y, z, w)^t$, where $x$, $y$, and $z$ are the coordinates in a local \emph{model coordinate system} and $w = 1$. In order to transform a vertex to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatenated to a final \emph{model matrix} using matrix multiplication as descibed above. This final matrix is then applied to the vertex $\mathbf{x}$ to acquire the world coordinates $\mathbf{w}$.
 
-A \emph{view matrix} is also commonly generated based on a camera position and rotation expressed in the world coordinate system, and then used to transform world coordinates to \emph{view coordinates}, with the camera in the origin, and the z-axis parallel to the view direction. This view matrix is multiplied with the world coordinate $\mathbf{w}$ and outputs the view coordinates $\mathbf{v}$.
+A \emph{view matrix} is usually generated using a camera position and rotation expressed in the world coordinate system and then used to transform world coordinates to \emph{view coordinates}, with the camera in the origin, and the z-axis parallel to the view direction. This view matrix is multiplied with the world coordinate $\mathbf{w}$ and outputs the view coordinates $\mathbf{v}$.
 
 View coordinates are transformed into \emph{clip coordinates} $\mathbf{c}$ using a \emph{projection matrix}, in this case a perspective projection matrix.
 After that, content that does not satisfy the equation $-w \le x, y, z \le w$ will be subject to frustum culling, and will be discarded from rendering. The vector is divided by $w$ to compute the \emph{normalized device coordinates (NDC)}. This last step, commonly called \emph{perspective division}, causes objects farther away from the camera to appear smaller on the screen. The $x$ and $y$ in NDC determines the object's position on the screen, with $(-1, -1)$ representing the bottom left corner and $(1, 1)$ upper right one.
@@ -527,6 +527,15 @@ How to calculate the final Model View Matrix...
 \subsection{Volume rendering and Order Independent Transparency}
 
 \section{Result}
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{figure/precision.png}
+\caption{Comparison between old and new method. TODO: more text}
+\label{fig:comparison}
+
+\end{figure}
+
+
 
 \joncomment{OS Scenes?}
 
