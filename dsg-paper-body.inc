@@ -93,7 +93,7 @@ transformations operating on 4-dimensional homogeneous coordinate vectors with f
 
 \begin{figure}
 \includegraphics[width=8.4cm,height=8.4cm,keepaspectratio]{degradation-circles.pdf}
-\caption{The problem of coordinate preicsion for vertices far from the origin is amplicied by limiting the number of mantissa bits to 5. Circle A, being close to the origin, is represented relatively well despite the limited bit depth. The circles marked B have poor precision for one of their vector components, while C is heavily distored in both dimensions. \alexcomment{I'd remove the outer most layer on the top and right as they only repeat the inner values. Also the axes need labels.}}
+\caption{The problem of coordinate preicsion for vertices far from the origin is amplified by limiting the number of mantissa bits to 5. Circle A, being close to the origin, is represented relatively well despite the limited bit depth. The circles marked B have poor precision for one of their vector components, while C is heavily distored in both dimensions. \alexcomment{I'd remove the outer most layer on the top and right as they only repeat the inner values. Also the axes need labels.}}
 \label{fig:degradation-circles}
 \end{figure}
 
@@ -179,10 +179,10 @@ a(1 + [e_1]) \odot b(1 + [e_2]) \\
 
 \noindent Since $[e]$-terms are intervals on the form $cu[-1, 1]$, we can conclude that Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_3u| + |bc_4u|$. Equation \ref{eq:errortermmult} has a maximum rounding error of $|abc_5u|$. That means that while several floating point additions will accumulate errors from all contributing terms, creating a risk for catastrophic cancellation, floating point multiplication will scale the error proportionally to the factors. Multiplying an interval with a number with absolute value smaller than $1$ will hence shrink the absolute error interval proportionally. The relative precision $c_5u$ is independent of the size of the factors $a$ and $b$. \emilcomment{Is this a better claim?}.
 
-By applying Equation~\ref{eq:errortermadd} iteratively, we can also conclude that for floating point sums $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, Equation~\ref{eq:errortermsum} holds regardless of the order of operations,with $[e_i], [e'_i] \in \mathds{E}$. \alexcomment{What does this equation mean? What is the relationship between $e$ and $e'$?}
+By applying Equation~\ref{eq:errortermadd} iteratively, we can also conclude that for floating point sums $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, Equation~\ref{eq:errortermsum} holds regardless of the order of operations, with $[e_i] \in \mathds{E}$. \alexcomment{What does this equation mean? What is the relationship between $e$ and $e'$?}
 
 \begin{equation} \label{eq:errortermsum} 
-\osum_i x_i(1 + [e_i]) \subseteq \sum_i x_i(1 + [e'_i])
+\osum_i [x_i] \subseteq \sum_i [x_i](1 + [e'_i])
 \end{equation}
 
 A straight-forward floating point matrix multiplication $A \otimes B$ is calculated through a sum of products using $\oplus$ and $\odot$. By applying Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get Equation~\ref{eq:matrixmult} where $m$ is the number of columns of $A$ and the number of rows of $B$.
@@ -209,7 +209,7 @@ Depth sorting is commonly performed using a depth buffer, which stores a depth v
 
 \subsubsection{Shading operations}
 \alexcomment{Move this to later}
-Shading models frequently use various coordinate vectors of objects in the scene, such as light sources, surface normals and the camera position to compute fragment colors. Various shading algorithms may require transformations of vectors between the model coordinate system, the world coordinate system, the view coordinate system, or some other coordiante space. These transformations are commonly implemented as matrix multiplications.
+Shading models frequently use various coordinate vectors of objects in the scene, such as light sources, surface normals and the camera position to compute fragment colors. Various shading algorithms may require transformations of vectors between the model coordinate system, the world coordinate system, the view coordinate system, or some other coordinate space. These transformations are commonly implemented as matrix multiplications.
 
 \subsection{Rendering artifacts}
 \alexcomment{Merge this into 3.4, replacing most of 3.4 content and leaving a paragraph explaining the near/far plane}
