@@ -187,7 +187,10 @@ The straight-forward implementation of floating point matrix multiplication $A \
 \noindent We observe that the maximum floating point error introduced to any individual component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$.
 
 
-\subsection{Coordinate transformations}
+\subsection{Graphics pipeline operations}
+Having observed how error intervals originate and propagate through various floating point operations, we proceed by studying the operations performed in the graphics pipeline to identify sources of precision problems of vertex transormations as well as fragment shading operations.
+
+\subsubsection{Vertex transformations}
 In computer graphics software, scene content is commonly organized in a \emph{scene graph}, which allows coordinate transformations to be represented hierarchically. Each node in the graph may contain a transformation, represented as a 4x4 matrix, that affects all its children. Objects consist of vertices $\mathbf{x}$ represented as homogeneous coordinates $(x, y, z, w)^t$, where $x$, $y$ and $z$ are the coordinates in a local coordinate system, and $w = 1$. In order to transform a vertex from its local \emph{model coordinate system} to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatenated to a final \emph{model matrix} using matrix multiplication. This final matrix is applied to the vertex $\mathbf{x}$ to acquire the world coordinates $\mathbf{w}$.
 
 A \emph{view matrix} is also commonly generated based on a camera position and rotation expressed in the world coordinate system, and then used to transform world coordinates to \emph{view coordinates}, with the camera in the origin, and the z-axis parallel to the view direction. This view matrix is multiplied with the world coordinate $\mathbf{w}$ and outputs the view coordinates $\mathbf{v}$.
@@ -195,18 +198,17 @@ A \emph{view matrix} is also commonly generated based on a camera position and r
 View coordinates are transformed into \emph{clip coordinates} $\mathbf{c}$ using a \emph{projection matrix}, in this case a perspective projection matrix.
 After that, content that does not satisfy the equation $-w \le x, y, z \le w$ will be subject to frustum culling, and will be discarded from rendering. The vector is divided by $w$ to compute the \emph{normalized device coordinates (NDC)}. This last step, commonly called \emph{perspective division}, causes objects farther away from the camera to appear smaller on the screen. The $x$ and $y$ in NDC determines the object's position on the screen, with $(-1, -1)$ representing the bottom left corner and $(1, 1)$ upper right one.
 
-Depth sorting is commonly performed using a depth buffer, which stores a depth value for each pixel on the screen. Fragments are only rendered to if they are closer than the closest already rendered fragment at the same screen location. The depth value of a fragment is commonly derived from the $z$-component of the normalized device coordinates, whereas $z = 1$ represents the \emph{near plane} and and $z = -1$ represents the \emph{far plane}. \joncomment{Are you sure about these values for z? I don't remember these values by heart, but they don't look familiar to me.} If the depth buffer is not represented with 32-bit floating point numbers, the depth first needs to be converted to the appropriate type. 
+Depth sorting is commonly performed using a depth buffer, which stores a depth value for each pixel on the screen. Fragments are only rendered to if they are closer than the closest already rendered fragment at the same screen location. The depth value of a fragment is derived from the $z$-component of the normalized device coordinates using a linear mapping. Commonly, $z = 0$ represents the \emph{near plane} and and $z = -1$ represents the \emph{far plane}. If the depth buffer is not represented with 32-bit floating point numbers, the depth is converted to the appropriate type. 
 
-\subsection{Coordinate precision}
-Rounding errors in the graphics pipeline may give rise to two types of visual artifacts:
-\begin{itemize}
-\item If errors in the $x$ and $y$ components of the normalized device coordinates are in the same order as the size of the pixels on the screen, there will be a \emph{visible displacement of vertices}. 
-\item If the rounding error of $z$ when stored in the depth buffer is larger than the $z$-difference of two adjacent fragments, there is a risk that the incorrect fragment is rendered on top, which is often referred to as \emph{z-fighting}.
-\end{itemize}
+\subsubsection{Shading operations}
+Shading models frequently use various coordinate vectors of objects in the scene, such as light sources, surface normals and the camera position to compute fragment colors. Various shading algorithms may require transformations of vectors between the model coordinate system, the world coordinate system, the view coordinate system, or some other coordiante space. These transformations are commonly implemented as matrix multiplications.
 
-By using interval arithmetic to trace the errors in $x$ and $y$ it is possible to predict vertex displacement issues. Similarly, the accumulated error interval of the z-component can be used to determine when there is a risk for z-fighting. In the following sections, we study the precision error implications of the coordinate operations in the conventional graphics pipeline to determine the set of circumstances in which precision problems may be introduced.
+\subsection{Rendering artifacts}
+Lack of precision may give rise to several types of visual artifacts. If errors in the $x$ and $y$ components of the normalized device coordinates are in the same order as the size of the pixels on the screen, there will be a visible displacement of vertices. If the rounding error of $z$ when stored in the depth buffer is larger than the $z$-difference of any two fragments covering the same pixel, there is a risk for z-fighting, i.e. that the incorrect fragment is rendered on top. Rounding errors introduced in shading operations may result in in poor color precision.
 
-Using column vectors, the NDC's $\mathbf{n}$ are derived from the model coordinates $\mathbf{x}$ in equation \ref{eq:mvp}.
+In the following sections, we study the precision error implications of the coordinate operations in the conventional graphics pipeline to determine the set of circumstances in which precision problems may be introduced. By using interval arithmetic to trace the errors in $x$ and $y$ it is possible to predict vertex displacement issues. Similarly, the accumulated error interval of the z-component can be used to determine when there is a risk for z-fighting. By studying the effect of transformation matrices acting on coordiante vectors, we can also develop a means to identify the risk of precision loss in various shading operations.
+
+Using column vectors, the normalized device coordinates $\mathbf{n}$ are derived from the model coordinates $\mathbf{x}$ in equation \ref{eq:mvp}.
 
 \begin{align} \label{eq:mvp}
 \mathbf{c} = P\otimes V \otimes M \otimes \mathbf{x} \\
