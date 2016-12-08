@@ -6,7 +6,7 @@
 %\title[EG Astronomical Scale Differences and Visualization]%
 %      {Astronomical Scale Differences in Visualization}
 % How about this? ---abock
-\title[]{Dynamic Scene Graphs: Avoiding Floating Point Inaccuracies in Large Scale Astrovisualization}
+\title[]{Dynamic Scene Graph: Avoiding Floating Point Inaccuracies in Large Scale Astrovisualization}
 
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
@@ -30,6 +30,13 @@
 %-------------------------------------------------------------------------
 \begin{document}
 
+\teaser{
+  \centering
+  \fbox{\includegraphics[width=\linewidth]{figure/teaser2.png}}
+  \caption{Accurate rendering of a real scale model of the New Horizons space craft taking measurements on Pluto. The model of $\approx 2\,m$ size is shown in its correct location relative to Pluto, which is about $6\cdot 10^{12}$\,m from the coordinate system origin with the stars of the constellation Ophiucus ($\approx 10^{18}$ m) in their correct 3D positions}
+\label{fig:teaser}
+}
+
 \maketitle
 
 \begin{abstract}
@@ -38,7 +45,7 @@ In this work, we address the challenges of limited numerical range and precision
 
 %-------------------------------------------------------------------------
 \section{Introduction}
-Maybe one of the biggest achievements of mankind is the ability to observe and collect data about the surrounding cosmos. This includes observations ranging from the diminutive to the unimaginably large. Everything we know and everything we can possibly know is constrained in size and distance by two limits. The upper limit is given by the size of the observable universe with a comoving diameter of about $10^{27}$ meters. The lower limit is the Planck length, at which the structure of space-time is dominated by quantum effects and the concept of locality loses physical meaning, with an approximate size of $10^{-35}$ meters. These two limits pose absolute limits to the resolution that a software system dealing data of any size has to support. While impressive, this tremendous range of scales over roughly 60 orders of magnitude generates many challenges to visualization system operating across such scales. Besides the issue of crossing different abstraction levels for the visualization, one challenge not immediately obvious is related to the precision of floating point numbers. Following a na\"ive approach using a conventional computer graphics pipeline object locations cannot be described with the necessary precision, for example when viewing models of space craft at the edge of our solarsystem, or watching micrometer-scaled scans on the surface of Mars. 
+Maybe one of the biggest achievements of mankind is the ability to observe and collect data about the surrounding cosmos. This includes observations ranging from the diminutive to the unimaginably large. Everything we know and everything we can possibly know is constrained in size and distance by two limits. The upper limit is given by the size of the observable universe with a comoving diameter of about $10^{27}$ meters. The lower limit is the Planck length, at which the structure of space-time is dominated by quantum effects, of $10^{-35}$ meters. These two limits pose hard limits to the resolution that a software system dealing with astronomical data has to support. While impressive, this tremendous range of scales over roughly 60 orders of magnitude generates many challenges to visualization system operating across such scales. Besides the issue of crossing different abstraction levels, one challenge not immediately obvious is related to the precision of floating point numbers. Following a na\"ive approach using a conventional computer graphics pipeline, object locations cannot be described with the necessary precision, for example when viewing models of space craft at the edge of our solarsystem, or watching micrometer-scaled scans on the surface of Mars.
 
 %Through various means of scientific discovery, humanity now has collected detailed information and measurements of structures in the surrounding cosmos that range from the diminutive to the unimaginably large. Everything we know and everything we can possibly know is constrained in size and distance by two boundaries. The upper boundary is given by the size of the observable universe with a comoving diameter of about $10^{27}$ meters. The lower boundary is the Planck length, at which the structure of space-time is dominated by quantum effects and the concept of locality loses physical meaning, with an approximate size of $10^{-35}$ meters. These two boundaries pose absolute limits to the resolution that a software system dealing data of any size has to support.
 
@@ -48,7 +55,7 @@ When virtually exploring datasets with these vast scale differences and distance
 
 Previous work by the visualization community has provided solutions to some of these issues, such as the Power Scaled Coordinates by Hanson~\etal~\cite{hanson2000very} and the ScaleGraph by Klashed~\etal~\cite{KHECY10}. However, only partial solutions to the precision issues have been provided thus far and the root cause of these problems remains unsolved.
 
-In this work, we propose a general framework, a dynamic scene graph, to deal with multiple scales or varying sizes within one application. The concept is applicable to large variety of settings. This framework is constructed by analyzing the sources of precision errors and range overflow problems in a conventional computer graphics pipeline. Using interval arithmetic to track floating point rounding errors, we are able to identify which set of operations that may introduce precision problems. We combine this information with the observation that high detail is only required for close objects, we present and motivate our method for visualizing datasets with astronomical scale and distance differences. This techniques relies on a dynamic update and traversal of a scene graph whereby cameras automatically attach and detach to the closest object of interest. This object of interest is then used as a new coordinate origin and, thus, provided the highest possible numerical precision. 
+In this work, we propose a general framework, a dynamic scene graph, to deal with the traversal of large scales and varying sizes. The concept is applicable to a variety of application domains with large scale differences and not limited to astronomical data. This framework is constructed by analyzing the sources of precision errors and range overflow problems in a conventional computer graphics pipeline. Using interval arithmetic to track floating point rounding errors, we are able to identify which set of operations may introduce precision problems. We combine this information with the observation that high detail is only required for close objects to build our framework for visualizing datasets with astronomical scale and distance differences. This technique relies on a dynamic update and traversal of a scene graph whereby cameras automatically attach and detach to the closest object of interest. This object of interest is then used as a new coordinate origin and, thus, provides the highest possible numerical precision for salient objects.
 
 The dynamic scene graph has been implemented in the \emph{OpenSpace} project. OpenSpace is an open source software project with the goal of interactively visualizing and contextualizing our knowledge of the known universe and our ongoing efforts of exploration. The software framework is designed for immersive environments to the public dissemination of science and to contextualize information if all possible scales, such as sub-atomic particle simulations on Earth, micrometer-scale discoveries made by rovers the Martian surface, or volumetric simulations of entire galaxies. In order to fully utilize the potential of these immersive environments, for example planetariums or virtual reality headsets, the software needs to support high-fidelity stereoscopic rendering and the ability to render on multipipeline architectures, such as power walls. However, our method is applicable to any visualization tool that uses scene graphs to represent objects, and is compatible with techniques for volumetric rendering as well as order-independent transparency techniques.
 
@@ -86,7 +93,7 @@ transformations operating on 4-dimensional homogeneous coordinate vectors with f
 
 \begin{figure}
 \includegraphics[width=8.4cm,height=8.4cm,keepaspectratio]{degradation-circles.pdf}
-\caption{5 mantissa bits instead of 23. TODO: write more here}
+\caption{5 mantissa bits instead of 23. TODO: write more here \alexcomment{I'd remove the outer most layer on the top and right as they only repeat the inner values}}
 \label{fig:degradation-circles}
 \end{figure}
 
@@ -103,9 +110,9 @@ v = \begin{cases}
 \end{cases}
 \end{equation}
 
-\noindent Only values that can be composed by this set of bits are valid 32-bit floating point numbers. If exponent of a number is not in the range $[-126, 127]$ it will be represented as $\infty$ or $-\infty$. One critical characteristic of IEEE754 floating point numbers $\mathbb{R}_f$ \alexcomment{Is there a better symbol for this?} is their inability to represent all possible numbers $\mathbb{R}$. All numbers $\mathbb{R}_f \setminus \mathbb{R}$ that are not representable are rounded to their closeset \alexcomment{is this correct?} representable number in $\mathbb{R}_f$.
+\noindent Only values that can be composed by this set of bits are valid 32-bit floating point numbers. If exponent of a number is not in the range $[-126, 127]$ it will be represented as $\infty$ or $-\infty$. One critical characteristic of valid IEEE754 floating point numbers $\mathbb{R}_f$ \alexcomment{Is there a better symbol for this?} is their inability to represent all possible numbers $\mathbb{R}$. All numbers $\mathbb{R} \setminus \mathbb{R}_f$ that are not representable are rounded to their closest \alexcomment{is this correct? or is it always rounding down?} representable number in $\mathbb{R}_f$. This characteristic is at the heart of the problem of floating point inaccuracies.
 
-An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits and 52 bits for the mantissa. Using 128-bits (quadruple precision), it is possible to further increase the precision and exponent range. Increasing the bit depth will naturally require more computational resources, and while the OpenGL Shading Language (GLSL) natively supports the doubles, there is no quad-precision data type available as of GLSL 4.4 \cite{kessenich2014opengl}. 
+An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits, and 52 bits for the mantissa. Using 128-bits (quadruple precision), it is possible to further increase the precision and exponent range. Increasing the bit depth will naturally require more computational resources, and might lack common hardware support, thus making their usage infeasible for real-time visualization.
 
 \subsubsection{Precision limitations}
 Due to the limited number of mantissa bits, values need to be rounded in order to be represented as floating point numbers. An upper bound of the absolute spacing between a floating point number $v$ and an adjacent one can be expressed as $\epsilon|v|$\cite{higham2002accuracy}, where the \emph{machine epsilon} $\epsilon$ is a constant given by $2^{-(n + 1)}$, and $n$ is the number of mantissa bits. Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, where the rounding error coefficient $u = \frac{\epsilon}{2}$.
@@ -123,7 +130,7 @@ The scale difference between the Planck length and the diameter of the observabl
 To reason about the precision of various floating point operations, it is possible to use interval arithmetic as a mathematical tool to track possible rounding errors. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$. Using interval arithmetic, the interval can be rewritten as $v(1 + u[-1,1])$.
 
 
-Throughout the following sections, $\oplus$, $\ominus$, $\odot$ and $\oslash$ will be used to denote floating point addition, subtraction, multiplication and division respectively. The IEEE754 standard requires that the result of each of these operations is identical to the result of an infinitely precise computation followed by a rounding to the closest representable float. The operators are commutaive, and yield the possible output intervals given two real number intervals $[x]$ and $[y]$ as described in equation \ref{eq:floatoperations}.
+Throughout the following sections, $\oplus$, $\ominus$, $\odot$ and $\oslash$ will be used to denote floating point addition, subtraction, multiplication and division respectively. The IEEE754 standard requires that the result of each of these operations is identical to the result of an infinitely precise computation followed by a rounding to the closest representable float. The operators are commutative, and yield the possible output intervals given two real number intervals $[x]$ and $[y]$ as described in equation \ref{eq:floatoperations}.
 
 \begin{equation} \label{eq:floatoperations}
 \begin{split}
@@ -187,7 +194,10 @@ The straight-forward implementation of floating point matrix multiplication $A \
 \noindent We observe that the maximum floating point error introduced to any individual component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$.
 
 
-\subsection{Coordinate transformations}
+\subsection{Graphics pipeline operations}
+Having observed how error intervals originate and propagate through various floating point operations, we proceed by studying the operations performed in the graphics pipeline to identify sources of precision problems of vertex transormations as well as fragment shading operations.
+
+\subsubsection{Vertex transformations}
 In computer graphics software, scene content is commonly organized in a \emph{scene graph}, which allows coordinate transformations to be represented hierarchically. Each node in the graph may contain a transformation, represented as a 4x4 matrix, that affects all its children. Objects consist of vertices $\mathbf{x}$ represented as homogeneous coordinates $(x, y, z, w)^t$, where $x$, $y$ and $z$ are the coordinates in a local coordinate system, and $w = 1$. In order to transform a vertex from its local \emph{model coordinate system} to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatenated to a final \emph{model matrix} using matrix multiplication. This final matrix is applied to the vertex $\mathbf{x}$ to acquire the world coordinates $\mathbf{w}$.
 
 A \emph{view matrix} is also commonly generated based on a camera position and rotation expressed in the world coordinate system, and then used to transform world coordinates to \emph{view coordinates}, with the camera in the origin, and the z-axis parallel to the view direction. This view matrix is multiplied with the world coordinate $\mathbf{w}$ and outputs the view coordinates $\mathbf{v}$.
@@ -195,18 +205,17 @@ A \emph{view matrix} is also commonly generated based on a camera position and r
 View coordinates are transformed into \emph{clip coordinates} $\mathbf{c}$ using a \emph{projection matrix}, in this case a perspective projection matrix.
 After that, content that does not satisfy the equation $-w \le x, y, z \le w$ will be subject to frustum culling, and will be discarded from rendering. The vector is divided by $w$ to compute the \emph{normalized device coordinates (NDC)}. This last step, commonly called \emph{perspective division}, causes objects farther away from the camera to appear smaller on the screen. The $x$ and $y$ in NDC determines the object's position on the screen, with $(-1, -1)$ representing the bottom left corner and $(1, 1)$ upper right one.
 
-Depth sorting is commonly performed using a depth buffer, which stores a depth value for each pixel on the screen. Fragments are only rendered to if they are closer than the closest already rendered fragment at the same screen location. The depth value of a fragment is commonly derived from the $z$-component of the normalized device coordinates, whereas $z = 1$ represents the \emph{near plane} and and $z = -1$ represents the \emph{far plane}. \joncomment{Everything OK here. I was sleepy when I did the comment. :-)} If the depth buffer is not represented with 32-bit floating point numbers, the depth first needs to be converted to the appropriate type. 
+Depth sorting is commonly performed using a depth buffer, which stores a depth value for each pixel on the screen. Fragments are only rendered to if they are closer than the closest already rendered fragment at the same screen location. The depth value of a fragment is derived from the $z$-component of the normalized device coordinates using a linear mapping. Commonly, $z = 0$ represents the \emph{near plane} and and $z = -1$ represents the \emph{far plane}. If the depth buffer is not represented with 32-bit floating point numbers, the depth is converted to the appropriate type. 
 
-\subsection{Coordinate precision}
-Rounding errors in the graphics pipeline may give rise to two types of visual artifacts:
-\begin{itemize}
-\item If errors in the $x$ and $y$ components of the normalized device coordinates are in the same order as the size of the pixels on the screen, there will be a \emph{visible displacement of vertices}. 
-\item If the rounding error of $z$ when stored in the depth buffer is larger than the $z$-difference of two adjacent fragments, there is a risk that the incorrect fragment is rendered on top, which is often referred to as \emph{z-fighting}.
-\end{itemize}
+\subsubsection{Shading operations}
+Shading models frequently use various coordinate vectors of objects in the scene, such as light sources, surface normals and the camera position to compute fragment colors. Various shading algorithms may require transformations of vectors between the model coordinate system, the world coordinate system, the view coordinate system, or some other coordiante space. These transformations are commonly implemented as matrix multiplications.
 
-By using interval arithmetic to trace the errors in $x$ and $y$ it is possible to predict vertex displacement issues. Similarly, the accumulated error interval of the z-component can be used to determine when there is a risk for z-fighting. In the following sections, we study the precision error implications of the coordinate operations in the conventional graphics pipeline to determine the set of circumstances in which precision problems may be introduced.
+\subsection{Rendering artifacts}
+Lack of precision may give rise to several types of visual artifacts. If errors in the $x$ and $y$ components of the normalized device coordinates are in the same order as the size of the pixels on the screen, there will be a visible displacement of vertices. If the rounding error of $z$ when stored in the depth buffer is larger than the $z$-difference of any two fragments covering the same pixel, there is a risk for z-fighting, i.e. that the incorrect fragment is rendered on top. Rounding errors introduced in shading operations may result in in poor color precision.
 
-Using column vectors, the NDC's $\mathbf{n}$ are derived from the model coordinates $\mathbf{x}$ in equation \ref{eq:mvp}.
+In the following sections, we study the precision error implications of the coordinate operations in the conventional graphics pipeline to determine the set of circumstances in which precision problems may be introduced. By using interval arithmetic to trace the errors in $x$ and $y$ it is possible to predict vertex displacement issues. Similarly, the accumulated error interval of the z-component can be used to determine when there is a risk for z-fighting. By studying the effect of transformation matrices acting on coordinate vectors, we can also develop a means to identify the risk of precision loss in various shading operations.
+
+Using column vectors, the normalized device coordinates $\mathbf{n}$ are derived from the model coordinates $\mathbf{x}$ in equation \ref{eq:mvp}.
 
 \begin{align} \label{eq:mvp}
 \mathbf{c} = P\otimes V \otimes M \otimes \mathbf{x} \\
