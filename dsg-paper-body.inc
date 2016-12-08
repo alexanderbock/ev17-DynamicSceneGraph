@@ -6,7 +6,7 @@
 %\title[EG Astronomical Scale Differences and Visualization]%
 %      {Astronomical Scale Differences in Visualization}
 % How about this? ---abock
-\title[]{Dynamic Scene Graphs: Avoiding Floating Point Inaccuracies in Large Scale Astrovisualization}
+\title[]{Dynamic Scene Graph: Avoiding Floating Point Inaccuracies in Large Scale Astrovisualization}
 
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
@@ -30,6 +30,13 @@
 %-------------------------------------------------------------------------
 \begin{document}
 
+\teaser{
+  \centering
+  \fbox{\includegraphics[width=\linewidth]{figure/teaser2.png}}
+  \caption{Accurate rendering of a real scale model of the New Horizons space craft taking measurements on Pluto. The model of $\approx 2\,m$ size is shown in its correct location relative to Pluto, which is about $6\cdot 10^{12}$\,m from the coordinate system origin with the stars of the constellation Ophiucus ($\approx 10^{18}$ m) in their correct 3D positions}
+\label{fig:teaser}
+}
+
 \maketitle
 
 \begin{abstract}
@@ -38,7 +45,7 @@ In this work, we address the challenges of limited numerical range and precision
 
 %-------------------------------------------------------------------------
 \section{Introduction}
-Maybe one of the biggest achievements of mankind is the ability to observe and collect data about the surrounding cosmos. This includes observations ranging from the diminutive to the unimaginably large. Everything we know and everything we can possibly know is constrained in size and distance by two limits. The upper limit is given by the size of the observable universe with a comoving diameter of about $10^{27}$ meters. The lower limit is the Planck length, at which the structure of space-time is dominated by quantum effects and the concept of locality loses physical meaning, with an approximate size of $10^{-35}$ meters. These two limits pose absolute limits to the resolution that a software system dealing data of any size has to support. While impressive, this tremendous range of scales over roughly 60 orders of magnitude generates many challenges to visualization system operating across such scales. Besides the issue of crossing different abstraction levels for the visualization, one challenge not immediately obvious is related to the precision of floating point numbers. Following a na\"ive approach using a conventional computer graphics pipeline object locations cannot be described with the necessary precision, for example when viewing models of space craft at the edge of our solarsystem, or watching micrometer-scaled scans on the surface of Mars. 
+Maybe one of the biggest achievements of mankind is the ability to observe and collect data about the surrounding cosmos. This includes observations ranging from the diminutive to the unimaginably large. Everything we know and everything we can possibly know is constrained in size and distance by two limits. The upper limit is given by the size of the observable universe with a comoving diameter of about $10^{27}$ meters. The lower limit is the Planck length, at which the structure of space-time is dominated by quantum effects, of $10^{-35}$ meters. These two limits pose hard limits to the resolution that a software system dealing with astronomical data has to support. While impressive, this tremendous range of scales over roughly 60 orders of magnitude generates many challenges to visualization system operating across such scales. Besides the issue of crossing different abstraction levels, one challenge not immediately obvious is related to the precision of floating point numbers. Following a na\"ive approach using a conventional computer graphics pipeline, object locations cannot be described with the necessary precision, for example when viewing models of space craft at the edge of our solarsystem, or watching micrometer-scaled scans on the surface of Mars.
 
 %Through various means of scientific discovery, humanity now has collected detailed information and measurements of structures in the surrounding cosmos that range from the diminutive to the unimaginably large. Everything we know and everything we can possibly know is constrained in size and distance by two boundaries. The upper boundary is given by the size of the observable universe with a comoving diameter of about $10^{27}$ meters. The lower boundary is the Planck length, at which the structure of space-time is dominated by quantum effects and the concept of locality loses physical meaning, with an approximate size of $10^{-35}$ meters. These two boundaries pose absolute limits to the resolution that a software system dealing data of any size has to support.
 
@@ -48,7 +55,7 @@ When virtually exploring datasets with these vast scale differences and distance
 
 Previous work by the visualization community has provided solutions to some of these issues, such as the Power Scaled Coordinates by Hanson~\etal~\cite{hanson2000very} and the ScaleGraph by Klashed~\etal~\cite{KHECY10}. However, only partial solutions to the precision issues have been provided thus far and the root cause of these problems remains unsolved.
 
-In this work, we propose a general framework, a dynamic scene graph, to deal with multiple scales or varying sizes within one application. The concept is applicable to large variety of settings. This framework is constructed by analyzing the sources of precision errors and range overflow problems in a conventional computer graphics pipeline. Using interval arithmetic to track floating point rounding errors, we are able to identify which set of operations that may introduce precision problems. We combine this information with the observation that high detail is only required for close objects, we present and motivate our method for visualizing datasets with astronomical scale and distance differences. This techniques relies on a dynamic update and traversal of a scene graph whereby cameras automatically attach and detach to the closest object of interest. This object of interest is then used as a new coordinate origin and, thus, provided the highest possible numerical precision. 
+In this work, we propose a general framework, a dynamic scene graph, to deal with the traversal of large scales and varying sizes. The concept is applicable to a variety of application domains with large scale differences and not limited to astronomical data. This framework is constructed by analyzing the sources of precision errors and range overflow problems in a conventional computer graphics pipeline. Using interval arithmetic to track floating point rounding errors, we are able to identify which set of operations may introduce precision problems. We combine this information with the observation that high detail is only required for close objects to build our framework for visualizing datasets with astronomical scale and distance differences. This technique relies on a dynamic update and traversal of a scene graph whereby cameras automatically attach and detach to the closest object of interest. This object of interest is then used as a new coordinate origin and, thus, provides the highest possible numerical precision for salient objects.
 
 The dynamic scene graph has been implemented in the \emph{OpenSpace} project. OpenSpace is an open source software project with the goal of interactively visualizing and contextualizing our knowledge of the known universe and our ongoing efforts of exploration. The software framework is designed for immersive environments to the public dissemination of science and to contextualize information if all possible scales, such as sub-atomic particle simulations on Earth, micrometer-scale discoveries made by rovers the Martian surface, or volumetric simulations of entire galaxies. In order to fully utilize the potential of these immersive environments, for example planetariums or virtual reality headsets, the software needs to support high-fidelity stereoscopic rendering and the ability to render on multipipeline architectures, such as power walls. However, our method is applicable to any visualization tool that uses scene graphs to represent objects, and is compatible with techniques for volumetric rendering as well as order-independent transparency techniques.
 
@@ -86,7 +93,7 @@ transformations operating on 4-dimensional homogeneous coordinate vectors with f
 
 \begin{figure}
 \includegraphics[width=8.4cm,height=8.4cm,keepaspectratio]{degradation-circles.pdf}
-\caption{5 mantissa bits instead of 23. TODO: write more here}
+\caption{5 mantissa bits instead of 23. TODO: write more here \alexcomment{I'd remove the outer most layer on the top and right as they only repeat the inner values}}
 \label{fig:degradation-circles}
 \end{figure}
 
@@ -103,9 +110,9 @@ v = \begin{cases}
 \end{cases}
 \end{equation}
 
-\noindent Only values that can be composed by this set of bits are valid 32-bit floating point numbers. If exponent of a number is not in the range $[-126, 127]$ it will be represented as $\infty$ or $-\infty$. One critical characteristic of IEEE754 floating point numbers $\mathbb{R}_f$ \alexcomment{Is there a better symbol for this?} is their inability to represent all possible numbers $\mathbb{R}$. All numbers $\mathbb{R}_f \setminus \mathbb{R}$ that are not representable are rounded to their closeset \alexcomment{is this correct?} representable number in $\mathbb{R}_f$.
+\noindent Only values that can be composed by this set of bits are valid 32-bit floating point numbers. If exponent of a number is not in the range $[-126, 127]$ it will be represented as $\infty$ or $-\infty$. One critical characteristic of valid IEEE754 floating point numbers $\mathbb{R}_f$ \alexcomment{Is there a better symbol for this?} is their inability to represent all possible numbers $\mathbb{R}$. All numbers $\mathbb{R} \setminus \mathbb{R}_f$ that are not representable are rounded to their closest \alexcomment{is this correct? or is it always rounding down?} representable number in $\mathbb{R}_f$. This characteristic is at the heart of the problem of floating point inaccuracies.
 
-An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits and 52 bits for the mantissa. Using 128-bits (quadruple precision), it is possible to further increase the precision and exponent range. Increasing the bit depth will naturally require more computational resources, and while the OpenGL Shading Language (GLSL) natively supports the doubles, there is no quad-precision data type available as of GLSL 4.4 \cite{kessenich2014opengl}. 
+An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits, and 52 bits for the mantissa. Using 128-bits (quadruple precision), it is possible to further increase the precision and exponent range. Increasing the bit depth will naturally require more computational resources, and might lack common hardware support, thus making their usage infeasible for real-time visualization.
 
 \subsubsection{Precision limitations}
 Due to the limited number of mantissa bits, values need to be rounded in order to be represented as floating point numbers. An upper bound of the absolute spacing between a floating point number $v$ and an adjacent one can be expressed as $\epsilon|v|$\cite{higham2002accuracy}, where the \emph{machine epsilon} $\epsilon$ is a constant given by $2^{-(n + 1)}$, and $n$ is the number of mantissa bits. Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, where the rounding error coefficient $u = \frac{\epsilon}{2}$.
