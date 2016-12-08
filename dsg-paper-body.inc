@@ -86,7 +86,7 @@ transformations operating on 4-dimensional homogeneous coordinate vectors with f
 
 \begin{figure}
 \includegraphics[width=8.4cm,height=8.4cm,keepaspectratio]{degradation-circles.pdf}
-\caption{5 mantissa bits instead of 23. TODO: write more here}
+\caption{The problem of coordinate preicsion for vertices far from the origin is amplicied by limiting the number of mantissa bits to 5. Circle A, being close to the origin, is represented relatively well despite the limited bit depth. The circles marked B have poor precision for one of their vector components, while C is heavily distored in both dimensions. }
 \label{fig:degradation-circles}
 \end{figure}
 
