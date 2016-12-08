@@ -195,7 +195,7 @@ A \emph{view matrix} is also commonly generated based on a camera position and r
 View coordinates are transformed into \emph{clip coordinates} $\mathbf{c}$ using a \emph{projection matrix}, in this case a perspective projection matrix.
 After that, content that does not satisfy the equation $-w \le x, y, z \le w$ will be subject to frustum culling, and will be discarded from rendering. The vector is divided by $w$ to compute the \emph{normalized device coordinates (NDC)}. This last step, commonly called \emph{perspective division}, causes objects farther away from the camera to appear smaller on the screen. The $x$ and $y$ in NDC determines the object's position on the screen, with $(-1, -1)$ representing the bottom left corner and $(1, 1)$ upper right one.
 
-Depth sorting is commonly performed using a depth buffer, which stores a depth value for each pixel on the screen. Fragments are only rendered to if they are closer than the closest already rendered fragment at the same screen location. The depth value of a fragment is commonly derived from the $z$-component of the normalized device coordinates, whereas $z = 1$ represents the \emph{near plane} and and $z = -1$ represents the \emph{far plane}. \joncomment{Are you sure about these values for z? I don't remember these values by heart, but they don't look familiar to me.} If the depth buffer is not represented with 32-bit floating point numbers, the depth first needs to be converted to the appropriate type. 
+Depth sorting is commonly performed using a depth buffer, which stores a depth value for each pixel on the screen. Fragments are only rendered to if they are closer than the closest already rendered fragment at the same screen location. The depth value of a fragment is commonly derived from the $z$-component of the normalized device coordinates, whereas $z = 1$ represents the \emph{near plane} and and $z = -1$ represents the \emph{far plane}. \joncomment{Everything OK here. I was sleepy when I did the comment. :-)} If the depth buffer is not represented with 32-bit floating point numbers, the depth first needs to be converted to the appropriate type. 
 
 \subsection{Coordinate precision}
 Rounding errors in the graphics pipeline may give rise to two types of visual artifacts:
@@ -389,21 +389,20 @@ A number of conclusions can be drawn from the previous section:
 
 \section{Method}
 
-Our method is based on the work of Klashed \etal \cite{KHECY10}. We also use a scenegraph to represent the hierarchical relationships between transformations and objects in a scene but, differently of their work, our method doesn't have a concept of sub-scene and as a result it doesn't require a re-scale process to compensate for perspective effects and mapping of depths to manageable ranges.
+Our method is based on the work of Klashed \etal \cite{KHECY10}. We also use a scene graph to represent the hierarchical relationships between transformations and objects in a scene but, differently of their work, our method doesn't have the concept of sub-scene and, as a result, it doesn't require a re-scale process to compensate for perspective effects and mapping of depths to manageable ranges.
 
 \subsection{Precision Adaptive Scene Graph}\label{sec:scenegraph}
 
-
-In our implementation, the scene graph of a scene is composed of three different types of nodes:
+In our implementation, the dynamic scene graph, is composed of three different types of nodes:
 \begin{enumerate}
 	\item The root node of the tree representing the whole scene in our 3-d space. It also can be used to represent the center of the universe.
-	\item Internal nodes representing an astronomic position \joncomment{Maybe a better name here.} (e.g. the barycenter of a celestial system) or a renderable entity (e.g. a celestial body, spacecraft, etc.).
+	\item Internal nodes representing positions, the center of mass of two or more bodies orbiting each other (e.g. the barycenter of a celestial system) or a renderable entity (e.g. a celestial body, spacecraft, etc.).
 	\item The leaf nodes representing a renderable entity or the virtual camera of the system.
 \end{enumerate}
 
-Each node also stores the transformation matrix (which can be composed by rotation, translation and scale matrices as well) to be applied over the element in the node and a \textbf{node radius}. As usual in a scene graph tree structure, the transformation matrix is inherited by all children of a node. A \textbf{node radius} is defined as a virtual sphere (bounding volume) centered on the node's spatial position which allows one to decide when another node's spatial position is in its influence sphere.
+Each node stores also the transformation matrix (which can be composed by rotation, translation and scale matrices as well) to be applied over the element in the node, and a \textbf{node radius}. A \textbf{node radius} is defined as a virtual sphere (bounding volume) centered on the node's spatial position which allows one to decide when another node's spatial position is in its influence sphere. As usual in a scene graph tree structure, the transformation matrix is inherited by all children of a node.
 
-Figure~\ref{fig:scenegraph} illustrates the schematic shape of a scene graph for the scene in the figure. In the top drawing of Figure~\ref{fig:scenegraph} the item number 1 represents the node radius of the scene; item number 2 is another node radius in the scene, with items 4 and 5 inside it plus the virtual camera of the system; item 3 is another celestial body (for the sake of simplicity, let's consider this a heliocentric system so item 3 represents the Sun); item 4 is an orbiting element (this element could be another celestial body, a spacecraft, a satellite, etc.) of item 5, another celestial body. The virtual camera of the system is attached to the item 4 node. This scene graph can be seen as a representation of the Sun in yellow, Earth in blue and Moon in gray. 
+Figure~\ref{fig:scenegraph} illustrates the schematic configuration of a scene graph (bottom drawings) for the scene in the figure (top drawing). In Figure~\ref{fig:scenegraph} the item number 1 represents the node radius of the whole scene; item number 2 is the another node radius in the scene, with items 4 and 5 inside it plus the virtual camera of the system; item 3, 4 and 5 are renderable entities. The virtual camera of the system (item \textbf{A}) is attached to the item 4 node. This scene graph can be seen as a simplistic representation of a an heliocentric system with the Sun in yellow and Earth in blue orbiting it. The Moon in gray is orbiting the Earth.
 
 \joncomment{Emil, do you think is possible to write some text aside the nodes in the bottom part of Figure~\ref{fig:scenegraph}? Like: badycenter, Moon, Sun, etc?} 
 Also in Figure~\ref{fig:scenegraph}, in the bottom right drawing, the representation of the scene as a scene graph tree can be seen. In this example the virtual camera is focusing on item 4, the Moon. We call our scene graph a dynamic scene graph.
@@ -414,14 +413,16 @@ Also in Figure~\ref{fig:scenegraph}, in the bottom right drawing, the representa
 \label{fig:scenegraph}
 \end{figure}
 
-In order to render the scene correctly, a commonly used scene graph visits all nodes traversing the tree concatenating the transformation matrices throughout the path  from the root node to each of the leaf nodes. In this structure the root of the scene graph is seen as the center of coordinates of the scene (the world coordinates).
-Considering the possible differences in size and distance when visualizing objects in universe and the classical way a scene graph is traversed during a scene rendering, this approach can lead the precision problems in the final rendering of the scene, as discussed in section~\ref{sec:theoretical}, mainly because the amount of possible translation transformations performed between different nodes. A higher scene graph may lead to higher errors (\joncomment{This is not always true. I think I will remove this last sentence.}).\joncomment{Should we say more about position and depth and catastrophic cancellation?}
+In order to render the scene correctly, a commonly used scene graph traverses all nodes in the tree composing (by multiplication) \joncomment{concatenating?} the transformation matrices throughout the path from the root node to each of the leaf nodes. In this structure the root of the scene graph is frequently seen as the center of coordinates of the scene (the world coordinates).
+Considering the possible differences in size and distance when visualizing objects in universe and the classical way a scene graph is traversed during a scene rendering, this approach can lead to precision problems in the final rendering of the scene, as discussed in section~\ref{sec:theoretical}, mainly because the amount of translation transformations performed between different nodes and the final perspective transformation. In this case, a higher scene graph may lead to higher errors.\joncomment{Should we say more about position and depth and catastrophic cancellation?}
 
-As we noted, traversing the scene graph from root to leaf during each rendering pass will produce a catastrophic cancellation process when the dimensions considered are of order of magnitude. To avoid the catastrophic cancellation process, we traverse the scene graph in a different way than the commonly used way, trying to minimizing the number of transformations executed.\joncomment{TO REVIEW.}
+%As we noted, traversing the scene graph from root to leaf during each rendering pass will produce a catastrophic cancellation process when the dimensions considered are of order of magnitude. 
 
-In our dynamic scene graph, the closest (in an euclidean space) node from the camera is the current center of the coordinates system for the scene (center of the world coordinates) and will be called from now on the current center node. In our example in Figure~\ref{fig:scenegraph} this node is the item 4 node (Moon). Thus, instead of applying all translations from the root node to item 4 node, we only apply the translations present in item 4 node, minimizing the chances of a catastrophic cancellation happens.
+To avoid the precision problems leading, we traverse our dynamic scene graph in a different way than the commonly used way for a scene graph, trying to minimizing the number of transformations executed.
 
-When visiting other item nodes, for instance, the item 5 node, we initially find the closest ancestor node between the current center node and the item 5 node; the item 2 node. Instead of applying all translations from the root node to item 5 node, we only apply the translation from item 2 node to item 5 node (drawn as a blue arrow in Figure~\ref{fig:scenegraph}, and to obtain the final translation from the current center node, we subtract the translation from the item 2 node to the current center node (drawn as a red arrow in Figure~\ref{fig:scenegraph}). This procedure is equivalent to sum vector $\vec{v_1}$ from item 2 node to item 5 node to vector $\vec{v_2}$ from item 5 node to item 2 node. See Figure~\ref{fig:vectorsum}
+The closest (in an euclidean space) node from the virtual camera, the node which virtual camera is attached, is the current center of the coordinates of the system for the whole scene (center of the world coordinates) and will be called from now on the current center node. In our example in Figure~\ref{fig:scenegraph} this node is the item 4 node (Moon). Thus, instead of applying all translations from the root node to item 4 node, we only apply the transformations present in item 4 node in order to render its entity, minimizing the chances of a catastrophic cancellation happens.
+
+When visiting other item nodes, for instance, the item 5 node, we initially find the closest common ancestor node between the current center node and the item 5 node, i.e. the item 2 node. Instead of applying all transformations from the root node to item 5 node, we only apply the transformations from item 2 node to item 5 node (drawn as a blue arrow in Figure~\ref{fig:scenegraph}, and to obtain the final translation from the current center node to item 5 node, we subtract the translation from the item 2 node to the current center node (drawn as a red arrow in Figure~\ref{fig:scenegraph}). This procedure is equivalent to summing the vector $\vec{v_1}$ from item 2 node to item 5 node to vector $\vec{v_2}$ from item 5 node to item 2 node. See Figure~\ref{fig:vectorsum}
 
 The same idea can be extended for the other nodes. For the item 3 node, its position related to the current center node can be obtained adding the vectors $\vec{v_2}$, $\vec{v_3}$ and $\vec{v_4}$ in Figure~\ref{fig:vectorsum}.
 
@@ -432,7 +433,7 @@ The same idea can be extended for the other nodes. For the item 3 node, its posi
 \label{fig:vectorsum}
 \end{figure}
 
-\joncomment{Talk about the perspective effects.}
+\joncomment{Emil, What do you want to talk about the perspective effects here?.}
 
 We use the perspective matrix:
 
@@ -452,57 +453,61 @@ Clipping is performed for all content with negative w.
 
 \subsubsection{Dynamic camera attachment}
 
-The virtual camera in our system can move freely within 5 degrees of freedom (DOF). Considering only 3 DOF (3-d space movement), the camera can be close to any node in our dynamic scene graph. Which means that once the camera is close to a node, this node must be the new current center node. This propriety of changing the current center node, and by consequence the scene's center of coordinate, based on the camera position is one of the factors contributing to the ``dynamic'' aspect of our scene graph.
+The virtual camera in our system can move freely within 5 degrees of freedom (DOF). Considering only 3 DOF (3-d space movement), the camera can be close to the position of any node in our dynamic scene graph. Which means that once the camera is close to a node's position, this node must be the new current center node. This propriety of changing the current center node, and by consequence the scene's center of coordinate, based on the camera position and other nodes proximity is one of the factors contributing to the ``dynamic'' aspect of our scene graph.
 
-In order to determine which node should be the new current center node, every time the camera is translated, its current position is tested against the node radius of the nodes in the dynamic scene graph. If the camera is inside a node's node radius, the camera position is tested against its children nodes' node radius to determine which node should be the new current center node. This idea is represented by the algorithm~\ref{alg:dynamicCamera}.
+In order to determine which node should be the new current center node and attach the virtual camera to it, every time the camera is translated, its current position is tested against the node radius of the nodes in the dynamic scene graph. If the camera is inside a node's node radius, the camera position is tested against its children nodes' node radius (if present) to determine which new node should be the next current center node.
 
-\begin{algorithm}\label{alg:dynamicCamera}
- \caption{Dynamic Camera Attachment Algorithm}
- \begin{algorithmic}[1]
- \renewcommand{\algorithmicrequire}{\textbf{Input:}}
- \renewcommand{\algorithmicensure}{\textbf{Output:}}
- \REQUIRE in
- \ENSURE  out
- \\ \textit{Initialization} :
-  \STATE first statement
- \\ \textit{LOOP Process}
-  \FOR {$i = l-2$ to $0$}
-  \STATE statements..
-  \IF {($i \ne 0$)}
-  \STATE statement..
-  \ENDIF
-  \ENDFOR
- \RETURN $P$
- \end{algorithmic}
-\end{algorithm}  
+%This idea is represented by the algorithm~\ref{alg:dynamicCamera}.
+
+%\begin{algorithm}\label{alg:dynamicCamera}
+% \caption{Dynamic Camera Attachment Algorithm}
+% \begin{algorithmic}[1]
+% \renewcommand{\algorithmicrequire}{\textbf{Input:}}
+% \renewcommand{\algorithmicensure}{\textbf{Output:}}
+% \REQUIRE in
+% \ENSURE  out
+% \\ \textit{Initialization} :
+%  \STATE first statement
+% \\ \textit{LOOP Process}
+%  \FOR {$i = l-2$ to $0$}
+%  \STATE statements..
+%  \IF {($i \ne 0$)}
+%  \STATE statement..
+%  \ENDIF
+%  \ENDFOR
+% \RETURN $P$
+% \end{algorithmic}
+%\end{algorithm}  
 
 \subsubsection{Dynamic object attachment}
 
-As stated before, not all nodes in the dynamic scene graph are celestial bodies with known orbits. The dynamic scene graph can handle any of the three types defined in section~\ref{sec:scenegraph}. One possible type is a mission space probe. 
+Not all nodes with a renderable entity in the dynamic scene graph are celestial bodies with known orbits. One possible renderable entity is a mission space probe. 
 
-Space probes like New Horizons~\cite{??} travels through the solar system capturing important scientific data that is later sent to Earth. Because of New Horizons' trajectory is given by a path from Earth to Pluto, a commonly used scene graph would set New Horizon's node as a child of an existent node in the tree (Earth's node, e.g.) and when the New Horizons probe is rendered close to Pluto, the translations necessary to render that node will lead to an precision problem. Equivalently, setting Pluto's node as the New Horizons' node will generate precision problems when rendering New Horizons probe close to Earth.
+Space probes like New Horizons~\cite{stern2009new} travels through the solar system capturing important scientific data that is later sent to Earth. Because of New Horizons' trajectory is given by a path from Earth to Pluto, a commonly used scene graph would set New Horizon's node as a child of an existent node in the tree (Earth's node, e.g.) and when the New Horizons probe is rendered close to Pluto, the transformations necessary to render that entity will lead to a precision problem. Equivalently, setting Pluto's node as the parent of New Horizons' node will generate precision problems when rendering New Horizons probe close to Earth.
 
-The solution to this problem is to have a dynamic node attachment, i.e., during the traveling of New Horizons probe its node changes the parent relationship with the other nodes in the dynamic scene graph. This parent changing (adoption), is done based on the checking of the moving node's position against the other node's node radius. If the moving node is inside a node radius, the children of this node are also tested against to determine the closest one which moving node is inside the node radius. The algorithm~\ref{alg:dynamicAdoption} represents this idea. \joncomment{Improve this paragraph.}
+The solution to this problem is to have a dynamic node attachment, i.e., during the traveling of the New Horizons probe its node changes the parent relationship with the other nodes in the dynamic scene graph. This parent changing (adoption), is done based on checking the moving node's position against the other node's node radius. If the moving node position is inside a node radius, the children of this node are also tested against to determine the closest node which the moving node is inside the node radius. Once this closes node is determined, the moving node is adopted by this new node and the transformations adjusted accordingly.
 
-\begin{algorithm}\label{alg:dynamicAdoption}
- \caption{Dynamic Node Attachment Algorithm - Node Adoption}
- \begin{algorithmic}[1]
- \renewcommand{\algorithmicrequire}{\textbf{Input:}}
- \renewcommand{\algorithmicensure}{\textbf{Output:}}
- \REQUIRE in
- \ENSURE  out
- \\ \textit{Initialization} :
-  \STATE first statement
- \\ \textit{LOOP Process}
-  \FOR {$i = l-2$ to $0$}
-  \STATE statements..
-  \IF {($i \ne 0$)}
-  \STATE statement..
-  \ENDIF
-  \ENDFOR
- \RETURN $P$
- \end{algorithmic}
-\end{algorithm}  
+%The algorithm~\ref{alg:dynamicAdoption} represents this idea. \joncomment{Improve this paragraph.}
+%
+%\begin{algorithm}\label{alg:dynamicAdoption}
+% \caption{Dynamic Node Attachment Algorithm - Node Adoption}
+% \begin{algorithmic}[1]
+% \renewcommand{\algorithmicrequire}{\textbf{Input:}}
+% \renewcommand{\algorithmicensure}{\textbf{Output:}}
+% \REQUIRE in
+% \ENSURE  out
+% \\ \textit{Initialization} :
+%  \STATE first statement
+% \\ \textit{LOOP Process}
+%  \FOR {$i = l-2$ to $0$}
+%  \STATE statements..
+%  \IF {($i \ne 0$)}
+%  \STATE statement..
+%  \ENDIF
+%  \ENDFOR
+% \RETURN $P$
+% \end{algorithmic}
+%\end{algorithm}  
 
 \subsubsection{Model view matrix computation}
 
