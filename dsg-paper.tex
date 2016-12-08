@@ -56,6 +56,8 @@
 \usepackage{algorithm}
 \usepackage{algorithmic}
 
+\setlength{\fboxsep}{0pt}
+
 \newcommand\constructosum[3]{%
     \begin{tikzpicture}[baseline=(char.base), inner sep=0, outer sep=0]
         \draw (#1,0) circle (#2); 
@@ -71,6 +73,7 @@
     }\displaylimits
 }
 
+
 \newcommand{\joncomment}[1]{\textbf{[-Jonathas-~}
 		\textcolor{orange}{#1}
 		%\marginpar{\textcolor{blue}{\centerline{{\Huge \textbf{!}}}}}
@@ -82,7 +85,7 @@
 		\textbf{~]}}
 
 \newcommand{\alexcomment}[1]{\textbf{[-Alex-~}
-		\textcolor{blue}{#1}
+		\textcolor{magenta}{#1}
 		%\marginpar{\textcolor{blue}{\centerline{{\Huge \textbf{!}}}}}
 		\textbf{~]}}
 
