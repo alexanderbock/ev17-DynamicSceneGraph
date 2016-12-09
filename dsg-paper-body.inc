@@ -213,20 +213,20 @@ Shading models frequently use various coordinate vectors of objects in the scene
 
 \subsection{Rendering artifacts}
 \alexcomment{Merge this into 3.4, replacing most of 3.4 content and leaving a paragraph explaining the near/far plane}
-Lack of precision may give rise to several types of visual artifacts. If errors in the $x$ and $y$ components of the normalized device coordinates are in the same order as the size of the pixels on the screen, there will be a visible displacement of vertices. If the rounding error of $z$ when stored in the depth buffer is larger than the $z$-difference of any two fragments covering the same pixel, there is a risk for z-fighting, i.e. that the incorrect fragment is rendered on top. Rounding errors introduced in shading operations may result in in poor color precision.
+Lack of precision may give rise to several types of visual artifacts. If errors in the $x$ and $y$ components of the normalized device coordinates are in the same order as the size of the pixels on the screen, there will be a visible displacement of vertices. If the rounding error of $z$ when stored in the depth buffer is larger than the $z$ difference of any two fragments covering the same pixel, there is a risk for z-fighting, i.e. that the incorrect fragment is rendered on top. Rounding errors introduced in shading operations may result in in poor color precision.
 
 In the following sections, we study the precision error implications of the coordinate operations in the conventional graphics pipeline to determine the set of circumstances in which precision problems may be introduced. By using interval arithmetic to trace the errors in $x$ and $y$ it is possible to predict vertex displacement issues. Similarly, the accumulated error interval of the z-component can be used to determine when there is a risk for z-fighting. By studying the effect of transformation matrices acting on coordinate vectors, we can also develop a means to identify the risk of precision loss in various shading operations.
 
-Using column vectors, the normalized device coordinates $\mathbf{n}$ are derived from the model coordinates $\mathbf{x}$ in equation \ref{eq:mvp}.
+Using column vectors, the normalized device coordinates $\mathbf{n}$ are derived from the model coordinates $\mathbf{x}$ in Equation \ref{eq:mvp}.
 
 \begin{align} \label{eq:mvp}
 \mathbf{c} = P\otimes V \otimes M \otimes \mathbf{x} \\
 \mathbf{n} = \mathbf{c} \oslash {c_w}
 \end{align}
  
-Here, $P$ is the projection matrix, V is the view matrix, $M$ is the model matrix, and $\mathbf{x}$, $\mathbf{c}$ and $\mathbf{n}$ are homogeneous coordinate vectors on the form $(x, y, z, w)^t$. The precision in normalized device coordinates depends on the collective effects of $M$, $V$, $P$ and the perspective division as they act on $\mathbf{x}$. 
+Here, $P$ is the projection matrix, V is the view matrix, $M$ is the model matrix, and $\mathbf{x}$, $\mathbf{c}$ and $\mathbf{n}$ are homogeneous coordinate vectors on the form $(x, y, z, w)^t$. The precision in normalized device coordinates depends on the collective effects of $M$, $V$, $P$, and the perspective division as they act on $\mathbf{x}$. 
 
-$M$ and $V$ are commonly composed from three types of transformations that are encoded in the scene graph: scaling, translation and rotation. We study the effect of applying scaling, translation and rotation on a generalized model matrix or view matrix A, composed of a translation vector $\mathbf{a}$ and a combined rotation/scaling 3x3-matrix $A'$, as given by equation \ref{eq:matrixa}. To observe how the matrices act on a coordinate vector, we can study the fourth column in A.
+$M$ and $V$ are commonly composed from three types of transformations that are encoded in the scene graph: scaling, translation, and rotation. We study the effect of applying scaling, translation, and rotation on a generalized model matrix or view matrix $A$, composed of a translation vector $\mathbf{a}$ and a combined rotation/scaling 3x3-matrix $A'$, as given by Equation \ref{eq:matrixa}. To observe how the matrices act on a coordinate vector we can study the fourth column in $A$.
 \begin{equation} \label{eq:matrixa}
 A = \mleft(
 \begin{array}{c|c}
@@ -237,11 +237,10 @@ A = \mleft(
 \mright)
 \end{equation}
 
-After evaluating the possible effects of the scaling, translation and rotation, we continue with a similar analysis for the projection matrix, the perspective division and conversion of to depth buffer representation.
+After evaluating the possible effects of the scaling, translation, and rotation we continue with a similar analysis for the projection matrix, the perspective division, and conversion of to depth buffer representation.
 
 \subsubsection{Scaling}
-
-Equation \ref{eq:scaling} describes a floating point matrix multiplication of a scaling matrix $S$ and a matrix $A$. $S'$ is a diagonal matrix with one scaling component per dimension $x$, $y$ and $z$. 
+Equation \ref{eq:scaling} describes a floating point matrix multiplication of a scaling matrix $S$ and a matrix $A$. $S'$ is a diagonal matrix with one scaling component per dimension $x$, $y$, and $z$. 
 \begin{equation} \label{eq:scaling}
 \hat{S} = S \otimes A = 
 \mleft(
@@ -266,7 +265,7 @@ Equation \ref{eq:scaling} describes a floating point matrix multiplication of a 
 \end{array}\mright)
 \end{equation}
 
-\noindent Since the diagonal matrix components $S'_{ij}$ are $0$ for all $i \neq j$, the output matrix components $\hat{S}'_{ij}$ and $\hat{\mathbf{s}}_i $ can be written as in equation \ref{eq:scalingconclusion}.
+\noindent Since the diagonal matrix components $S'_{ij}$ are $0$ for all $i \neq j$, the output matrix components $\hat{S}'_{ij}$ and $\hat{\mathbf{s}}_i $ can be written as in Equation \ref{eq:scalingconclusion}.
 
 \begin{align} \label{eq:scalingconclusion}
 \hat{S}'_{ij} = (S' \otimes A')_{ij} &\subseteq S'_{ii}\,A'_{ij}(1 + [e_{ij}]) \\
@@ -544,6 +543,7 @@ How to calculate the final Model View Matrix...
 %-------------------------------------------------------------------------
 \section{Conclusions}
 
+\subsection{Future Work}
 
 \section{Acknowledgments}
 
