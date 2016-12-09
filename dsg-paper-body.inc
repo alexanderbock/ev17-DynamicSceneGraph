@@ -6,7 +6,10 @@
 %\title[EG Astronomical Scale Differences and Visualization]%
 %      {Astronomical Scale Differences in Visualization}
 % How about this? ---abock
-\title[]{Dynamic Scene Graph: Avoiding Floating Point Inaccuracies in Large Scale Astrovisualization}
+
+% suggestion from Anders
+\title{Dynamic Scene Graph: Accurate(?) Scaling, Positioning, and Navigation in the Universe}
+%\title[]{Dynamic Scene Graph: Avoiding Floating Point Inaccuracies in Large Scale Astrovisualization}
 
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
@@ -40,7 +43,7 @@
 \maketitle
 
 \begin{abstract}
-In this work, we address the challenges of limited numerical range and precision of floating point numbers when simultaneously visualizing astronomical objects with huge scale differences, both in size and distance. Due to the limited precision of floating point numbers, it is impossible to represent comparatively small objects far away from the coordinate system origin. We propose a system that utilizes a dynamically assigned coordinate system origin in a scene graph to provide the highest possible numerical precision for all salient objects. This makes it possible to interactively render, for example, surface structures on Mars and the Milky Way simultaneously. We track and quantify the propagation of numerical precision errors through the computer graphics pipeline using interval arithmetic for cases of large differences in scale. Furthermore, we identify sources of precision degradation, leading to incorrect object positions in screen-space and z-fighting, mathematically. Our proposed method operates without near and far planes while maintaining high depth precision through the use of floating point depth buffers. By providing interoperability with order-independent transparency algorithms, direct volume rendering, and stereoscopy, our approach is well suited for scientific visualization. We provide the mathematical background, a thorough description of the method, and a reference implementation.
+In this work, we address the challenges of limited numerical range and precision of floating point numbers when simultaneously visualizing astronomical objects with huge scale differences, both in size and distance. Due to the limited precision of floating point numbers, it is impossible to represent comparatively small objects far away from the coordinate system origin. We propose a framework that utilizes a dynamically assigned coordinate system origin to provide the highest possible numerical precision for all salient objects in a scene graph. This makes it possible to navigate and interactively render, for example, surface structures on Mars and the Milky Way simultaneously. We track and quantify the propagation of numerical precision errors through the computer graphics pipeline using interval arithmetic for cases of large differences in scale. Furthermore, we identify sources of precision degradation, leading to incorrect object positions in screen-space and z-fighting, mathematically. Our proposed method operates without near and far planes while maintaining high depth precision through the use of floating point depth buffers. By providing interoperability with order-independent transparency algorithms, direct volume rendering, and stereoscopy, our approach is well suited for scientific visualization. We provide the mathematical background, a thorough description of the method, and a reference implementation.
 \end{abstract}
 
 %-------------------------------------------------------------------------
@@ -67,6 +70,8 @@ In summary, our contributions include:
 \item A scheme for seamless adaption of the eye-separation used for stereoscopic rendering.
 \end{itemize}
 
+The paper is structured as follows, after describing the related work in the following section, we provide a theoretical background for the sources of floating point inaccuracies in Section~\ref{sec:theoretical}, followed by a description of our proposed dynamic scene graph framework in Section~\ref{sec:method} and its results in Section~\ref{sec:result}.
+
 \section{Related work}
 Computer graphics and interactive visualization have
 proven to be immensely valuable tools for communicating scientific findings
@@ -76,9 +81,7 @@ All We Are [citation needed], as well as interactive software for digital planet
 such as Uniview~\cite{KHECY10}, DigiStar~\cite{ES16} or DigitalSky~\cite{Sky16}. The usefulness of planetariums as immersive visualization environments as been recognized~\cite{magnor2010progress}.
 
 The concept of \emph{Power Scaled Coordinates}, introduced by Hanson~\etal ,
-addresses some of the challenges with multi-scale visualization~\cite{hanson2000very}. The method uses four-dimensional floating point vectors where the first three components determine the direction of the vector, and the fourth encodes a scaling coefficient as a power of ten. The proposed system can operate with floating point numbers close to unit scale, which solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors.
-
-\alexcomment{Duplicate of the previous section?} The Power Scaled Coordinates method is based on floating point representation of numbers, which yields high precision close to zero, and decreasing precision with larger values. Hence, the method achieves high precision close to the origin of the scene, but decreasing precision for coordinates further away. This is a viable solution for scenes where the high precision data is centered in one region, such as solely close to Earth. However, the challenge of representing multiple regions in the virtual universe with high precision is not addressed in this work.
+addresses some of the challenges with multi-scale visualization~\cite{hanson2000very}. The method uses four-dimensional floating point vectors where the first three components determine the direction of the vector, and the fourth encodes a scaling coefficient as a power of ten. The proposed system can operate with floating point numbers close to unit scale, which solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors. This is a viable solution for scenes where the high precision data is centered in one region, such as solely close to Earth. However, the challenge of representing multiple regions in the virtual universe with high precision is not addressed in this work.
 
 Fu~\etal \cite{fu2007transparently} elaborate on the concept of Power Scales Coordinates and introduce a depth buffer remapping scheme to cover a wider range of distances than what is possible with a fixed point depth buffer and a conventional near and far plane. The depth buffer range is divided into three regions, where small and huge depth values are remapped using logarithmic scales, while values in the mid-range are mapped linearly. While this method may be beneficial for some specific type of scene content, the method does not provide a generic way to select appropriate threshold values, and the choice of three separate regions with different mapping does not necessarily provide better results than one single logarithmic mapping.
 
@@ -265,17 +268,17 @@ Equation \ref{eq:scaling} describes a floating point matrix multiplication of a 
 \end{array}\mright)
 \end{equation}
 
-\noindent Since the diagonal matrix components $S'_{ij}$ are $0$ for all $i \neq j$, the output matrix components $\hat{S}'_{ij}$ and $\hat{\mathbf{s}}_i $ can be written as in Equation \ref{eq:scalingconclusion}.
+\noindent Since the diagonal matrix components $S'_{ij}$ are $0$ for all $i \neq j$ the output matrix components $\hat{S}'_{ij}$ and $\hat{\mathbf{s}}_i $ can be written as in Equation \ref{eq:scalingconclusion}.
 
 \begin{align} \label{eq:scalingconclusion}
 \hat{S}'_{ij} = (S' \otimes A')_{ij} &\subseteq S'_{ii}\,A'_{ij}(1 + [e_{ij}]) \\
 \hat{\mathbf{s}}_i = (S' \otimes \mathbf{a})_{i} &\subseteq S'_{ii}\,\mathbf{a}_i(1 + [e_{j}])
 \end{align}
 
-The rounding error introduced by a scaling matrix $S$ is proportional to the scaling factors in $S'$. Any error interval encoded in $A'$ and $\mathbf{a}$ will be scaled proportionally. We conclude that applying a scaling matrix to a matrix $A$ \emph{preserves the relative precision} of all components of $A$.
+The rounding error introduced by a scaling matrix $S$ is proportional to the scaling factors in $S'$. Any error interval in $A'$ and $\mathbf{a}$ will be scaled proportionally. Thus, we conclude that applying a scaling matrix to a matrix $A$ \emph{preserves the relative precision} of all components of $A$. \alexcomment{This is technically not part of the theoretical background, but already a contribution. Should I be moved elsewhere?}
 
 \subsubsection{Translation}
-In equation \ref{eq:translation}, a translation matrix $T$ is applied to $A$ using floating point matrix multiplication. $I$ denotes a 3x3 identity matrix, and $\mathbf{t}$ represents the translation vector. 
+In addition to the scaling, we can also represent the translation by a vector using floating point inteval arithmatic. In Equation \ref{eq:translation} a translation matrix $T$ is applied to $A$ using floating point matrix multiplication. $I$ denotes a 3$\times$3 identity matrix, and $\mathbf{t}$ represents the translation vector. 
 
 \begin{equation} \label{eq:translation}
 \hat{T} = T \otimes A = 
@@ -301,17 +304,17 @@ In equation \ref{eq:translation}, a translation matrix $T$ is applied to $A$ usi
 \end{array}\mright)
 \end{equation}
 
-where 
+\noindent where 
 
 \begin{align} \label{eq:translationconclusion}
 \hat{T}_{ij} = (I \otimes A')_{ij} = A'_{ij}\\
 \hat{t}_i = t_i \oplus a_i \subseteq (t_i + a_i)(1 + [e_i])
 \end{align}
-We note that the precision in $\hat{T}_{ij}$ is preserved from $A'$ when any translation matrix $T$ is applied. However, any error intervals encoded in $t_i$ and $a_i$ will propagate to $\hat{t}_i$, and will \emph{not} be scaled down even if $|\hat{t}_i|$ is orders of magnitude smaller than $|t_i|$ and $|a_i|$. This scenario \emph{may lead to catastrophic cancellation} in the component $\hat{t}_i$.
 
+\noindent We note that the precision in $\hat{T}_{ij}$ is preserved from $A'$ when any translation matrix $T$ is applied. However, any error intervals encoded in $t_i$ and $a_i$ will propagate to $\hat{t}_i$, and will \emph{not} be scaled down even if $|\hat{t}_i|$ is orders of magnitude smaller than $|t_i|$ and $|a_i|$. This scenario \emph{may lead to catastrophic cancellation} in the component $\hat{t}_i$.
 
 \subsubsection{Rotation}
-The same analysis is performed for floating point rotation in equation \ref{eq:rotation}.
+The same analysis is performed for floating point rotation in Equation \ref{eq:rotation}.
 
 \begin{equation} \label{eq:rotation}
 \hat{R} = R \otimes A = 
@@ -342,10 +345,10 @@ The same analysis is performed for floating point rotation in equation \ref{eq:r
 \hat{\mathbf{r}}_i = (R' \otimes \mathbf{a})_{i} &\subseteq \sum_{k = 1}^3 R'_{ik}\,\mathbf{a}_k(1 + [e_{ijk}])
 \end{align}
 
-When applying a rotation matrix to a general matrix $A$, the potential rounding error of any output component $A_{ij}$ will be equal to $\sum_{k = 1}^3 |R'_{ik}\,A'_{kj} [e_{ijk}]|$. For a general rotation matrix $R$ written on the same form as in \ref{eq:rotation}, all the components of $R'$ are in the interval $[-1, 1]$, which means that the maximum possible precision loss is governed by the values of A. When applying $R$ on a matrix or vector with both huge and close-to-zero components, the precision in the small components may be lost. However, for the most significant matrix components, the relative precision will be close to preserved. This means that when $R$ is used to transform the coordinate vector $\mathbf{a} = (x, y, z)^t = \mathbf{\hat{a}}|\mathbf{a}|$, neither the precision of the direction $\mathbf{\hat{a}}$ nor the magnitude $|\mathbf{a}|$ will be affected significantly. The same is true for the column vectors in $A'$, which means that the significant properties of $A'$ are preserved in $\hat{R}'$
+When applying a rotation matrix to a general matrix $A$, the potential rounding error of any output component $A_{ij}$ will be equal to $\sum_{k = 1}^3 |R'_{ik}\,A'_{kj} [e_{ijk}]|$. For a general rotation matrix $R$ written on the same form as in Equation~\ref{eq:rotation}, all the components of $R'$ are in the interval $[-1, 1]$, which means that the maximum possible precision loss is governed by the values of $A$. When applying $R$ on a matrix or vector with both large and close-to-zero components, the precision in the small components may be lost. However, the loss of precision in the most significant matrix components will be minimal. This means that when using $R$ to transform the coordinate vector $\mathbf{a} = (x, y, z)^t = \mathbf{\hat{a}}|\mathbf{a}|$, neither the precision of the direction $\mathbf{\hat{a}}$ nor the magnitude $|\mathbf{a}|$ will be affected significantly. The same is true for the column vectors in $A'$, which means that the significant properties of $A'$ are preserved in $\hat{R}'$
 
 \subsubsection{Projection}
-A typical matrix for symmetric perspective projection $P$ can be written as in equation \ref{eq:perspectiveprojection}, where
+A typical matrix for symmetric perspective projection $P$ can be written as in Equation \ref{eq:perspectiveprojection}, where
 $\theta_h$ and $\theta_v$ are the horizontal and vertical field of view, and $n$ and $f$ are the distances from the camera to the near and far planes.
 
 \begin{equation} \label{eq:perspectiveprojection}
@@ -360,7 +363,7 @@ P = \mleft(
 
 \joncomment{Why did you prefer to use the version with $arctan$ instead of the version with $\frac{2n}{r-l}$ and $\frac{2n}{t-b}$ elements? Any reason in particular?}
 
-When $P$ is multiplied with a homogeneous view coordinate vector $\mathbf{v} = (x, y, z, 1)^t$, the sums of products to compute the output x, y and w components will only consist of one non-zero term, which means that the relative precision of these components is preserved. The z-component $c_z = (P\mathbf{v})_z$ is given by equation \ref{eq:nearfar}.
+When $P$ is multiplied with a homogeneous view coordinate vector $\mathbf{v} = (x, y, z, 1)^t$, the sums of products to compute the output x, y, and w components will only consist of one non-zero term, which means that the relative precision of these components is preserved. The z-component $c_z = (P\mathbf{v})_z$ is given by Equation \ref{eq:nearfar}.
 
 \begin{equation} \label{eq:nearfar}
 \begin{split}
@@ -370,14 +373,15 @@ c_z = \lambda_1 v_z + \lambda_2
 \end{split}
 \end{equation}
 
-To observe the effect of a huge scale difference between $f$ and $n$ on the precision of $c_z$,
-we study equation \ref{eq:nearfar} when $f \rightarrow \infty$ and $n \rightarrow 0$, and see that 
+In order to observe the effect of a huge scale difference between $f$ and $n$ on the precision of $c_z$,
+we study Equation \ref{eq:nearfar} when $f \rightarrow \infty$ and $n \rightarrow 0$, and see that 
 $\lambda_1 \rightarrow -1$ and $\lambda_2 \rightarrow 0$ respectively, which means that $c_z \rightarrow -v_z = c_w$.
-The perspective division step would yield $n_z = 1$ for all vertices, giving them the exact same depth buffer value.
+The perspective division step would yield $n_z = 1$ for all vertices, thus resulting in the exact same depth buffer value.
 
 \subsubsection{Perspective division}
-The perspective division, carried out to bring coordinates from clip space to normalized device coordinates will divide all vector components with the $w$-component. When using a perspective projection matrix as described in equation \ref{eq:perspectiveprojection}, all components will effectively be divided with the view coordinates' $-z$. Since floating point division preserves the relative precision, the absolute error interval will scale proportionally with the value itself.
-The perspective division, carried out to bring coordinates from clip space to normalized device coordinates will divide all vector components with the $w$-component. When using a perspective projection matrix as described in equation \ref{eq:perspectiveprojection}, all components will effectively be divided with the view coordinates' $-z$. Since floating point division preserves the relative precision, the absolute error interval will scale proportionally with the value itself.
+The perspective division, carried out to bring coordinates from clip space to normalized device coordinates, is a division of all vector components by the $w$-component. When using a perspective projection matrix as described in Equation \ref{eq:perspectiveprojection}, all components will effectively be divided with the view coordinates' $-z$. Since floating point division preserves the relative precision, the absolute error interval will scale proportionally to the value itself.
+
+%The perspective division, carried out to bring coordinates from clip space to normalized device coordinates will divide all vector components with the $w$-component. When using a perspective projection matrix as described in equation \ref{eq:perspectiveprojection}, all components will effectively be divided with the view coordinates' $-z$. Since floating point division preserves the relative precision, the absolute error interval will scale proportionally with the value itself.
 
 What ultimately defines the 
 
@@ -397,7 +401,7 @@ A number of conclusions can be drawn from the previous section:
 \item Integer depths. TODO.
 \end{itemize}
 
-\section{Method}
+\section{Method}\label{sec:method}
 
 Our method is based on the work of Klashed \etal \cite{KHECY10}. We also use a scene graph to represent the hierarchical relationships between transformations and objects in a scene but, differently of their work, our method doesn't have the concept of sub-scene and, as a result, it doesn't require a re-scale process to compensate for perspective effects and mapping of depths to manageable ranges.
 
@@ -527,7 +531,7 @@ How to calculate the final Model View Matrix...
 
 \subsection{Volume rendering and Order Independent Transparency}
 
-\section{Result}
+\section{Result} \label{sec:result}
 \begin{figure}
 \centering
 \includegraphics[width=\linewidth]{figure/precision.png}
