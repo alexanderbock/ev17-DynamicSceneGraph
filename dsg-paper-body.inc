@@ -59,7 +59,8 @@ Maybe one of the biggest achievements of mankind is the ability to observe and c
 
 When virtually exploring datasets with these vast scale differences and distances, the location of objects need to be expressed in huge value ranges with great precision. Current computer hardware is limited to hardware accelerated computations of single and double precision floating point numbers, which are insufficient to represent microscopic objects and cosmological distances simultaneously. This lack of precision causes visual rendering artifacts, such as displaced vertices or z-fighting, and generate problems when displaying volumetric content. Furthermore, overflow and underflow of the available value ranges results in undesirable clipping of near and far geometry.
 
-Previous work by the visualization community has provided solutions to some of these issues, such as the Power Scaled Coordinates by Hanson~\etal~\cite{hanson2000very} and the ScaleGraph by Klashed~\etal~\cite{KHECY10}. However, only partial solutions to the precision issues have been provided thus far and the root cause of these problems remains unsolved. \anderscomment{Hansen would disagree and kill the paper here if he were the reviewer, which is likely. In what way are they partial? We have to very precise here to make a case}
+% Removed this part as it would be a large repeat of the related works section
+%Previous work by the visualization community has provided solutions to some of these issues, such as the Power Scaled Coordinates by Hanson~\etal~\cite{hanson2000very} and the ScaleGraph by Klashed~\etal~\cite{KHECY10}. However, only partial solutions to the precision issues have been provided thus far and the root cause of these problems remains unsolved. \anderscomment{Hansen would disagree and kill the paper here if he were the reviewer, which is likely. In what way are they partial? We have to very precise here to make a case}
 
 In this work, we propose a general framework, a dynamic scene graph, to deal with the traversal of large scales and varying sizes. The concept is applicable to a variety of application domains with large scale differences and not limited to astronomical data. This framework is constructed by analyzing the sources of precision errors and range overflow problems in a conventional computer graphics pipeline. Using interval arithmetic to track floating point rounding errors, we are able to identify which set of operations may introduce precision problems. We combine this information with the observation that high detail is only required for close objects to build our framework for visualizing datasets with astronomical scale and distance differences. This technique relies on a dynamic update and traversal of a scene graph whereby cameras automatically attach and detach to the closest object of interest. This object of interest is then used as a new coordinate origin and, thus, provides the highest possible numerical precision for salient objects.
 
@@ -83,24 +84,37 @@ The paper is structured as follows, after describing the related work in the fol
 \section{Related work}
 Computer graphics and interactive visualization have proven to be immensely valuable tools for communicating scientific findings and contextualizing information.
 Notable examples of applications where huge scale differences are visualized together include movie productions, such as \emph{Powers of Ten} by Eames~\cite{powersOfTen} from 1977, as well as interactive software for digital planetariums, such as Uniview~\cite{KHECY10}, DigiStar~\cite{ES16} or DigitalSky~\cite{Sky16}, which are based on curated datasets containing information about our universe~\cite{abbott2006digital}.
-% Moving this into introduction as motivation?
 
 Fu~\etal~\cite{fu2006navigation} separated the problem of large scale navigation into two categories.
-Techniques for travel place constrains on user input with the goal of supporting the travel towards and already selected target, whereas techniques for wayfinding support the user in selecting a target by providing a spatial context.
-Our travel component is based on the \emph{Spatial Scaling Navigation Model} described in this work that operators on a logarithmic camera model, where the navigation speed is dependent on the logarithmic distance to the object of interest.
+\emph{Techniques for travel} place constrains on user input with the goal of supporting the travel towards and already selected target, whereas techniques for wayfinding support the user in selecting a target by providing a spatial context.
+Our travel component is based on the \emph{Spatial Scaling Navigation Model} described in this work operating on a logarithmic camera model in which the navigation speed is dependent on the distance to the object of interest.
+In terms of \emph{Techniques for wayfinding}, Li~\etal~\cite{li2006scalable} introduce a world-in-miniature techniques based on logarithmic landmarks for navigation support in astronomical data.
+Combining this with the concept of power cubes, described in earlier works~ \cite{fu2006navigation}, allows the creation of paths in this logarithmic space to aid in the large-scale navigation.
 
-The concept of \emph{Power Scaled Coordinates} or \emph{Power Homogeneous Coordinates}, introduced by Hanson~\etal , addresses some of the challenges with multi-scale visualization~\cite{hanson2000very}.
+The concept of \emph{Power Scaled Coordinates} or \emph{Power Homogeneous Coordinates}, introduced by Hanson~\etal , is a technique introduced to address the travel challenge when creating animations with large scale differences~\cite{hanson2000very}.
 The method uses four-dimensional floating point vectors where the first three components determine the direction of the vector, and the fourth encodes a scaling coefficient as a power of ten.
-The proposed system can operate with floating point numbers close to unit scale, which solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors.
-This is a viable solution for scenes where the high precision data is centered in one region, such as solely close to Earth.
 The authors successfully utilize to create a powers-of-ten animation flythrough of the universe in which increasingly larger objects are shown with increasing distance to the Earth.
-However, the challenge of representing multiple disjoint regions in which high precision is required a great distance from the coordinate origin is not addressed in this work.
+This elegant solution is viable for scenes where the required precision decreases with distance from the coordinate origin, as it does not solve the problem of catastrophic cancellation and thus prohibits high-precision regions in large distances from the origin.
+%The proposed system can operate with floating point numbers close to unit scale, which solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors.
+%However, the challenge of representing multiple disjoint regions in which high precision is required a great distance from the coordinate origin is not addressed in this work.
 
-Fu~\etal~\cite{fu2007transparently} elaborate on the concept of Power Scales Coordinates and introduce a depth buffer remapping scheme to cover a wider range of distances than what is possible with a fixed point depth buffer and a conventional near and far plane. The depth buffer range is divided into three regions, where small and huge depth values are remapped using logarithmic scales, while values in the mid-range are mapped linearly. While this method may be beneficial for some specific type of scene content, the method does not provide a generic way to select appropriate threshold values, and the choice of three separate regions with different mapping does not necessarily provide better results than one single logarithmic mapping. \anderscomment{I thought there were two Fu papers, the latter one dealing with what he calls attachments. Why did you not reference this one?}
+Fu~\etal~\cite{fu2007transparently} introduce a depth buffer remapping to Power Scales Coordinates to cover a wider range of distances than what is possible with a fixed point depth buffer and a conventional near and far plane.
+The depth buffer range is divided into three regions where small and huge depth values are remapped using logarithmic scales and mid-range values are mapped linearly.
+Their method 
+While this method may be beneficial for some specific type of scene content, the method does not provide a generic way to select appropriate threshold values, and the choice of three separate regions with different mapping does not necessarily provide better results than one single logarithmic mapping.
+\anderscomment{I thought there were two Fu papers, the latter one dealing with what he calls attachments. Why did you not reference this one?}
+\alexcomment{I can't find the attachments paper; I know that he was explaining about it when we showed OpenSpace to him, but I don't think they have published it. I went through the Hansen/Fu paper list and couldn't find attachments}
 
-The \emph{ScaleGraph} method, introduced by Klashed~\etal \cite{KHECY10} as a part of the digital planetarium software Uniview, employs a scene graph structure with sub-scenes that the camera can be attached to. The content of the current sub-scene is rendered in its local coordinate system, which maintains the precision of vertex coordinates, and allows multiple regions in the universe to be represented with high relative precision. When rendering content outside the current sub-scene, objects are translated onto the bounding sphere of the scene and scaled to compensate for perspective effects. Vectors between sub-scenes are computed by traversing the scene graph through the closest common ancestor in the tree, to avoid introducing precision errors caused by handling unnecessarily large numbers. By moving objects onto the bounding sphere of the current scene, object depths are mapped to a manageable range. However, the method does not provide a general solution for depth sorting objects that are outside the current sub-scene. Furthermore, the work does not address stereoscopic rendering of objects across sub-scenes. The traversal of sub-scenes in this work formed the bases for our algorithm of the dynamic traversal of a scene graph.
-
-In terms of wayfinding, Li~\etal~\cite{li2006scalable} introduce a world-in-miniature techniques based on logarithmic landmarks for navigation support in astronomical data. Combining this with the concept of power cubes, described in earlier works~ \cite{fu2006navigation}, allows the creation of paths in this logarithmic space to aid in the large-scale navigation.
+The \emph{ScaleGraph}, introduced by Klashed~\etal \cite{KHECY10} as a part of the Uniview software, is the most similar to our proposed framework.
+It employs a scene graph structure with sub-scenes to which the camera can attach.
+The content of the current sub-scene is rendered in its local coordinate system, maintaining high precision and allowing multiple regions in the universe to be represented with high relative precision.
+When rendering content outside the current sub-scene, objects are translated onto the bounding sphere of the scene and scaled to compensate for perspective effects.
+This translation, however, leads to inconsistencies in stereoscopic rendering when switching between scenes as objects jump from the bounding sphere of a scene to a finite location.
+%Vectors between sub-scenes are computed by traversing the scene graph through the closest common ancestor in the tree, to avoid introducing precision errors caused by handling unnecessarily large numbers.
+%By moving objects onto the bounding sphere of the current scene, object depths are mapped to a manageable range.
+Furthermore, the method does not provide a general solution for depth sorting objects that are outside the current sub-scene.
+%Furthermore, the work does not address stereoscopic rendering of objects across sub-scenes.
+The traversal of sub-scenes in this work formed the bases for our algorithm of the dynamic traversal of a scene graph.
 
 \section{Theoretical foundation}\label{sec:theoretical}
 The co-evolution of graphics hardware, software, and content, largely pushed forward by
@@ -424,10 +438,16 @@ A number of conclusions can be drawn from the previous section:
 \end{itemize}
 
 \section{Method}\label{sec:method}
-Our method is based on the work of Klashed \etal \cite{KHECY10}.
-We also use a scene graph to represent the hierarchical relationships between transformations and objects in a scene but, differently of their work, our method does not have the concept of sub-scene and, as a result, it doesn't require a re-scale process to compensate for perspective effects and mapping of depths to manageable ranges.
+Having identified the sources of potential floating point precision inaccuracies in the computer graphics pipeline, we will now elaborate on our proposed framework, the \emph{Dynamic Scene Graph} that utilizes these insights such that it becomes possible to achieve a high-fidelity rendering regardless of the location of the coordinate system origin.
+It is based on a traditional scene graph structure in which the traversal order is not fixed, but dependent on the location of the camera in the scene.
 
-\subsection{Precision Adaptive Scene Graph}\label{sec:scenegraph}
+
+
+%Our method is based on the work of Klashed \etal \cite{KHECY10}.
+%We also use a scene graph to represent the hierarchical relationships between transformations and objects in a scene but, differently of their work, our method does not have the concept of sub-scene and, as a result, it doesn't require a re-scale process to compensate for perspective effects and mapping of depths to manageable ranges.
+
+\subsection{Dynamic Scene Graph}\label{sec:scenegraph}
+Analogous to a traditional 
 In our implementation, the dynamic scene graph, is composed of three different types of nodes:
 \begin{enumerate}
 	\item The root node of the tree representing the whole scene in our 3-d space. It also can be used to represent the center of the universe.
