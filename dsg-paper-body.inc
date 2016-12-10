@@ -177,15 +177,7 @@ When a result from one floating point operation is used in further computations,
 Let $\mathds{E}$ be the set of intervals that can be written in form of equation $cu[-1, 1]$, where c is a non-negative constant that is not a function of any floating point value. For any intervals $[e_1], [e_2] \in \mathds{E}$, there are intervals $[e_3], [e_4] \in \mathds{E}$, such that
 $[e_1]+[e_2] \subseteq [e_3]$ and $[e_1e_2] \subseteq [e_4]$.
 
-We let $[e_i] = c_iu[-1, 1] \in \mathds{E}$ and observe properties of $\oplus$ and $\odot$ when applied to the two intervals $a(1 + [e_1])$ and $b(1 + [e_2])$.
-
-\begin{equation} \label{eq:errortermadd} 
-\begin{split}
-a(1 + [e_1]) \oplus b( 1 + [e_2]) \\
-\subseteq \big(a(1 + [e_1]) + b( 1 + [e_2])\big)(1 + u[-1, 1]) \\
-\subseteq a(1 + [e_3]) + b(1 + [e_4])
-\end{split}
-\end{equation}
+We let $[e_i] = c_iu[-1, 1] \in \mathds{E}$ and consider two intervals $a(1 + [e_1])$ and $b(1 + [e_2])$. First, we study the effects of floating point multiplication acting on these intervals.
 
 \begin{equation} \label{eq:errortermmult} 
 \begin{split}
@@ -195,13 +187,23 @@ a(1 + [e_1]) \odot b(1 + [e_2]) \\
 \end{split}
 \end{equation}
 
-\noindent Since $[e]$-terms are intervals on the form $cu[-1, 1]$, we can conclude that Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_3u| + |bc_4u|$. Equation \ref{eq:errortermmult} has a maximum rounding error of $|abc_5u|$. That means that while several floating point additions will accumulate errors from all contributing terms, creating a risk for catastrophic cancellation, floating point multiplication will scale the error proportionally to the factors. Multiplying an interval with a number with absolute value smaller than $1$ will hence shrink the absolute error interval proportionally. The relative precision $c_5u$ is independent of the size of the factors $a$ and $b$. \emilcomment{Is this a better claim?}.
+The output interval in Equation \ref{eq:errortermmult} has the size $|abc_5u|$, meaning that the maximum absolute rounding error of floating point multiplication is proportional to the absolute value of the product $ab$. However, the relative rounding error $c_5u$ is independent of these factors. We proceed with Equation \ref{eq:errortermadd} to study the properties of floating point addition.
 
-By applying Equation~\ref{eq:errortermadd} iteratively, we can also conclude that for floating point sums $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, Equation~\ref{eq:errortermsum} holds regardless of the order of operations, with $[e_i] \in \mathds{E}$. \alexcomment{What does this equation mean? What is the relationship between $e$ and $e'$?}
+\begin{equation} \label{eq:errortermadd} 
+\begin{split}
+a(1 + [e_1]) \oplus b( 1 + [e_2]) \\
+\subseteq \big(a(1 + [e_1]) + b( 1 + [e_2])\big)(1 + u[-1, 1]) \\
+\subseteq a(1 + [e_3]) + b(1 + [e_4])
+\end{split}
+\end{equation}
+
+\noindent Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_3u| + |bc_4u|$. The relative error of the floating point sum depends on the absolute value of the individual terms. By applying Equation~\ref{eq:errortermadd} iteratively, we see that for floating point sums $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, Equation~\ref{eq:errortermsum} holds regardless of the order of operations, with $[e_i] \in \mathds{E}$.
 
 \begin{equation} \label{eq:errortermsum} 
 \osum_i [x_i] \subseteq \sum_i [x_i](1 + [e'_i])
 \end{equation}
+
+Floating point sums will accumulate errors from all contributing terms, creating a risk for catastrophic cancellation if both large and small terms are involved in the computation.
 
 A straight-forward floating point matrix multiplication $A \otimes B$ is calculated through a sum of products using $\oplus$ and $\odot$. By applying Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get Equation~\ref{eq:matrixmult} where $m$ is the number of columns of $A$ and the number of rows of $B$.
 
@@ -209,7 +211,9 @@ A straight-forward floating point matrix multiplication $A \otimes B$ is calcula
 (A \otimes B)_{ij} \subseteq \osum_{k = 1}^mA_{ik}\odot B_{kj} \subseteq \sum_{k = 1}^mA_{ik} B_{kj}(1 + [e_{ijk}])
 \end{equation}
 
-\noindent We observe that the maximum floating point error introduced to any individual component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$. \alexcomment{And this means that \dots  This needs some connection to 3.4}
+\noindent We observe that the maximum floating point error introduced to any individual component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$. Depending on the structure of the matrices $A$ and $B$, the output component may be subject to catastrophic cancellation. 
+
+With these quantifications of floating point errors introduced by scalar multiplication, scalar addition and vector multiplication, we can identify the components in the graphics pipeline that are prone to introduce visible precision problems.
 
 \subsection{Rendering artifacts}
 %Having observed how error intervals originate and propagate through various floating point operations, we can studying the operations performed in the graphics pipeline to identify sources of precision problems of vertex as well as fragment operations.
@@ -382,7 +386,9 @@ P = \mleft(
 
 \joncomment{Why did you prefer to use the version with $arctan$ instead of the version with $\frac{2n}{r-l}$ and $\frac{2n}{t-b}$ elements? Any reason in particular?}
 
-When $P$ is multiplied with a homogeneous view coordinate vector $\mathbf{v} = (x, y, z, 1)^t$, the sums of products to compute the output x, y, and w components will only consist of one non-zero term, which means that the relative precision of these components is preserved. The z-component $c_z = (P\mathbf{v})_z$ is given by Equation \ref{eq:nearfar}.
+When $P$ is multiplied with a homogeneous view coordinate vector $\mathbf{v} = (x, y, z, 1)^t$, the sums of products to compute the output x, y, and w components will only consist of one non-zero term. Hence, there is no significant loss of relative precision in these components.
+
+However, the output z-component $c_z = (P\mathbf{v})_z$ is given by Equation \ref{eq:nearfar}.
 
 \begin{equation} \label{eq:nearfar}
 \begin{split}
@@ -392,19 +398,16 @@ c_z = \lambda_1 v_z + \lambda_2
 \end{split}
 \end{equation}
 
-In order to observe the effect of a huge scale difference between $f$ and $n$ on the precision of $c_z$,
-we study Equation \ref{eq:nearfar} when $f \rightarrow \infty$ and $n \rightarrow 0$, and see that 
-$\lambda_1 \rightarrow -1$ and $\lambda_2 \rightarrow 0$ respectively, which means that $c_z \rightarrow -v_z = c_w$.
-The perspective division step would yield $n_z = 1$ for all vertices, thus resulting in the exact same depth buffer value.
+The result is an affine mapping of depths such that for vertices in the near plane yield $c_z = 0$ and vertices in the far plane results in $c_z = -z_w$. If the quote $\frac{n}{f}$ approaches the machine epsilon $\epsilon$, the possible floating point error of $f + n$ will exceed the value of $n$, risking that $\lambda_1 = 1$ and $\lambda2 = 0$, causing the equality $c_z = c_w$.
+
+In this case, the perspective division step would yield $n_z = 1$ for all vertices, thus resulting in the exact same depth buffer value. 
 
 \subsubsection{Perspective division}
-The perspective division, carried out to bring coordinates from clip space to normalized device coordinates, is a division of all vector components by the $w$-component. When using a perspective projection matrix as described in Equation \ref{eq:perspectiveprojection}, all components will effectively be divided with the view coordinates' $-z$. Since floating point division preserves the relative precision, the absolute error interval will scale proportionally to the value itself.
+The perspective division, carried out to bring coordinates from clip space to normalized device coordinates, is a division of all vector components by the $w$-component. While the reason for this is to make distant objects appear smaller on the screen, this also has the effect of scaling down any floating point precision errors present in distant vertex coordinates.
 
-%The perspective division, carried out to bring coordinates from clip space to normalized device coordinates will divide all vector components with the $w$-component. When using a perspective projection matrix as described in equation \ref{eq:perspectiveprojection}, all components will effectively be divided with the view coordinates' $-z$. Since floating point division preserves the relative precision, the absolute error interval will scale proportionally with the value itself.
+We conclude the key to minimizing the absolute floating point error leading to visible vertex displacement in screen space is to minimize the relaitve error clip space.
 
-What ultimately defines the 
-
-The output value will have a precision that 
+For 
 
 
 \subsubsection{Depth buffer representation}
