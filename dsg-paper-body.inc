@@ -8,7 +8,7 @@
 % How about this? ---abock
 
 % suggestion from Anders
-\title{Dynamic Scene Graph: Accurate(?) Scaling, Positioning, and Navigation in the Universe}
+\title{Dynamic Scene Graph:\\Scaling, Positioning, and Navigation in the Universe}
 %\title[]{Dynamic Scene Graph: Avoiding Floating Point Inaccuracies in Large Scale Astrovisualization}
 
 % for anonymous conference submission please enter your SUBMISSION ID
@@ -63,7 +63,12 @@ Previous work by the visualization community has provided solutions to some of t
 
 In this work, we propose a general framework, a dynamic scene graph, to deal with the traversal of large scales and varying sizes. The concept is applicable to a variety of application domains with large scale differences and not limited to astronomical data. This framework is constructed by analyzing the sources of precision errors and range overflow problems in a conventional computer graphics pipeline. Using interval arithmetic to track floating point rounding errors, we are able to identify which set of operations may introduce precision problems. We combine this information with the observation that high detail is only required for close objects to build our framework for visualizing datasets with astronomical scale and distance differences. This technique relies on a dynamic update and traversal of a scene graph whereby cameras automatically attach and detach to the closest object of interest. This object of interest is then used as a new coordinate origin and, thus, provides the highest possible numerical precision for salient objects.
 
-The dynamic scene graph has been implemented in the \emph{OpenSpace} project. OpenSpace is an open source software project with the goal of interactively visualizing and contextualizing our knowledge of the known universe and our ongoing efforts of exploration. The software framework is designed for immersive environments to the public dissemination of science and to contextualize information if all possible scales, such as sub-atomic particle simulations on Earth, micrometer-scale discoveries made by rovers the Martian surface, or volumetric simulations of entire galaxies. In order to fully utilize the potential of these immersive environments, for example planetariums or virtual reality headsets, the software needs to support high-fidelity stereoscopic rendering and the ability to render on multipipeline architectures, such as power walls~\cite{liu20013}. However, our method is applicable to any visualization tool that uses scene graphs to represent objects, and is compatible with techniques for volumetric rendering as well as order-independent transparency techniques.
+The dynamic scene graph has been implemented in the \emph{OpenSpace} project.
+OpenSpace is an open source software project with the goal of interactively visualizing and contextualizing our knowledge of the known universe and our ongoing efforts of exploration.
+The software framework is designed for immersive environments to the public dissemination of science and to contextualize information if all possible scales, such as sub-atomic particle simulations on Earth, micrometer-scale discoveries made by rovers the Martian surface, or volumetric simulations of entire galaxies.
+The use of immersive visualization environments, such as planetariums~\cite{magnor2010progress} or virtual reality~\cite{nakasone2009astrosim}as been realized in the past years.
+In order to fully utilize the potential of these immersive environments, for example planetariums or virtual reality headsets, the software needs to support high-fidelity stereoscopic rendering and the ability to render on multipipeline architectures, such as power walls~\cite{liu20013}.
+However, our method is applicable to any visualization tool that uses scene graphs to represent objects, and is compatible with techniques for volumetric rendering as well as order-independent transparency techniques.
 
 In summary, our contributions include:
 
@@ -76,19 +81,26 @@ In summary, our contributions include:
 The paper is structured as follows, after describing the related work in the following section, we provide a theoretical background for the sources of floating point inaccuracies in Section~\ref{sec:theoretical}, followed by a description of our proposed dynamic scene graph framework in Section~\ref{sec:method} and its results in Section~\ref{sec:result}.
 
 \section{Related work}
-Computer graphics and interactive visualization have
-proven to be immensely valuable tools for communicating scientific findings
-and contextualizing information. Notable examples of applications where huge scale differences are visualized 
-together include movie productions, such as \emph{Powers of Ten} by Eames~\cite{powersOfTen} from 1977,
-All We Are [citation needed], as well as interactive software for digital planetariums,
-such as Uniview~\cite{KHECY10}, DigiStar~\cite{ES16} or DigitalSky~\cite{Sky16}. The usefulness of planetariums as immersive visualization environments as been recognized~\cite{magnor2010progress}.
+Computer graphics and interactive visualization have proven to be immensely valuable tools for communicating scientific findings and contextualizing information.
+Notable examples of applications where huge scale differences are visualized together include movie productions, such as \emph{Powers of Ten} by Eames~\cite{powersOfTen} from 1977, as well as interactive software for digital planetariums, such as Uniview~\cite{KHECY10}, DigiStar~\cite{ES16} or DigitalSky~\cite{Sky16}, which are based on curated datasets containing information about our universe~\cite{abbott2006digital}.
+% Moving this into introduction as motivation?
 
-The concept of \emph{Power Scaled Coordinates}, introduced by Hanson~\etal ,
-addresses some of the challenges with multi-scale visualization~\cite{hanson2000very}. The method uses four-dimensional floating point vectors where the first three components determine the direction of the vector, and the fourth encodes a scaling coefficient as a power of ten. The proposed system can operate with floating point numbers close to unit scale, which solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors. This is a viable solution for scenes where the high precision data is centered in one region, such as solely close to Earth. However, the challenge of representing multiple regions in the virtual universe with high precision is not addressed in this work.
+Fu~\etal~\cite{fu2006navigation} separated the problem of large scale navigation into two categories.
+Techniques for travel place constrains on user input with the goal of supporting the travel towards and already selected target, whereas techniques for wayfinding support the user in selecting a target by providing a spatial context.
+Our travel component is based on the \emph{Spatial Scaling Navigation Model} described in this work that operators on a logarithmic camera model, where the navigation speed is dependent on the logarithmic distance to the object of interest.
 
-Fu~\etal \cite{fu2007transparently} elaborate on the concept of Power Scales Coordinates and introduce a depth buffer remapping scheme to cover a wider range of distances than what is possible with a fixed point depth buffer and a conventional near and far plane. The depth buffer range is divided into three regions, where small and huge depth values are remapped using logarithmic scales, while values in the mid-range are mapped linearly. While this method may be beneficial for some specific type of scene content, the method does not provide a generic way to select appropriate threshold values, and the choice of three separate regions with different mapping does not necessarily provide better results than one single logarithmic mapping. \anderscomment{I thought there were two Fu papers, the latter one dealing with what he calls attachments. Why did you not reference this one?}
+The concept of \emph{Power Scaled Coordinates} or \emph{Power Homogeneous Coordinates}, introduced by Hanson~\etal , addresses some of the challenges with multi-scale visualization~\cite{hanson2000very}.
+The method uses four-dimensional floating point vectors where the first three components determine the direction of the vector, and the fourth encodes a scaling coefficient as a power of ten.
+The proposed system can operate with floating point numbers close to unit scale, which solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors.
+This is a viable solution for scenes where the high precision data is centered in one region, such as solely close to Earth.
+The authors successfully utilize to create a powers-of-ten animation flythrough of the universe in which increasingly larger objects are shown with increasing distance to the Earth.
+However, the challenge of representing multiple disjoint regions in which high precision is required a great distance from the coordinate origin is not addressed in this work.
+
+Fu~\etal~\cite{fu2007transparently} elaborate on the concept of Power Scales Coordinates and introduce a depth buffer remapping scheme to cover a wider range of distances than what is possible with a fixed point depth buffer and a conventional near and far plane. The depth buffer range is divided into three regions, where small and huge depth values are remapped using logarithmic scales, while values in the mid-range are mapped linearly. While this method may be beneficial for some specific type of scene content, the method does not provide a generic way to select appropriate threshold values, and the choice of three separate regions with different mapping does not necessarily provide better results than one single logarithmic mapping. \anderscomment{I thought there were two Fu papers, the latter one dealing with what he calls attachments. Why did you not reference this one?}
 
 The \emph{ScaleGraph} method, introduced by Klashed~\etal \cite{KHECY10} as a part of the digital planetarium software Uniview, employs a scene graph structure with sub-scenes that the camera can be attached to. The content of the current sub-scene is rendered in its local coordinate system, which maintains the precision of vertex coordinates, and allows multiple regions in the universe to be represented with high relative precision. When rendering content outside the current sub-scene, objects are translated onto the bounding sphere of the scene and scaled to compensate for perspective effects. Vectors between sub-scenes are computed by traversing the scene graph through the closest common ancestor in the tree, to avoid introducing precision errors caused by handling unnecessarily large numbers. By moving objects onto the bounding sphere of the current scene, object depths are mapped to a manageable range. However, the method does not provide a general solution for depth sorting objects that are outside the current sub-scene. Furthermore, the work does not address stereoscopic rendering of objects across sub-scenes. The traversal of sub-scenes in this work formed the bases for our algorithm of the dynamic traversal of a scene graph.
+
+In terms of wayfinding, Li~\etal~\cite{li2006scalable} introduce a world-in-miniature techniques based on logarithmic landmarks for navigation support in astronomical data. Combining this with the concept of power cubes, described in earlier works~ \cite{fu2006navigation}, allows the creation of paths in this logarithmic space to aid in the large-scale navigation.
 
 \section{Theoretical foundation}\label{sec:theoretical}
 The co-evolution of graphics hardware, software, and content, largely pushed forward by
@@ -199,26 +211,30 @@ A straight-forward floating point matrix multiplication $A \otimes B$ is calcula
 
 \noindent We observe that the maximum floating point error introduced to any individual component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$. \alexcomment{And this means that \dots  This needs some connection to 3.4}
 
-\subsection{Graphics pipeline operations}
-Having observed how error intervals originate and propagate through various floating point operations, we can studying the operations performed in the graphics pipeline to identify sources of precision problems of vertex transformations as well as fragment shading operations.
-
-\subsubsection{Vertex transformations}
-\alexcomment{I think we should cut a bit on this part. It's a bit too long for the value that it has. It is a visualization conference, so we can expect people to know all of this}
-In computer graphics, content is commonly organized in a \emph{scene graph} that allows coordinate transformations to be represented hierarchically. Each node in the graph may contain a transformation, represented as a $4\times 4$ matrix, that affects all children. Objects consist of vertices $\mathbf{x}$ represented as homogeneous coordinates $(x, y, z, w)^t$, where $x$, $y$, and $z$ are the coordinates in a local \emph{model coordinate system} and $w = 1$. In order to transform a vertex to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatenated to a final \emph{model matrix} using matrix multiplication as described above. This final matrix is then applied to the vertex $\mathbf{x}$ to acquire the world coordinates $\mathbf{w}$.
-
-A \emph{view matrix} is usually generated using a camera position and rotation expressed in the world coordinate system and then used to transform world coordinates to \emph{view coordinates}, with the camera in the origin, and the z-axis parallel to the view direction. This view matrix is multiplied with the world coordinate $\mathbf{w}$ and outputs the view coordinates $\mathbf{v}$.
-
-View coordinates are transformed into \emph{clip coordinates} $\mathbf{c}$ using a \emph{projection matrix}, in this case a perspective projection matrix.
-After that, content that does not satisfy the equation $-w \le x, y, z \le w$ will be subject to frustum culling, and will be discarded from rendering. The vector is divided by $w$ to compute the \emph{normalized device coordinates (NDC)}. This last step, commonly called \emph{perspective division}, causes objects farther away from the camera to appear smaller on the screen. The $x$ and $y$ in NDC determines the object's position on the screen, with $(-1, -1)$ representing the bottom left corner and $(1, 1)$ upper right one.
-
-Depth sorting is commonly performed using a depth buffer, which stores a depth value for each pixel on the screen. Fragments are only rendered to if they are closer than the closest already rendered fragment at the same screen location. The depth value of a fragment is derived from the $z$-component of the normalized device coordinates using a linear mapping. Commonly, $z = 0$ represents the \emph{near plane} and and $z = -1$ represents the \emph{far plane}. If the depth buffer is not represented with 32-bit floating point numbers, the depth is converted to the appropriate type. 
-
-\subsubsection{Shading operations}
-\alexcomment{Move this to later}
-Shading models frequently use various coordinate vectors of objects in the scene, such as light sources, surface normals and the camera position to compute fragment colors. Various shading algorithms may require transformations of vectors between the model coordinate system, the world coordinate system, the view coordinate system, or some other coordinate space. These transformations are commonly implemented as matrix multiplications.
-
 \subsection{Rendering artifacts}
-\alexcomment{Merge this into 3.4, replacing most of 3.4 content and leaving a paragraph explaining the near/far plane}
+%Having observed how error intervals originate and propagate through various floating point operations, we can studying the operations performed in the graphics pipeline to identify sources of precision problems of vertex as well as fragment operations.
+
+In computer graphics, content is commonly organized in a \emph{scene graph} that allows coordinate transformations to be represented hierarchically. Each node in the graph may contain transformations affecting all children. In order to transform an object to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatenated to a final \emph{model matrix} using matrix multiplication as described above.
+
+
+
+%\subsubsection{Vertex transformations}
+%\alexcomment{I think we should cut a bit on this part. It's a bit too long for the value that it has. It is a visualization conference, so we can expect people to know all of this}
+%In computer graphics, content is commonly organized in a \emph{scene graph} that allows coordinate transformations to be represented hierarchically. Each node in the graph may contain a transformation, represented as a $4\times 4$ matrix, that affects all children. Objects consist of vertices $\mathbf{x}$ represented as homogeneous coordinates $(x, y, z, w)^t$, where $x$, $y$, and $z$ are the coordinates in a local \emph{model coordinate system} and $w = 1$. In order to transform a vertex to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatenated to a final \emph{model matrix} using matrix multiplication as described above. This final matrix is then applied to the vertex $\mathbf{x}$ to acquire the world coordinates $\mathbf{w}$.
+
+%A \emph{view matrix} is usually generated using a camera position and rotation expressed in the world coordinate system and then used to transform world coordinates to \emph{view coordinates}, with the camera in the origin, and the z-axis parallel to the view direction. This view matrix is multiplied with the world coordinate $\mathbf{w}$ and outputs the view coordinates $\mathbf{v}$.
+
+%View coordinates are transformed into \emph{clip coordinates} $\mathbf{c}$ using a \emph{projection matrix}, in this case a perspective projection matrix.
+%After that, content that does not satisfy the equation $-w \le x, y, z \le w$ will be subject to frustum culling, and will be discarded from rendering. The vector is divided by $w$ to compute the \emph{normalized device coordinates (NDC)}. This last step, commonly called \emph{perspective division}, causes objects farther away from the camera to appear smaller on the screen. The $x$ and $y$ in NDC determines the object's position on the screen, with $(-1, -1)$ representing the bottom left corner and $(1, 1)$ upper right one.
+
+%Depth sorting is commonly performed using a depth buffer, which stores a depth value for each pixel on the screen. Fragments are only rendered to if they are closer than the closest already rendered fragment at the same screen location. The depth value of a fragment is derived from the $z$-component of the normalized device coordinates using a linear mapping. Commonly, $z = 0$ represents the \emph{near plane} and and $z = -1$ represents the \emph{far plane}. If the depth buffer is not represented with 32-bit floating point numbers, the depth is converted to the appropriate type. 
+
+%\subsubsection{Shading operations}
+%\alexcomment{Move this to later}
+%Shading models frequently use various coordinate vectors of objects in the scene, such as light sources, surface normals and the camera position to compute fragment colors. Various shading algorithms may require transformations of vectors between the model coordinate system, the world coordinate system, the view coordinate system, or some other coordinate space. These transformations are commonly implemented as matrix multiplications.
+
+%\subsection{Rendering artifacts}
+%\alexcomment{Merge this into 3.4, replacing most of 3.4 content and leaving a paragraph explaining the near/far plane}
 Lack of precision may give rise to several types of visual artifacts. If errors in the $x$ and $y$ components of the normalized device coordinates are in the same order as the size of the pixels on the screen, there will be a visible displacement of vertices. If the rounding error of $z$ when stored in the depth buffer is larger than the $z$ difference of any two fragments covering the same pixel, there is a risk for z-fighting, i.e. that the incorrect fragment is rendered on top. Rounding errors introduced in shading operations may result in in poor color precision.
 
 In the following sections, we study the precision error implications of the coordinate operations in the conventional graphics pipeline to determine the set of circumstances in which precision problems may be introduced. By using interval arithmetic to trace the errors in $x$ and $y$ it is possible to predict vertex displacement issues. Similarly, the accumulated error interval of the z-component can be used to determine when there is a risk for z-fighting. By studying the effect of transformation matrices acting on coordinate vectors, we can also develop a means to identify the risk of precision loss in various shading operations.
@@ -405,11 +421,10 @@ A number of conclusions can be drawn from the previous section:
 \end{itemize}
 
 \section{Method}\label{sec:method}
-
-Our method is based on the work of Klashed \etal \cite{KHECY10}. We also use a scene graph to represent the hierarchical relationships between transformations and objects in a scene but, differently of their work, our method doesn't have the concept of sub-scene and, as a result, it doesn't require a re-scale process to compensate for perspective effects and mapping of depths to manageable ranges.
+Our method is based on the work of Klashed \etal \cite{KHECY10}.
+We also use a scene graph to represent the hierarchical relationships between transformations and objects in a scene but, differently of their work, our method does not have the concept of sub-scene and, as a result, it doesn't require a re-scale process to compensate for perspective effects and mapping of depths to manageable ranges.
 
 \subsection{Precision Adaptive Scene Graph}\label{sec:scenegraph}
-
 In our implementation, the dynamic scene graph, is composed of three different types of nodes:
 \begin{enumerate}
 	\item The root node of the tree representing the whole scene in our 3-d space. It also can be used to represent the center of the universe.
@@ -417,12 +432,19 @@ In our implementation, the dynamic scene graph, is composed of three different t
 	\item The leaf nodes representing a renderable entity or the virtual camera of the system.
 \end{enumerate}
 
-Each node stores also the transformation matrix (which can be composed by rotation, translation and scale matrices as well) to be applied over the element in the node, and a \textbf{node radius}. A \textbf{node radius} is defined as a virtual sphere (bounding volume) centered on the node's spatial position which allows one to decide when another node's spatial position is in its influence sphere. As usual in a scene graph tree structure, the transformation matrix is inherited by all children of a node.
+Each node stores also the transformation matrix (which can be composed by rotation, translation and scale matrices as well) to be applied over the element in the node, and a \textbf{node radius}.
+A \textbf{node radius} is defined as a virtual sphere (bounding volume) centered on the node's spatial position which allows one to decide when another node's spatial position is in its influence sphere.
+As usual in a scene graph tree structure, the transformation matrix is inherited by all children of a node.
 
-Figure~\ref{fig:scenegraph} illustrates the schematic configuration of a scene graph (bottom drawings) for the scene in the figure (top drawing). In Figure~\ref{fig:scenegraph} the item number 1 represents the node radius of the whole scene; item number 2 is the another node radius in the scene, with items 4 and 5 inside it plus the virtual camera of the system; item 3, 4 and 5 are renderable entities. The virtual camera of the system (item \textbf{A}) is attached to the item 4 node. This scene graph can be seen as a simplistic representation of a an heliocentric system with the Sun in yellow and Earth in blue orbiting it. The Moon in gray is orbiting the Earth.
+Figure~\ref{fig:scenegraph} illustrates the schematic configuration of a scene graph (bottom drawings) for the scene in the figure (top drawing).
+In Figure~\ref{fig:scenegraph} the item number 1 represents the node radius of the whole scene; item number 2 is the another node radius in the scene, with items 4 and 5 inside it plus the virtual camera of the system; item 3, 4 and 5 are renderable entities.
+The virtual camera of the system (item \textbf{A}) is attached to the item 4 node.
+This scene graph can be seen as a simplistic representation of a an heliocentric system with the Sun in yellow and Earth in blue orbiting it.
+The Moon in gray is orbiting the Earth.
 
 \joncomment{Emil, do you think is possible to write some text aside the nodes in the bottom part of Figure~\ref{fig:scenegraph}? Like: badycenter, Moon, Sun, etc?} 
-Also in Figure~\ref{fig:scenegraph}, in the bottom right drawing, the representation of the scene as a scene graph tree can be seen. In this example the virtual camera is focusing on item 4, the Moon. We call our scene graph a dynamic scene graph.
+Also in Figure~\ref{fig:scenegraph}, in the bottom right drawing, the representation of the scene as a scene graph tree can be seen.
+In this example the virtual camera is focusing on item 4, the Moon. We call our scene graph a dynamic scene graph.
 
 \begin{figure}
 \includegraphics[width=10cm,height=10cm,keepaspectratio]{scenegraph.pdf}
@@ -430,18 +452,25 @@ Also in Figure~\ref{fig:scenegraph}, in the bottom right drawing, the representa
 \label{fig:scenegraph}
 \end{figure}
 
-In order to render the scene correctly, a commonly used scene graph traverses all nodes in the tree composing (by multiplication) \joncomment{concatenating?} the transformation matrices throughout the path from the root node to each of the leaf nodes. In this structure the root of the scene graph is frequently seen as the center of coordinates of the scene (the world coordinates).
-Considering the possible differences in size and distance when visualizing objects in universe and the classical way a scene graph is traversed during a scene rendering, this approach can lead to precision problems in the final rendering of the scene, as discussed in section~\ref{sec:theoretical}, mainly because the amount of translation transformations performed between different nodes and the final perspective transformation. In this case, a higher scene graph may lead to higher errors.\joncomment{Should we say more about position and depth and catastrophic cancellation?}
+In order to render the scene correctly, a commonly used scene graph traverses all nodes in the tree composing (by multiplication) \joncomment{concatenating?} the transformation matrices throughout the path from the root node to each of the leaf nodes.
+In this structure the root of the scene graph is frequently seen as the center of coordinates of the scene (the world coordinates).
+Considering the possible differences in size and distance when visualizing objects in universe and the classical way a scene graph is traversed during a scene rendering, this approach can lead to precision problems in the final rendering of the scene, as discussed in section~\ref{sec:theoretical}, mainly because the amount of translation transformations performed between different nodes and the final perspective transformation.
+In this case, a higher scene graph may lead to higher errors.\joncomment{Should we say more about position and depth and catastrophic cancellation?}
 
 %As we noted, traversing the scene graph from root to leaf during each rendering pass will produce a catastrophic cancellation process when the dimensions considered are of order of magnitude. 
 
 To avoid the precision problems leading, we traverse our dynamic scene graph in a different way than the commonly used way for a scene graph, trying to minimizing the number of transformations executed.
 
-The closest (in an euclidean space) node from the virtual camera, the node which virtual camera is attached, is the current center of the coordinates of the system for the whole scene (center of the world coordinates) and will be called from now on the current center node. In our example in Figure~\ref{fig:scenegraph} this node is the item 4 node (Moon). Thus, instead of applying all translations from the root node to item 4 node, we only apply the transformations present in item 4 node in order to render its entity, minimizing the chances of a catastrophic cancellation happens.
+The closest (in an euclidean space) node from the virtual camera, the node which virtual camera is attached, is the current center of the coordinates of the system for the whole scene (center of the world coordinates) and will be called from now on the current center node.
+In our example in Figure~\ref{fig:scenegraph} this node is the item 4 node (Moon).
+Thus, instead of applying all translations from the root node to item 4 node, we only apply the transformations present in item 4 node in order to render its entity, minimizing the chances of a catastrophic cancellation happens.
 
-When visiting other item nodes, for instance, the item 5 node, we initially find the closest common ancestor node between the current center node and the item 5 node, i.e. the item 2 node. Instead of applying all transformations from the root node to item 5 node, we only apply the transformations from item 2 node to item 5 node (drawn as a blue arrow in Figure~\ref{fig:scenegraph}, and to obtain the final translation from the current center node to item 5 node, we subtract the translation from the item 2 node to the current center node (drawn as a red arrow in Figure~\ref{fig:scenegraph}). This procedure is equivalent to summing the vector $\mathbf{v}_1$ from item 2 node to item 5 node to vector $\mathbf{v}_2$ from item 5 node to item 2 node. See Figure~\ref{fig:vectorsum}
+When visiting other item nodes, for instance, the item 5 node, we initially find the closest common ancestor node between the current center node and the item 5 node, i.e. the item 2 node.
+Instead of applying all transformations from the root node to item 5 node, we only apply the transformations from item 2 node to item 5 node (drawn as a blue arrow in Figure~\ref{fig:scenegraph}, and to obtain the final translation from the current center node to item 5 node, we subtract the translation from the item 2 node to the current center node (drawn as a red arrow in Figure~\ref{fig:scenegraph}).
+This procedure is equivalent to summing the vector $\mathbf{v}_1$ from item 2 node to item 5 node to vector $\mathbf{v}_2$ from item 5 node to item 2 node. See Figure~\ref{fig:vectorsum}
 
-The same idea can be extended for the other nodes. For the item 3 node, its position related to the current center node can be obtained adding the vectors $\mathbf{v}_2$, $\mathbf{v}_3$ and $\mathbf{v}_4$ in Figure~\ref{fig:vectorsum}.
+The same idea can be extended for the other nodes.
+For the item 3 node, its position related to the current center node can be obtained adding the vectors $\mathbf{v}_2$, $\mathbf{v}_3$ and $\mathbf{v}_4$ in Figure~\ref{fig:vectorsum}.
 
 
 \begin{figure}
@@ -470,9 +499,13 @@ Clipping is performed for all content with negative w.
 
 \subsubsection{Dynamic camera attachment}
 
-The virtual camera in our system can move freely within 5 degrees of freedom (DOF). Considering only 3 DOF (3-d space movement), the camera can be close to the position of any node in our dynamic scene graph. Which means that once the camera is close to a node's position, this node must be the new current center node. This propriety of changing the current center node, and by consequence the scene's center of coordinate, based on the camera position and other nodes proximity is one of the factors contributing to the ``dynamic'' aspect of our scene graph.
+The virtual camera in our system can move freely within 5 degrees of freedom (DOF).
+Considering only 3 DOF (3-d space movement), the camera can be close to the position of any node in our dynamic scene graph.
+Which means that once the camera is close to a node's position, this node must be the new current center node.
+This propriety of changing the current center node, and by consequence the scene's center of coordinate, based on the camera position and other nodes proximity is one of the factors contributing to the ``dynamic'' aspect of our scene graph.
 
-In order to determine which node should be the new current center node and attach the virtual camera to it, every time the camera is translated, its current position is tested against the node radius of the nodes in the dynamic scene graph. If the camera is inside a node's node radius, the camera position is tested against its children nodes' node radius (if present) to determine which new node should be the next current center node.
+In order to determine which node should be the new current center node and attach the virtual camera to it, every time the camera is translated, its current position is tested against the node radius of the nodes in the dynamic scene graph.
+If the camera is inside a node's node radius, the camera position is tested against its children nodes' node radius (if present) to determine which new node should be the next current center node.
 
 %This idea is represented by the algorithm~\ref{alg:dynamicCamera}.
 
@@ -497,12 +530,17 @@ In order to determine which node should be the new current center node and attac
 %\end{algorithm}  
 
 \subsubsection{Dynamic object attachment}
+Not all nodes with a renderable entity in the dynamic scene graph are celestial bodies with known orbits. 
+One possible renderable entity is a mission space probe. 
 
-Not all nodes with a renderable entity in the dynamic scene graph are celestial bodies with known orbits. One possible renderable entity is a mission space probe. 
+Space probes like New Horizons~\cite{stern2009new} travels through the solar system capturing important scientific data that is later sent to Earth.
+Because of New Horizons' trajectory is given by a path from Earth to Pluto, a commonly used scene graph would set New Horizon's node as a child of an existent node in the tree (Earth's node, e.g.) and when the New Horizons probe is rendered close to Pluto, the transformations necessary to render that entity will lead to a precision problem.
+Equivalently, setting Pluto's node as the parent of New Horizons' node will generate precision problems when rendering New Horizons probe close to Earth.
 
-Space probes like New Horizons~\cite{stern2009new} travels through the solar system capturing important scientific data that is later sent to Earth. Because of New Horizons' trajectory is given by a path from Earth to Pluto, a commonly used scene graph would set New Horizon's node as a child of an existent node in the tree (Earth's node, e.g.) and when the New Horizons probe is rendered close to Pluto, the transformations necessary to render that entity will lead to a precision problem. Equivalently, setting Pluto's node as the parent of New Horizons' node will generate precision problems when rendering New Horizons probe close to Earth.
-
-The solution to this problem is to have a dynamic node attachment, i.e., during the traveling of the New Horizons probe its node changes the parent relationship with the other nodes in the dynamic scene graph. This parent changing (adoption), is done based on checking the moving node's position against the other node's node radius. If the moving node position is inside a node radius, the children of this node are also tested against to determine the closest node which the moving node is inside the node radius. Once this closes node is determined, the moving node is adopted by this new node and the transformations adjusted accordingly.
+The solution to this problem is to have a dynamic node attachment, i.e., during the traveling of the New Horizons probe its node changes the parent relationship with the other nodes in the dynamic scene graph.
+This parent changing (adoption), is done based on checking the moving node's position against the other node's node radius.
+If the moving node position is inside a node radius, the children of this node are also tested against to determine the closest node which the moving node is inside the node radius.
+Once this closes node is determined, the moving node is adopted by this new node and the transformations adjusted accordingly.
 
 %The algorithm~\ref{alg:dynamicAdoption} represents this idea. \joncomment{Improve this paragraph.}
 %
@@ -553,7 +591,7 @@ How to calculate the final Model View Matrix...
 \subsection{Future Work}
 
 \section{Acknowledgments}
-
+Swedish e-Science Research Center (SeRC)
 
 
 %-------------------------------------------------------------------------
