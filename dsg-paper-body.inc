@@ -51,7 +51,7 @@ In this work, we address the challenges of limited numerical range and precision
 \section{Introduction}
 \anderscomment{I have now rewritten parts of the introduction. It is still focused on precision but reads a bit more general. I have also taken away a number of repeated statements about the multiple scales :-)}
 
-Over the past centuries the ability to observe and collect data representing the physical world has been one of the great success of mankind. This includes observations ranging from the diminutive to the unimaginably large. Everything we know and everything we can possibly know is constrained in size and distance by two boundaries. The upper limit is given by the size of the observable universe with a comoving diameter of about $10^{27}$ meters. The lower limit is the Planck length, at which the structure of space-time is dominated by quantum effects, of $10^{-35}$ meters. Seamless positioning and navigation across this tremendous range of scales, over roughly 60 orders of magnitude, generates many challenges to visualization systems. Besides the issue of creating visual metaphores for objects and their interrelated positions, based on different abstraction levels and contracted distance representations, one challenge not immediately obvious is related to the limited precision of floating point numbers. Following a na\"ive approach using a conventional computer graphics pipeline, with a co-ordinate origin at the center of the earth object locations cannot be described with the necessary precision, for example when viewing models of a space craft at the edge of our solar system, or watching micrometer-scaled scans on the surface of Mars. The location of objects thus need to be expressed in huge value ranges with great precision. Current computer hardware is, however, limited to hardware accelerated computations of single and double precision floating point numbers, which are insufficient to represent microscopic objects and cosmological distances simultaneously. This lack of precision causes well-known visual rendering artifacts, such as displaced vertices or z-fighting, and generate intricate problems when displaying volumetric content. Furthermore, overflow and underflow of the available value ranges results in undesirable clipping of near and far geometry.
+Over the past centuries the ability to observe and collect data representing the physical world has been one of the great accomplishments of mankind. This includes observations ranging from the diminutive to the unimaginably large. Everything we know and everything we can possibly know is constrained in size and distance by two boundaries. The upper limit is given by the size of the observable universe with a comoving diameter of about $10^{27}$ meters. The lower limit is the Planck length, at which the structure of space-time is dominated by quantum effects, of $10^{-35}$ meters. Seamless positioning and navigation across this tremendous range of scales, over roughly 60 orders of magnitude, generates many challenges to visualization systems. Besides the issue of creating visual metaphores for objects and their interrelated positions, based on different abstraction levels and contracted distance representations, one challenge not immediately obvious is related to the limited precision of floating point numbers. Following a na\"ive approach using a conventional computer graphics pipeline, with a coordinate origin at the center of the earth object locations cannot be described with the necessary precision, for example when viewing models of a space craft at the edge of our solar system, or watching micrometer-scaled scans on the surface of Mars. The location of objects thus need to be expressed in huge value ranges with great precision. Current computer hardware is, however, limited to hardware accelerated computations of single and double precision floating point numbers, which are insufficient to represent microscopic objects and cosmological distances simultaneously. This lack of precision causes well-known visual rendering artifacts, such as displaced vertices or z-fighting, and generate intricate problems when displaying volumetric content. Furthermore, overflow and underflow of the available value ranges results in undesirable clipping of near and far geometry.
 
 %Through various means of scientific discovery, humanity now has collected detailed information and measurements of structures in the surrounding cosmos that range from the diminutive to the unimaginably large. Everything we know and everything we can possibly know is constrained in size and distance by two boundaries. The upper boundary is given by the size of the observable universe with a comoving diameter of about $10^{27}$ meters. The lower boundary is the Planck length, at which the structure of space-time is dominated by quantum effects and the concept of locality loses physical meaning, with an approximate size of $10^{-35}$ meters. These two boundaries pose absolute limits to the resolution that a software system dealing data of any size has to support.
 
@@ -82,7 +82,7 @@ In summary, our contributions include:
 \item A scheme for seamless adaption of the eye-separation used for stereoscopic rendering.
 \end{itemize}
 
-The paper is structured as follows, after describing the related work in the following section, we provide a theoretical background for the sources of floating point inaccuracies in Section~\ref{sec:theoretical}, followed by a description of our proposed dynamic scene graph framework in Section~\ref{sec:method} and its results in Section~\ref{sec:result}.
+The paper is structured as follows: After describing the related work in the following section, we provide a theoretical background for the sources of floating point inaccuracies in Section~\ref{sec:theoretical}, followed by a description of our proposed dynamic scene graph framework in Section~\ref{sec:method} and its results in Section~\ref{sec:result}.
 
 \section{Related work}
 Computer graphics and interactive visualization have proven to be immensely valuable tools for communicating scientific findings and contextualizing information.
@@ -187,11 +187,11 @@ For the remainder of the following sections, $\oplus$, $\ominus$, $\odot$, and $
 \end{equation}
 
 \subsection{Propagation of error intervals}
-When a result from one floating point operation is used in further computations, rounding errors will propagate and compound through the whole series of operations. This, for example, may lead to scenarios where expressions on the form $(a + b) - b$ may evaluate to $0$, for a sufficiently small $a$ and large $b$. This phenomena is known as 
+When a result from one floating point operation is used in further computations, rounding errors will propagate and compound through the whole series of operations. This, for example, may lead to scenarios where expressions on the form $(a + b) - b$ may evaluate to $0$ for a sufficiently small $a$ and large $b$. This phenomena is known as 
 \emph{catastrophic cancellation}~\cite{Cuyt2001}. In any rendering pipeline where, for example, matrix multiplications or vector additions result in this type of operations there is a risk for floating point precision problems.
 
-Let $\mathds{E}$ be the set of intervals that can be written in form of equation $cu[-1, 1]$, where c is a non-negative constant that is not a function of any floating point value. For any intervals $[e_1], [e_2] \in \mathds{E}$, there are intervals $[e_3], [e_4] \in \mathds{E}$, such that
-$[e_1]+[e_2] \subseteq [e_3]$ and $[e_1e_2] \subseteq [e_4]$.
+Let $\mathds{E}$ be the set of intervals that can be written in the form $cu[-1, 1]$, where c is a non-negative constant that is not a function of any floating point value. For any intervals $[e_1], [e_2] \in \mathds{E}$, there are intervals $[e_3], [e_4] \in \mathds{E}$, such that
+$[e_1]+[e_2] \subseteq [e_3]$ and $[e_1e_2] \subseteq [e_4]$. 
 
 We let $[e_i] = c_iu[-1, 1] \in \mathds{E}$ and consider two intervals $a(1 + [e_1])$ and $b(1 + [e_2])$. First, we study the effects of floating point multiplication acting on these intervals.
 
@@ -203,7 +203,7 @@ a(1 + [e_1]) \odot b(1 + [e_2]) \\
 \end{split}
 \end{equation}
 
-The output interval in Equation \ref{eq:errortermmult} has the size $|abc_3u|$, meaning that the maximum absolute rounding error of floating point multiplication is proportional to the absolute value of the product $ab$. However, the relative rounding error $c_5u$ is independent of these factors. We proceed with Equation \ref{eq:errortermadd} to study the properties of floating point addition.
+The output interval in Equation \ref{eq:errortermmult} has the size $|abc_3u|$, meaning that the maximum absolute rounding error of floating point multiplication is proportional to the absolute value of the product $ab$. However, the relative rounding error $c_3u$ is independent of these factors. We proceed with studying the properties of floating point addition.
 
 \begin{equation} \label{eq:errortermadd} 
 \begin{split}
@@ -213,7 +213,7 @@ a(1 + [e_1]) \oplus b( 1 + [e_2]) \\
 \end{split}
 \end{equation}
 
-\noindent Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_4u| + |bc_5u|$. The relative error of the floating point sum depends on the absolute value of the individual terms. By applying the equation iteratively, we see that for floating point sums $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, Equation~\ref{eq:errortermsum} holds regardless of the order of operations, with $[e_i] \in \mathds{E}$.
+\noindent Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_4u| + |bc_5u|$. The relative error of the floating point sum depends on the absolute value of the individual terms. By applying the equation iteratively, we see that for floating point sums $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, Equation~\ref{eq:errortermsum} holds regardless of the order of operations.
 
 \begin{equation} \label{eq:errortermsum} 
 \osum_i [x_i] \subseteq \sum_i [x_i](1 + [e'_i])
@@ -221,7 +221,7 @@ a(1 + [e_1]) \oplus b( 1 + [e_2]) \\
 
 Floating point sums will accumulate errors from all contributing terms, creating a risk for catastrophic cancellation if both large and small terms are involved in the computation.
 
-Given a matrix $X$ with components $X_{ij}$ and a matrix $[E]$ with interval components $[E_{ij}]$, let $[X^E]$ denote a matrix with the interval components $X_{ij}(1 + [E_{ij}])$. We use the operator $\otimes$ to denote matrix multiplication, in which output components are computed as sums of products. By applying Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get Equation~\ref{eq:matrixmult} where all interval matrix components $[E_{ij}], [F_{ij}] \in \mathds{E}$ and $e_{ijk} \in \mathds{E}$. The number of terms $m$ equals the number of columns in $A$ as well as the number of rows in $B$.
+Given a matrix $X$ with components $X_{ij}$ and a matrix $[E]$ with interval components $[E_{ij}]$, let $[X^E]$ denote a matrix with the interval components $X_{ij}(1 + [E_{ij}])$. We use the operator $\otimes$ to denote matrix multiplication, in which output components are computed as sums of products. By combining Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get Equation~\ref{eq:matrixmult} where all interval matrix components $[E_{ij}], [F_{ij}] \in \mathds{E}$ and $e_{ijk} \in \mathds{E}$. The number of terms $m$ equals the number of columns in $A$ as well as the number of rows in $B$.
 
 \begin{equation} \label{eq:matrixmult} 
 \begin{split}
@@ -237,7 +237,6 @@ With these quantifications of floating point errors introduced by scalar operati
 \subsection{Rendering artifacts}
 %Having observed how error intervals originate and propagate through various floating point operations, we can studying the operations performed in the graphics pipeline to identify sources of precision problems of vertex as well as fragment operations.
 
-In computer graphics, content is commonly organized in a \emph{scene graph} that allows coordinate transformations to be represented hierarchically. Each node in the graph may contain transformations affecting all children. In order to transform an object to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatenated to a final \emph{model matrix} using matrix multiplication as described above.
 
 
 
@@ -262,12 +261,16 @@ Lack of precision may give rise to several types of visual artifacts. If errors 
 
 In the following sections, we study the precision error implications of the coordinate operations in the conventional graphics pipeline to determine the set of circumstances in which precision problems may be introduced. By using interval arithmetic to trace the errors in $x$ and $y$ it is possible to predict vertex displacement issues. Similarly, the accumulated error interval of the z-component can be used to determine when there is a risk for z-fighting. By studying the effect of transformation matrices acting on coordinate vectors, we can also develop a means to identify the risk of precision loss in various shading operations.
 
+In computer graphics, content is commonly organized in a \emph{scene graph} that allows coordinate transformations to be represented hierarchically. Each node in the graph may contain transformations affecting all children. In order to transform an object to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatenated to a final \emph{model matrix} using floating point matrix multiplications. Subsequently, world positions are transformed into view space, through the use of a \emph{view matrix} and then mapped onto the screen using a \emph{projection matrix} and \emph{perspective division}.
+
 Using column vectors, the interval vector $[\mathbf{n}]$ of possible normalized device coordinates is derived from the model coordinates $[\mathbf{x}]$ in Equation \ref{eq:mvp}.
 
-\begin{align} \label{eq:mvp}
+\begin{equation} \label{eq:mvp}
+\begin{split}
 [\mathbf{c}] = [P]\otimes [V] \otimes [M] \otimes [\mathbf{x}] \\
 [\mathbf{n}] = [\mathbf{c}] \oslash [\mathbf{c}_w]
-\end{align}
+\end{split}
+\end{equation}
  
 Here, $[P]$ is the projection matrix, $[V]$ is the view matrix, $[M]$ is the model matrix, and $[\mathbf{x}]$, $[\mathbf{c}]$ and $[\mathbf{n}]$ are interval vectors on the form $([x], [y], [z], [w])^t$. The error interval size of the normalized device coordinates depends on the collective effects of $[M]$, $[V]$, $[P]$, and the perspective division as they act on $[\mathbf{x}]$. 
 
@@ -288,7 +291,7 @@ After evaluating the possible effects of the scaling, translation, and rotation 
 Equation \ref{eq:scaling} describes a floating point matrix multiplication of a scaling matrix $[S]$ and a matrix $[A]$. $[S']$ is a diagonal matrix with one scaling component per dimension $x$, $y$, and $z$. 
 \begin{equation} \label{eq:scaling}
 \begin{split}
-[\hat{S}] = [S] \otimes [A] = \mleft(
+[\hat{S}] = [S] \otimes [A] \\ = \mleft(
 \begin{array}{c|c}
   [S'] & \{\mathbf{0}\} \\
   \hline
@@ -311,11 +314,11 @@ Equation \ref{eq:scaling} describes a floating point matrix multiplication of a 
 \end{split}
 \end{equation}
 
-\noindent Since the diagonal matrix components $S'_{ij}$ are $0$ for all $i \neq j$ the output matrix components $\hat{S}'_{ij}$ and $\hat{\mathbf{s}}_i $ can be written as in Equation \ref{eq:scalingconclusion}.
+\noindent Since the diagonal matrix components $S'_{ij}$ are $\{0\}$ for all $i \neq j$ the output matrix components $\hat{S}'_{ij}$ and $\hat{\mathbf{s}}_i $ can be written as in Equation \ref{eq:scalingconclusion}.
 
 \begin{align} \label{eq:scalingconclusion}
-\hat{S}'_{ij} = (S' \otimes A')_{ij} &\subseteq S'_{ii}\,A'_{ij}(1 + [e_{ij}]) \\
-\hat{\mathbf{s}}_i = (S' \otimes \mathbf{a})_{i} &\subseteq S'_{ii}\,\mathbf{a}_i(1 + [e_{j}])
+[\hat{S}'_{ij}] = ([S'] \otimes [A'])_{ij} &\subseteq S'_{ii}\,A'_{ij}(1 + [e_{ij}]) \\
+[\hat{\mathbf{s}}_i] = ([S'] \otimes [\mathbf{a}])_{i} &\subseteq S'_{ii}\,\mathbf{a}_i(1 + [e_{j}])
 \end{align}
 
 The rounding error introduced by a scaling matrix $S$ is proportional to the scaling factors in $S'$. Any error interval in $A'$ and $\mathbf{a}$ will be scaled proportionally. Thus, we conclude that applying a scaling matrix to a matrix $A$ \emph{preserves the relative precision} of all components of $A$. \alexcomment{This is technically not part of the theoretical background, but already a contribution. Should I be moved elsewhere?}
