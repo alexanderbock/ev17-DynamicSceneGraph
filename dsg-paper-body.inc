@@ -211,7 +211,7 @@ a(1 + [e_1]) \oplus b( 1 + [e_2]) \\
 \end{split}
 \end{equation}
 
-\noindent Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_3u| + |bc_4u|$. The relative error of the floating point sum depends on the absolute value of the individual terms. By applying Equation~\ref{eq:errortermadd} iteratively, we see that for floating point sums $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, Equation~\ref{eq:errortermsum} holds regardless of the order of operations, with $[e_i] \in \mathds{E}$.
+\noindent Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_3u| + |bc_4u|$. The relative error of the floating point sum depends on the absolute value of the individual terms. By applying the equation iteratively, we see that for floating point sums $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, Equation~\ref{eq:errortermsum} holds regardless of the order of operations, with $[e_i] \in \mathds{E}$.
 
 \begin{equation} \label{eq:errortermsum} 
 \osum_i [x_i] \subseteq \sum_i [x_i](1 + [e'_i])
@@ -420,8 +420,6 @@ In this case, the perspective division step would yield $n_z = 1$ for all vertic
 The perspective division, carried out to bring coordinates from clip space to normalized device coordinates, is a division of all vector components by the $w$-component. While the reason for this is to make distant objects appear smaller on the screen, this also has the effect of scaling down any floating point precision errors present in distant vertex coordinates.
 
 We conclude the key to minimizing the absolute floating point error leading to visible vertex displacement in screen space is to minimize the relaitve error clip space.
-
-For 
 
 
 \subsubsection{Depth buffer representation}
