@@ -219,15 +219,18 @@ a(1 + [e_1]) \oplus b( 1 + [e_2]) \\
 
 Floating point sums will accumulate errors from all contributing terms, creating a risk for catastrophic cancellation if both large and small terms are involved in the computation.
 
-A straight-forward floating point matrix multiplication $A \otimes B$ is calculated through a sum of products using $\oplus$ and $\odot$. By applying Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get Equation~\ref{eq:matrixmult} where $m$ is the number of columns of $A$ and the number of rows of $B$.
+Given a matrix X with components $x_{ij}$ and a matrix E with interval components $[e_{ij}]$, let $[X^E]$ denote a matrix with the interval components $x_{ij}(1 + [e_{ij}])$. We use the operator $\otimes$ to denote matrix multiplication, in which output components are computed as sums of products. By applying Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get Equation~\ref{eq:matrixmult} where all interval matrix components $[e_{ij}], [f_{ij}], [g_{ij}] \subseteq \mathds{E}$ and $m$ is the number of columns of $A$ as well as the number of rows of $B$.
 
 \begin{equation} \label{eq:matrixmult} 
-(A \otimes B)_{ij} \subseteq \osum_{k = 1}^mA_{ik}\odot B_{kj} \subseteq \sum_{k = 1}^mA_{ik} B_{kj}(1 + [e_{ijk}])
+\begin{split}
+([A^E] \otimes [B^F])_{ij} \subseteq \osum_{k = 1}^m a_{ik} (1 + [e_{ij}])\odot b_{kj} (1 + [f_{kj}]) \\
+\subseteq \sum_{k = 1}^ma_{ik} b_{kj}(1 + [g_{ijk}]),
+\end{split}
 \end{equation}
 
 \noindent We observe that the maximum floating point error introduced to any individual component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$. Depending on the structure of the matrices $A$ and $B$, the output component may be subject to catastrophic cancellation. 
 
-With these quantifications of floating point errors introduced by scalar multiplication, scalar addition and vector multiplication, we can identify the components in the graphics pipeline that are prone to introduce visible precision problems.
+With these quantifications of floating point errors introduced by scalar operations and vector multiplications, we can identify the components in the graphics pipeline that are prone to introduce visible precision problems.
 
 \subsection{Rendering artifacts}
 %Having observed how error intervals originate and propagate through various floating point operations, we can studying the operations performed in the graphics pipeline to identify sources of precision problems of vertex as well as fragment operations.
@@ -257,22 +260,22 @@ Lack of precision may give rise to several types of visual artifacts. If errors 
 
 In the following sections, we study the precision error implications of the coordinate operations in the conventional graphics pipeline to determine the set of circumstances in which precision problems may be introduced. By using interval arithmetic to trace the errors in $x$ and $y$ it is possible to predict vertex displacement issues. Similarly, the accumulated error interval of the z-component can be used to determine when there is a risk for z-fighting. By studying the effect of transformation matrices acting on coordinate vectors, we can also develop a means to identify the risk of precision loss in various shading operations.
 
-Using column vectors, the normalized device coordinates $\mathbf{n}$ are derived from the model coordinates $\mathbf{x}$ in Equation \ref{eq:mvp}.
+Using column vectors, the interval vector $[\mathbf{n}]$ of possible normalized device coordinates is derived from the model coordinates $[\mathbf{x}]$ in Equation \ref{eq:mvp}.
 
 \begin{align} \label{eq:mvp}
-\mathbf{c} = P\otimes V \otimes M \otimes \mathbf{x} \\
-\mathbf{n} = \mathbf{c} \oslash {c_w}
+[\mathbf{c}] = [P]\otimes [V] \otimes [M] \otimes [\mathbf{x}] \\
+[\mathbf{n}] = [\mathbf{c}] \oslash [\mathbf{c}_w]
 \end{align}
  
-Here, $P$ is the projection matrix, V is the view matrix, $M$ is the model matrix, and $\mathbf{x}$, $\mathbf{c}$ and $\mathbf{n}$ are homogeneous coordinate vectors on the form $(x, y, z, w)^t$. The precision in normalized device coordinates depends on the collective effects of $M$, $V$, $P$, and the perspective division as they act on $\mathbf{x}$. 
+Here, $[P]$ is the projection matrix, $[V]$ is the view matrix, $[M]$ is the model matrix, and $[\mathbf{x}]$, $[\mathbf{c}]$ and $[\mathbf{n}]$ are interval vectors on the form $([x], [y], [z], [w])^t$. The error interval size of the normalized device coordinates depends on the collective effects of $[M]$, $[V]$, $[P]$, and the perspective division as they act on $[\mathbf{x}]$. 
 
-$M$ and $V$ are commonly composed from three types of transformations that are encoded in the scene graph: scaling, translation, and rotation. We study the effect of applying scaling, translation, and rotation on a generalized model matrix or view matrix $A$, composed of a translation vector $\mathbf{a}$ and a combined rotation/scaling 3x3-matrix $A'$, as given by Equation \ref{eq:matrixa}. To observe how the matrices act on a coordinate vector we can study the fourth column in $A$.
+$M$ and $V$ are commonly composed from three types of transformations that are encoded in the scene graph: scaling, translation, and rotation. We study the effects of applying scaling, translation, and rotation on a generalized interval model matrix or view matrix $[A]$, composed of a translation vector $\mathbf{[a]}$ and a combined rotation/scaling 3x3-matrix $[A']$, as given by Equation \ref{eq:matrixa}. To observe how the matrices act on a coordinate vector we can study the fourth column in $[A]$.
 \begin{equation} \label{eq:matrixa}
-A = \mleft(
+[A] = \mleft(
 \begin{array}{c|c}
-  A' & \mathbf{a}\\
+  [A'] & [\mathbf{a}]\\
   \hline
-  \mathbf{0} & 1 
+  [\mathbf{0}, \mathbf{0}] & [1,1] 
 \end{array}
 \mright)
 \end{equation}
@@ -412,7 +415,7 @@ c_z = \lambda_1 v_z + \lambda_2
 \end{split}
 \end{equation}
 
-The result is an affine mapping of depths such that for vertices in the near plane yield $c_z = 0$ and vertices in the far plane results in $c_z = -z_w$. If the quote $\frac{n}{f}$ approaches the machine epsilon $\epsilon$, the possible floating point error of $f + n$ will exceed the value of $n$, risking that $\lambda_1 = 1$ and $\lambda2 = 0$, causing the equality $c_z = c_w$.
+The result is an affine mapping of depths such that for vertices in the near plane yield $c_z = 0$ and vertices in the far plane results in $c_z = -z_w$. If the quote $\frac{n}{f}$ approaches the machine epsilon $\epsilon$, the possible floating point error of $f + n$ will exceed the value of $n$, risking that $\lambda_1 = 1$ and $\lambda2 = 0$, causing the equality $\mathbf{c}_z = \mathbf{c}_w$.
 
 In this case, the perspective division step would yield $n_z = 1$ for all vertices, thus resulting in the exact same depth buffer value. 
 
