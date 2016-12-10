@@ -132,12 +132,12 @@ transformations operating on 4-dimensional homogeneous coordinate vectors with f
 \subsection{Floating point numbers}
 The widely used IEEE754 standard for representing 32-bit floating point numbers \cite{zuras2008ieee} enables the possibility to express numbers in a much larger range than what is possible using 32-bit integers. While a 32-bit signed integer type can only represent numbers in the range $[-2^{31},\, 2^{31} - 1]$, an IEEE754 single precision floating point number approximately supports the range $[-2^{127},\, 2^{127}]$.
 
-In floating point data types, values are represented as a sign, a mantissa, and an exponent. This representation has the attributes of resulting in high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range. The IEEE754 single precision floating point format uses 1 sign bit, 8 exponent bits, and 23 mantissa bits. Equation \ref{eq:floatingpoint} yields the value $v$ represented by the sign bit $s$, the mantissa bits $m_i$, and the integer $e \in [-127, 128]$ which is encoded in the exponent bits. 
+In floating point data types, values are represented as a sign, a mantissa, and an exponent. This representation has the attributes of resulting in high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range. The IEEE754 single precision floating point format uses 1 sign bit, 8 exponent bits, and 23 mantissa bits. Equation \ref{eq:floatingpoint} yields the value $v$ represented by the sign bit $s$, the mantissa bits $\mathbf{m}_i$, and the integer $e \in [-127, 128]$ which is encoded in the exponent bits. 
 
 \begin{equation} \label{eq:floatingpoint}
 v = \begin{cases}
-(-1)^s \sum_{i = 1}^{23}m_i\,2^{-i} 2^{-126}, & \text{for } e = -127 \\
-(-1)^s (1 + \sum_{i = 1}^{23}m_i\,2^{-i}) 2^e, & \text{for } -126 \leq e \leq 127 \\
+(-1)^s \sum_{i = 1}^{23}\mathbf{m}_i\,2^{-i} 2^{-126}, & \text{for } e = -127 \\
+(-1)^s (1 + \sum_{i = 1}^{23}\mathbf{m}_i\,2^{-i}) 2^e, & \text{for } -126 \leq e \leq 127 \\
 \text{Special numbers such as NaN or }\infty, & \text{for } e = 128
 \end{cases}
 \end{equation}
@@ -164,7 +164,7 @@ Since the precision limitations are inherently dependent on the size of the numb
 \subsection{Interval arithmetic}
 In order to reason about the precision of the different floating point operations, it is possible to use interval arithmetic as a mathematical tool to track potential sources of rounding error~\cite{Hickey2001}. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$. Using interval arithmetic, the interval can be rewritten as $v(1 + u[-1,1])$.
 
-For the remainder of the following sections, $\oplus$, $\ominus$, $\odot$, and $\oslash$ will be used to denote floating point addition, subtraction, multiplication, and division respectively. The IEEE754 standard requires that the result of each of these operations is identical to the result of an infinitely precise computation followed by a rounding to the closest representable float. The operators are commutative and yield the possible output intervals given two real number intervals $[x]$ and $[y]$ as described in Equation \ref{eq:floatoperations}.
+For the remainder of the following sections, $\oplus$, $\ominus$, $\odot$, and $\oslash$ will be used to denote floating point addition, subtraction, multiplication, and division respectively. The IEEE754 standard requires that the result of each of these operations is identical to the result of an infinitely precise computation followed by a rounding to the closest representable float. The operators are commutative and yield the possible output intervals given two real number intervals $[x] = [x_1, x_2]$ and $[y] = [y_1, y_2]$ as described in Equation \ref{eq:floatoperations}.
 
 \begin{equation} \label{eq:floatoperations}
 \begin{split}
@@ -174,13 +174,12 @@ For the remainder of the following sections, $\oplus$, $\ominus$, $\odot$, and $
 [x] \oslash [y] & \subseteq \frac{[x]}{[y]}(1 + u[-1, 1]) \\
 \end{split}
 \end{equation}
-
-For operations involving the degenerate intervals $[0, 0]$ and $[1, 1]$, we observe some special cases:
+ 
+\noindent For operations involving the degenerate intervals $[0, 0] = \{0\}$ and $[1, 1] = \{1\}$, we observe some special cases where it is possible to make stronger claims about the output intervals:
 \begin{equation} \label{eq:floatspecialcases}
 \begin{split}
-[x] \odot [0, 0] & = [0, 0] \\
-[x] \odot [1, 1] & = [x] \\
-[x] \oplus [0, 0] & = [x]
+[x] \odot \{1\} & = [x] \\
+[x] \oplus \{0\} & = [x]
 \end{split}
 \end{equation}
 
@@ -197,21 +196,21 @@ We let $[e_i] = c_iu[-1, 1] \in \mathds{E}$ and consider two intervals $a(1 + [e
 \begin{split}
 a(1 + [e_1]) \odot b(1 + [e_2]) \\
 \subseteq ab(1 + [e_1])(1 + [e_2])(1 + u[-1, 1]) \\
-\subseteq ab(1 + [e_5])
+\subseteq ab(1 + [e_3])
 \end{split}
 \end{equation}
 
-The output interval in Equation \ref{eq:errortermmult} has the size $|abc_5u|$, meaning that the maximum absolute rounding error of floating point multiplication is proportional to the absolute value of the product $ab$. However, the relative rounding error $c_5u$ is independent of these factors. We proceed with Equation \ref{eq:errortermadd} to study the properties of floating point addition.
+The output interval in Equation \ref{eq:errortermmult} has the size $|abc_3u|$, meaning that the maximum absolute rounding error of floating point multiplication is proportional to the absolute value of the product $ab$. However, the relative rounding error $c_5u$ is independent of these factors. We proceed with Equation \ref{eq:errortermadd} to study the properties of floating point addition.
 
 \begin{equation} \label{eq:errortermadd} 
 \begin{split}
 a(1 + [e_1]) \oplus b( 1 + [e_2]) \\
 \subseteq \big(a(1 + [e_1]) + b( 1 + [e_2])\big)(1 + u[-1, 1]) \\
-\subseteq a(1 + [e_3]) + b(1 + [e_4])
+\subseteq a(1 + [e_4]) + b(1 + [e_5])
 \end{split}
 \end{equation}
 
-\noindent Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_3u| + |bc_4u|$. The relative error of the floating point sum depends on the absolute value of the individual terms. By applying the equation iteratively, we see that for floating point sums $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, Equation~\ref{eq:errortermsum} holds regardless of the order of operations, with $[e_i] \in \mathds{E}$.
+\noindent Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_4u| + |bc_5u|$. The relative error of the floating point sum depends on the absolute value of the individual terms. By applying the equation iteratively, we see that for floating point sums $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, Equation~\ref{eq:errortermsum} holds regardless of the order of operations, with $[e_i] \in \mathds{E}$.
 
 \begin{equation} \label{eq:errortermsum} 
 \osum_i [x_i] \subseteq \sum_i [x_i](1 + [e'_i])
@@ -219,16 +218,16 @@ a(1 + [e_1]) \oplus b( 1 + [e_2]) \\
 
 Floating point sums will accumulate errors from all contributing terms, creating a risk for catastrophic cancellation if both large and small terms are involved in the computation.
 
-Given a matrix X with components $x_{ij}$ and a matrix E with interval components $[e_{ij}]$, let $[X^E]$ denote a matrix with the interval components $x_{ij}(1 + [e_{ij}])$. We use the operator $\otimes$ to denote matrix multiplication, in which output components are computed as sums of products. By applying Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get Equation~\ref{eq:matrixmult} where all interval matrix components $[e_{ij}], [f_{ij}], [g_{ij}] \subseteq \mathds{E}$ and $m$ is the number of columns of $A$ as well as the number of rows of $B$.
+Given a matrix $X$ with components $X_{ij}$ and a matrix $[E]$ with interval components $[E_{ij}]$, let $[X^E]$ denote a matrix with the interval components $X_{ij}(1 + [E_{ij}])$. We use the operator $\otimes$ to denote matrix multiplication, in which output components are computed as sums of products. By applying Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get Equation~\ref{eq:matrixmult} where all interval matrix components $[E_{ij}], [F_{ij}] \in \mathds{E}$ and $e_{ijk} \in \mathds{E}$. The number of terms $m$ equals the number of columns in $A$ as well as the number of rows in $B$.
 
 \begin{equation} \label{eq:matrixmult} 
 \begin{split}
-([A^E] \otimes [B^F])_{ij} \subseteq \osum_{k = 1}^m a_{ik} (1 + [e_{ij}])\odot b_{kj} (1 + [f_{kj}]) \\
-\subseteq \sum_{k = 1}^ma_{ik} b_{kj}(1 + [g_{ijk}]),
+([A^E] \otimes [B^F])_{ij} \subseteq \osum_{k = 1}^m A_{ik} (1 + [e_{ij}])\odot B_{kj} (1 + [F_{kj}]) \\
+\subseteq \sum_{k = 1}^mA_{ik} B_{kj}(1 + [e_{ijk}])
 \end{split}
 \end{equation}
 
-\noindent We observe that the maximum floating point error introduced to any individual component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$. Depending on the structure of the matrices $A$ and $B$, the output component may be subject to catastrophic cancellation. 
+\noindent We observe that the maximum floating point error associated with a component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$. Using the special cases from Equation \ref{eq:floatspecialcases}, we note that $e_{ijk} = 0$ if $A_{ik} = 0$ or $A_{ik} = 0$. Depending on the structure of the matrices $A$ and $B$, the output component may be subject to catastrophic cancellation. 
 
 With these quantifications of floating point errors introduced by scalar operations and vector multiplications, we can identify the components in the graphics pipeline that are prone to introduce visible precision problems.
 
@@ -275,7 +274,7 @@ $M$ and $V$ are commonly composed from three types of transformations that are e
 \begin{array}{c|c}
   [A'] & [\mathbf{a}]\\
   \hline
-  [\mathbf{0}, \mathbf{0}] & [1,1] 
+  \{\mathbf{0}\} & \{1\} 
 \end{array}
 \mright)
 \end{equation}
@@ -283,29 +282,30 @@ $M$ and $V$ are commonly composed from three types of transformations that are e
 After evaluating the possible effects of the scaling, translation, and rotation we continue with a similar analysis for the projection matrix, the perspective division, and conversion of to depth buffer representation.
 
 \subsubsection{Scaling}
-Equation \ref{eq:scaling} describes a floating point matrix multiplication of a scaling matrix $S$ and a matrix $A$. $S'$ is a diagonal matrix with one scaling component per dimension $x$, $y$, and $z$. 
+Equation \ref{eq:scaling} describes a floating point matrix multiplication of a scaling matrix $[S]$ and a matrix $[A]$. $[S']$ is a diagonal matrix with one scaling component per dimension $x$, $y$, and $z$. 
 \begin{equation} \label{eq:scaling}
-\hat{S} = S \otimes A = 
-\mleft(
+\begin{split}
+[\hat{S}] = [S] \otimes [A] = \mleft(
 \begin{array}{c|c}
-  S' & \mathbf{0}\\
+  [S'] & \{\mathbf{0}\} \\
   \hline
-  \mathbf{0} & 1 
+  \{\mathbf{0}\} & \{1\}
 \end{array}\mright)
 \otimes
 \mleft(
 \begin{array}{c|c}
-  A' & \mathbf{a}\\
+  [A'] & [\mathbf{a}]\\
   \hline
-  \mathbf{0} & 1 
+  \{\mathbf{0}\} & \{1\}
 \end{array}
-\mright) =  
+\mright) = 
 \mleft(
 \begin{array}{c|c}
-  \hat{S}' & \hat{\mathbf{s}}\\ 
+  [\hat{S}'] & [\hat{\mathbf{s}}]\\ 
   \hline
-  \mathbf{0} & 1 
+  \{\mathbf{0}\} & \{1\}
 \end{array}\mright)
+\end{split}
 \end{equation}
 
 \noindent Since the diagonal matrix components $S'_{ij}$ are $0$ for all $i \neq j$ the output matrix components $\hat{S}'_{ij}$ and $\hat{\mathbf{s}}_i $ can be written as in Equation \ref{eq:scalingconclusion}.
@@ -415,7 +415,7 @@ c_z = \lambda_1 v_z + \lambda_2
 \end{split}
 \end{equation}
 
-The result is an affine mapping of depths such that for vertices in the near plane yield $c_z = 0$ and vertices in the far plane results in $c_z = -z_w$. If the quote $\frac{n}{f}$ approaches the machine epsilon $\epsilon$, the possible floating point error of $f + n$ will exceed the value of $n$, risking that $\lambda_1 = 1$ and $\lambda2 = 0$, causing the equality $\mathbf{c}_z = \mathbf{c}_w$.
+The result is an affine mapping of depths such that for vertices in the near plane yield $c_z = 0$ and vertices in the far plane results in $c_z = -z_w$. If the quote $\frac{n}{f}$ approaches the machine epsilon $\epsilon$, the possible floating point error of $f + n$ will exceed the value of $n$, risking that $\lambda_1 = 1$ and $\lambda_2 = 0$, causing the equality $\mathbf{c}_z = \mathbf{c}_w$.
 
 In this case, the perspective division step would yield $n_z = 1$ for all vertices, thus resulting in the exact same depth buffer value. 
 
