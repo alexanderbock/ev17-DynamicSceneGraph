@@ -359,7 +359,7 @@ In addition to the scaling, we can also represent the translation by a vector us
 
 \noindent We note that the precision in $\hat{T}_{ij}$ is preserved from $A'$ when any translation matrix $T$ is applied. However, any error intervals encoded in $t_i$ and $a_i$ will propagate to $\hat{t}_i$, and will \emph{not} be scaled down even if $|\hat{t}_i|$ is orders of magnitude smaller than $|t_i|$ and $|a_i|$. This scenario \emph{may lead to catastrophic cancellation} in the component $\hat{t}_i$.
 
-\subsubsection{Rotation}
+\subsubsection{Rotation} \label{sec:theory:rotation}
 The same analysis is performed for floating point rotation in Equation \ref{eq:rotation}.
 
 \begin{equation} \label{eq:rotation}
@@ -436,13 +436,80 @@ This section has provided several insights:
 \end{itemize}
 
 \section{Method}\label{sec:method}
+\begin{figure}
+\includegraphics[width=10cm,height=10cm,keepaspectratio]{scenegraph.pdf}
+\caption{A subset of a potential scene graph consisting of two translation nodes for the solar system and the Earth system (1,2) and three rendering nodes for the Sun (3), Earth (5), and the Moon (4). Cameras can be attached to different scenes (A, B), thus avoiding the introduction of large, error-prone translation values. The upper image shows their relative location, whereas the lower image shows their organization in the scene graph.}
+\label{fig:scenegraph}
+\end{figure}
+
 Having identified the sources of potential floating point precision inaccuracies in the computer graphics pipeline, we will now elaborate on our proposed framework, the \emph{Dynamic Scene Graph} that utilizes these insights such that it becomes possible to achieve a high-fidelity rendering regardless of the location of the coordinate system origin.
-It is based on a traditional scene graph structure in which the traversal order is not fixed, but dependent on the location of the camera in the scene.
+This is achieved by utilizing a \emph{dynamic camera attachment} and a \emph{relative scene traversal} performed with respect to the attached object.
+
+The framework is based on a traditional scene graph structure in which the traversal order is not fixed, but dependent on the location of the camera in the scene instead.
+Each node in the scene graph can contain a \emph{transformation}, consisting of a \emph{translation}, \emph{rotation}, and \emph{scaling}, which are described relative to the node's parent.
+In addition, nodes can contain a visual object, for example a planet or a space craft, that is rendered relative to the origin of the scene graph node.
+If a scenegraph node contains a visible object, we refer to it as a \emph{rendering node}, otherwise it is a \emph{transformation node}.
+Each scene graph node has a radial \emph{extent}, which determines the node's sphere of influence.
+% Specify limitation of the graph? Or later?
+%The location and sizes of the scene graph nodes have to be specified such that 
+
+Figure~\ref{fig:scenegraph} shows a subset of a possible scene graph with 5 nodes; (1,2) transformation node centered on the solar system and the Earth barycenter respectively, (3,4,5) rendering node containing the surface of the Sun, the Moon, and Earth.
+
+\subsection{Dynamic camera attachment} \label{sec:method:dca}
+In our framework, a camera is always attached to a scenegraph node.
+The \emph{attachment node} (AN) is the lowest node in the tree whose sphere of influence fully encompasses the camera position.
+In Figure~\ref{fig:scenegraph} camera\texttt{A} is located in nodes \texttt{1} and \texttt{2}, but is attached to node \texttt{2} as it is a child of node \texttt{1}. Likewise, camera \texttt{B} is attached to node \texttt{4} instead.
+
+We have to consider two cases for the update of a camera's AN.
+A camera can either attach to the child of the current AN, thus moving down the scene graph, or it attaches to the parent of the AN, thus moving up the scene graph.
+In order to determine the reattachment all involved distances are specified \emph{relative} to the AN.
+This circumvents the potential of catastrophic cancellation and makes the distance computations independent of the location of the AN relative to the global coordinate system origin.
+A camera attaches to the AN's parent node iff the distance from the camera to the center of the AN is larger than the AN's extent. 
+If, however, a camera location enters the sphere of influence of one of the AN's child nodes, the child node becomes the camera's new AN.
+
+\begin{figure}
+\centering
+\fbox{\includegraphics[width=\linewidth]{figure/white-sq.png}}
+\caption{When changing attachment nodes, a camera's coordinate system changes. It's old location \texttt{A} is expressed relative to \texttt{N}, where as the new location \texttt{B} is expressed relative to \texttt{M} instead.}
+\label{fig:coordsystems}
+\end{figure}
+
+
+In both transition cases, the location of the camera most changes reference frames.
+Figure~\ref{fig:coordsystems} shows a camera's old (\texttt{A}) and new (\texttt{B}) location before and after a attachment node change. 
+\texttt{A} is expressed relative to \texttt{N} ($v$), whereas \texttt{B} is expressed relative to \texttt{M}.
+Thus, the new location of \texttt{B} $w$ is given by $b + v$.
+The expression for the new position of the camera provides a design constraint for the scene graph node, as $[b+v] \subset [w]$ or otherwise the new camera position would not be expressed precisely in the coordinate system of \texttt{M}.
+This can be mediated by choosing node extents appropriately.
+%Restriction; the distance differences between parent and child cannot be too big
+Similarly to the translation, the rotation of the camera has to be inverted by applying the inverse of the rotation of \texttt{N} towards \texttt{M}.
+As stated in Section~\ref{sec:theory:rotation} no precision error with the rotation will occur.
+
+\begin{figure*}
+\centering
+\fbox{\includegraphics[width=\linewidth]{figure/white-teaser.png}}
+\caption{A sequence of images from a flight started on Earth's surface (a), leaving the Earth's sphere of influence (b), entering the Saturnian system (c), entering Europa's sphere of influence (d), and approaching Europa; a journey of 877 million km.}
+\label{fig:imagesequence}
+\end{figure*}
+
+Figure~\ref{fig:imagesequence} shows an example these transition in a flight from the Earth to Saturn's moon Europa.
+
+\subsection{Dynamic object attachment} \label{sec:method:doa}
+In addition to the dynamic camera attachment, where the camera can reattached to children or parent nodes based on its movement, the same technique can also be required for scene graph nodes themselves.
+When dealing with dynamic astronomical objects it is possible for distinct sibling objects to approach each other.
+A typical example is a New Horizons~\cite{stern2009new}, which launched from Earth and approached both Jupiter and Pluto.
+If the scene graph node containing New Horizons would be a child of the solar system, catastrophic cancellation would occur on Earth, Jupiter, and Pluto.
+In order to avoid this, we enable scene graph nodes to dynamically attach to different nodes under specialized circumstances, that is, being highly mobile objects such as space craft, asteroids, or comets.
+
+\section{Dynamic Scene Graph Traversal} \label{sec:method:dsgt}
 
 
 
-%Our method is based on the work of Klashed \etal \cite{KHECY10}.
-%We also use a scene graph to represent the hierarchical relationships between transformations and objects in a scene but, differently of their work, our method does not have the concept of sub-scene and, as a result, it doesn't require a re-scale process to compensate for perspective effects and mapping of depths to manageable ranges.
+
+
+
+
+
 
 \subsection{Dynamic Scene Graph}\label{sec:scenegraph}
 Analogous to a traditional 
@@ -466,12 +533,6 @@ The Moon in gray is orbiting the Earth.
 \joncomment{Emil, do you think is possible to write some text aside the nodes in the bottom part of Figure~\ref{fig:scenegraph}? Like: badycenter, Moon, Sun, etc?} 
 Also in Figure~\ref{fig:scenegraph}, in the bottom right drawing, the representation of the scene as a scene graph tree can be seen.
 In this example the virtual camera is focusing on item 4, the Moon. We call our scene graph a dynamic scene graph.
-
-\begin{figure}
-\includegraphics[width=10cm,height=10cm,keepaspectratio]{scenegraph.pdf}
-\caption{(to do)}
-\label{fig:scenegraph}
-\end{figure}
 
 In order to render the scene correctly, a commonly used scene graph traverses all nodes in the tree composing (by multiplication) \joncomment{concatenating?} the transformation matrices throughout the path from the root node to each of the leaf nodes.
 In this structure the root of the scene graph is frequently seen as the center of coordinates of the scene (the world coordinates).
@@ -596,12 +657,18 @@ How to calculate the final Model View Matrix...
 \section{Result} \label{sec:result}
 \begin{figure}
 \centering
-\includegraphics[width=\linewidth]{figure/precision.png}
+\fbox{\includegraphics[width=\linewidth]{figure/precision.png}}
 \caption{Comparison between old and new method. TODO: more text}
-\label{fig:comparison}
+\label{fig:res:pluto}
 
 \end{figure}
 
+\begin{figure}
+\centering
+\fbox{\includegraphics[width=\linewidth]{figure/white-res.png}}
+\caption{Rendering on Mars; HiRISE, CTX. TODO: more text}
+\label{fig:res:mars}
+\end{figure}
 
 
 \joncomment{OS Scenes?}
@@ -610,6 +677,10 @@ How to calculate the final Model View Matrix...
 \section{Conclusions}
 
 \subsection{Future Work}
+\begin{enumerate}
+\item Dragging along problem when a planet moves into a camera, not a camera into the planet
+\end{enumerate}
+
 
 \section{Acknowledgments}
 Swedish e-Science Research Center (SeRC)
