@@ -1,4 +1,4 @@
 export default {
 	exponentBits: 8,
-	mantissaBits: 4
+	mantissaBits: 5
 }
