@@ -144,7 +144,7 @@ transformations operating on 4-dimensional homogeneous coordinate vectors with f
 
 \begin{figure}
 \centering
-\includegraphics[width=0.75\linewidth]{figure/degradation-circles.pdf}
+\includegraphics[width=\linewidth]{figure/degradation-circles.pdf}
 \caption{The problem of coordinate precision for vertices far from the origin is amplified by limiting the number of mantissa bits to 5. Circle A, being close to the origin, is represented relatively well despite the limited bit depth. The circles marked B have poor precision for one of their vector components, while C is heavily distorted in both dimensions.}
 \label{fig:degradation-circles}
 \end{figure}
@@ -515,9 +515,7 @@ As stated in Section~\ref{sec:theory:rotation} no significant precision error wi
 \subfigure[Surface of Titan]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-5-2.png}}}
 \subfigure[Scene Graph Representation]{\includegraphics[width=\abWidth]{figure/earth-titan-graph.pdf}}
 
-
-%\fbox{\includegraphics[width=\linewidth]{figure/white-teaser.png}}
-\caption{A sequence of images from a flight started on Earth's surface (a), showing Earth from the view of geostationary satellites (b), entering the Saturnian system (c), entering Titan's sphere of influence (d), and approaching Titan; a journey of 1.65 billion km.}
+\caption{A sequence of images of a flight started on Earth's surface (a), showing Earth from the view of geostationary satellites (b), entering the Saturnian system (c), entering Titan's sphere of influence (d), and approaching Titan; a journey of 1.65 billion km. Figure (f) shows the accompanying scene graph structure and and which locations the individual images were taken.}
 \label{fig:imagesequence}
 \end{figure*}
 
@@ -697,19 +695,29 @@ The rendering of the Sun (node \texttt{2}) as viewed from camera A would include
 
 \subsection{Volume rendering and Order Independent Transparency}
 
-\section{Result} \label{sec:result}
-\begin{figure}
-\centering
-\fbox{\includegraphics[width=\linewidth]{figure/precision.png}}
-\caption{Comparison rendering of Pluto using our proposed method (a) and conventional scene graph methods (b). 9 quantization levels of floating point numbers are visible at Pluto's distance of 5.1 billion km from the Sun without our method.}
-\label{fig:res:pluto}
+\section{Results} \label{sec:result}
+We have applied our framework to a variety of use cases, some of which have been shown to an audience at public events.
+In this section, we shortly describe these use-cases along relevant numbers and compare them to conventional methods.
 
-\end{figure}
+\noindent \textbf{Space craft } are one major use case in which small objects are rendered at great distances from the Sun.
+Figure~\ref{fig:teaser} shows the New Horizons space craft at 80000\,km distance to Pluto and $6 \cdot 10^{12}$\,m from the Sun.
+
+\noindent \textbf{Navigation. } Figure~\ref{fig:imagesequence} shows individual frames of a seamless nagivation from the surface of Earth, where the mountains of the Alps are rendered with their correct height and textures, out to the surface of Titan orbiting Saturn, showing color images of the moon's surface. At no point during this $1.65$\, billion km journey artifacts are visible.
+
+\noindent \textbf{Virtual globes. } Figure~\ref{fig:res:mars}
+
+\noindent \textbf{Volumetric data. } Figure~\ref{fig:res:galaxy}
+
+\noindent \textbf{Planets. } Figure~\ref{fig:res:pluto}. Computation of the 9 quantization levels taking into account the distance of Pluto from the coordinate system origin. Comparing that to the quantization levels we get with the dynamic scene graph
+
+\noindent \textbf{Stereoscopic rendering. } Figure~\ref{fig:res:stereo}
+
+
 
 \begin{figure}
 \centering
 \fbox{\includegraphics[width=\linewidth]{figure/mars.png}}
-\caption{A rendering of the surface features on Mars as captured and reconstructed from the HiRISE camera, showing details of structures with up to 25\,cm per pixel in resolution.}
+\caption{A rendering of the surface features in West Candor Chasma on Mars as captured from the HiRISE camera, showing details of structures with up to 25\,cm per pixel in resolution.}
 \label{fig:res:mars}
 \end{figure}
 
@@ -725,12 +733,15 @@ The rendering of the Sun (node \texttt{2}) as viewed from camera A would include
 \fbox{\includegraphics[width=\linewidth]{figure/galaxy.png}}
 \caption{A volumetric rendering of a three-channel time-varying simulation of the Milky Way with a bounding box size of about $10^{20}$\,m.}
 \label{fig:res:galaxy}
-
 \end{figure}
 
+\begin{figure}
+\centering
+\fbox{\includegraphics[width=\linewidth]{figure/precision.png}}
+\caption{Comparison rendering of Pluto using our proposed method (a) and conventional scene graph methods (b). 9 quantization levels of floating point numbers are visible at Pluto's distance of 5.1 billion km from the Sun without our method.}
+\label{fig:res:pluto}
+\end{figure}
 
-
-\joncomment{OS Scenes?}
 
 %-------------------------------------------------------------------------
 \section{Conclusions}
@@ -752,12 +763,12 @@ The framework was successfully tested on the visualization of multiple space cra
 
 
 \section{Acknowledgments}
-Swedish e-Science Research Center (SeRC)
+We would like to acknowledge the Swedish e-Science Research Center (SeRC) for their support of this work. Parts of this work were supported by NASA under award No NNX16AB93A.
 
 
 %-------------------------------------------------------------------------
 
-\newpage~\newpage
+\newpage
 
 %\bibliographystyle{eg-alpha}
 \bibliographystyle{eg-alpha-doi}
