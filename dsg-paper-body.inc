@@ -484,14 +484,14 @@ As stated in Section~\ref{sec:theory:rotation} no significant precision error wi
 \begin{figure*}
 \centering
 \newcommand{\abWidth}{0.325\linewidth}
-\subfigure[Surface of the Earth]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-1.png}}}
+\subfigure[Surface of the Earth]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-1-2.png}}}
 %\hfill
-\subfigure[Earth from  orbit]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-2.png}}}
-\subfigure[Saturnian sphere of influence]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-3.png}}}
+\subfigure[Earth from  orbit]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-2-2.png}}}
+\subfigure[Saturnian sphere of influence]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-3-2.png}}}
 \\
-\subfigure[Titan with Saturn in the background]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-4.png}}}
+\subfigure[Titan with Saturn in the background]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-4-2.png}}}
 %\hfill
-\subfigure[Surface of Titan]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-5.png}}}
+\subfigure[Surface of Titan]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-5-2.png}}}
 \subfigure[Scene Graph Representation]{\includegraphics[width=\abWidth]{figure/earth-titan-graph.pdf}}
 
 
