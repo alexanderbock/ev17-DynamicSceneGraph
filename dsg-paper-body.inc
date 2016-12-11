@@ -497,6 +497,8 @@ Figure~\ref{fig:coordsystems} shows a camera's old (\texttt{A}) and new (\texttt
 \texttt{A} is expressed relative to \texttt{N} by the vector $v$, whereas \texttt{B} is expressed relative to \texttt{M} as the vector $\mathbf{w}$.
 The old and new locations are related by $\mathbf{w} = \mathbf{v} + \mathbf{n}$.
 
+To allow for this remapping to be computed without precision problems, extents of the scene graph nodes are chosen such that the ratio between child node extent and parent node extent is significantly larger than the machine epsilon. In order to circumvent rounding errors related to translation as described in \ref{sec:theory:translation}, extends are chosen such that the camera attaches to a child render node before the details of the render node becomes visible.
+
 Similarly to the translation, the rotation of the camera has to be inverted by applying the inverse of the rotation of \texttt{N} towards \texttt{M}.
 As stated in Section~\ref{sec:theory:rotation} no significant precision error with the rotation will occur.
 
