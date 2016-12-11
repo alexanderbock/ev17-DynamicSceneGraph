@@ -96,6 +96,7 @@ In summary, our contributions include:
 \item A \emph{Dynamic Scene Graph} approach for representing objects and cameras to avoid precision-related rendering artifacts.
 \item A general method for rendering objects with a wide depth range and precision without the explicit need for near and far planes.
 \item A scheme for seamless adaption of the eye-separation used for stereoscopic rendering.
+\item An analysis of floating point precision errors using interval arithmatic.
 \end{itemize}
 
 The paper is structured as follows: After describing the related work in the following section, we provide a theoretical background for the sources of floating point inaccuracies in Section~\ref{sec:theoretical}, followed by a description of our proposed dynamic scene graph framework in Section~\ref{sec:method} and its results in Section~\ref{sec:result}.
@@ -451,6 +452,12 @@ This section has provided several insights:
 \item Projection matrices and depth mapping TODO.
 \item Perspective division scales down the floating point error intervals in vertex coordinates for distant objects.
 \end{itemize}
+
+Pluto epsilon:  (Diameter / Distance) / Machine Epsilon
+Distance: $5102004914.623568$\,km
+Diameter: about $2374$\,km
+Machine Epsilon: 5.96e-08
+Pluto epsilon: $(2374 / 5102004914.623568) / 5.96e-08 = 7.807169030929783$
 
 \section{Method}\label{sec:method}
 \begin{figure}

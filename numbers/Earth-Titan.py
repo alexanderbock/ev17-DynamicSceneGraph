@@ -2,7 +2,6 @@ import numpy as numpy
 import spiceypy as spice
 import math
 
-spice.tkvrsn("TOOLKIT")
 spice.furnsh("/Users/alex/Development/OpenSpace/data/spice/naif0011.tls")
 spice.furnsh("/Users/alex/Development/OpenSpace/data/spice/de430_1850-2150.bsp")
 spice.furnsh("/Users/alex/Development/OpenSpace/data/spice/sat375.bsp")
