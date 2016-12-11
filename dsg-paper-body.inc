@@ -413,7 +413,7 @@ When $P$ is multiplied with a homogeneous view coordinate vector $\mathbf{v} = (
 
 Furthermore, while the perspective division shrinks the projection image of distant objects, this also has the effect of scaling down any floating point precision errors present in distant vertex coordinates. Hence, the sesnsitivity of visible vertex displacement of a vertex is inversely proportional to the depth of the vertex in view space.
 
-The z-component in clip space, $c_z = (P\mathbf{v})_z$, is given by Equation \ref{eq:nearfar}.
+\noindent The z-component in clip space $c_z = (P\mathbf{v})_z$ is given by Equation \ref{eq:nearfar}.
 
 \begin{equation} \label{eq:nearfar}
 \begin{split}
@@ -475,7 +475,6 @@ Conversely, whenever a camera location enters the sphere of influence of one of 
 \label{fig:coordsystems}
 \end{figure}
 
-
 In both transition cases, the location of the camera most changes reference frames.
 Figure~\ref{fig:coordsystems} shows a camera's old (\texttt{A}) and new (\texttt{B}) location before and after a attachment node change. 
 \texttt{A} is expressed relative to \texttt{N} ($v$), whereas \texttt{B} is expressed relative to \texttt{M}.
@@ -488,8 +487,20 @@ As stated in Section~\ref{sec:theory:rotation} no significant precision error wi
 
 \begin{figure*}
 \centering
-\fbox{\includegraphics[width=\linewidth]{figure/white-teaser.png}}
-\caption{A sequence of images from a flight started on Earth's surface (a), leaving the Earth's sphere of influence (b), entering the Saturnian system (c), entering Europa's sphere of influence (d), and approaching Europa; a journey of 877 million km.}
+\newcommand{\abWidth}{0.175\linewidth}
+\subfigure[Surface of the Earth]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-1.png}}}
+%\hfill
+\subfigure[Earth from  orbit]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-2.png}}}
+%\hfill
+\subfigure[Saturnian sphere of influence]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-3.png}}}
+%\hfill
+\subfigure[Titan with Saturn in the background]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-4.png}}}
+%\hfill
+\subfigure[Surface of Titan]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-5.png}}}
+
+
+%\fbox{\includegraphics[width=\linewidth]{figure/white-teaser.png}}
+\caption{A sequence of images from a flight started on Earth's surface (a), showing Earth from the view of geostationary satellites (b), entering the Saturnian system (c), entering Titan's sphere of influence (d), and approaching Titan; a journey of 1.65 billion km.}
 \label{fig:imagesequence}
 \end{figure*}
 
@@ -502,7 +513,30 @@ A typical example is a New Horizons~\cite{stern2009new}, which launched from Ear
 If the scene graph node containing New Horizons would be a child of the solar system, catastrophic cancellation would occur on Earth, Jupiter, and Pluto.
 In order to avoid this, we enable scene graph nodes to dynamically attach to different nodes under specialized circumstances, that is, being highly mobile objects such as space craft, asteroids, or comets.
 
-\section{Dynamic Scene Graph Traversal} \label{sec:method:dsgt}
+\subsection{Dynamic Scene Graph Traversal} \label{sec:method:dsgt}
+For each traversal of the scene graph, the camera is attached to a specific scene graph node \texttt{N}.
+In comparison to a traditional scene graph traversal, our proposed framework does not construct the required matrices by a depth-first traversal originating from the root node.
+Instead, in order to maintain high prescision for all objects in the scene, we construct the required matrices relative to \texttt{N} during the traversal of the scene graph.
+This effectively places the origin of the coordinate system in the center of the node \texttt{N} and thus enables the highest precision for \texttt{N}.
+That fact that this is permissible is based on the observation that high-frequency changes are only visible in objects that are close to the camera.
+As described in Section~\ref{sec:theoretical}, the representable precision decreases with increasting numbers, such that small details in large objects with great distances would become prone to precision error.
+However, projected changes that are smaller than a fraction of a pixel will not be visible and, thus, do not need to be represented in the first place.
+
+The traversal of the scene graph works as follows: For each scene graph node \texttt{N}, the shortest path between \texttt{N} and the currently attached node \texttt{M} is computed in the graph.
+Figure~\ref{fig:scenegraph}~(b) shows two examples of this with the camera being attached to node \texttt{3} and node \texttt{5} respectively.
+For each step along this path, the transformation matrices have to be collected in the following way.
+If the transition is done towards the root node of the graph (red arrows in Figure~\ref{sec:scenegraph}~(b)), the inverse of the transformation has to be applied.
+If the transition is downwards (blue arrows in Figure~\ref{sec:scenegraph}~(b)), the the transformations are concatenated.
+
+
+
+For the traversal of the scene graph, for each of the scene graph nodes the shortest path 
+
+
+For the traversal of the scene graph , the relative transformations between nodes might be inverted, depending on the location of the camera.
+Figure~\ref{fig:scenegraph}~(b) shows two situations, one (A) where the camera is attached to node \texttt{3} and one (B) where the camera is attached to node \texttt{5}. 
+
+locations A and B of a camera inside the sceen graph. 
 
 
 
@@ -554,13 +588,6 @@ This procedure is equivalent to summing the vector $\mathbf{v}_1$ from item 2 no
 
 The same idea can be extended for the other nodes.
 For the item 3 node, its position related to the current center node can be obtained adding the vectors $\mathbf{v}_2$, $\mathbf{v}_3$ and $\mathbf{v}_4$ in Figure~\ref{fig:vectorsum}.
-
-
-\begin{figure}
-\includegraphics[width=10cm,height=10cm,keepaspectratio]{vectorsum.pdf}
-\caption{(to do)}
-\label{fig:vectorsum}
-\end{figure}
 
 \joncomment{Emil, What do you want to talk about the perspective effects here?.}
 
@@ -659,15 +686,15 @@ How to calculate the final Model View Matrix...
 \begin{figure}
 \centering
 \fbox{\includegraphics[width=\linewidth]{figure/precision.png}}
-\caption{Comparison between old and new method. TODO: more text}
+\caption{Comparison rendering of Pluto using our proposed method (a) and conventional scene graph methods (b). 9 quantization levels of floating point numbers are visible at Pluto's distance of 5.1 billion km from the Sun without our method.}
 \label{fig:res:pluto}
 
 \end{figure}
 
 \begin{figure}
 \centering
-\fbox{\includegraphics[width=\linewidth]{figure/white-res.png}}
-\caption{Rendering on Mars; HiRISE, CTX. TODO: more text}
+\fbox{\includegraphics[width=\linewidth]{figure/mars.png}}
+\caption{A rendering of the surface features on Mars as captured and reconstructed from the HiRISE camera, showing details of structures with up to 25\,cm per pixel in resolution.}
 \label{fig:res:mars}
 \end{figure}
 
