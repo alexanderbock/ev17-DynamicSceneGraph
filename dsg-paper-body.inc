@@ -437,7 +437,7 @@ This section has provided several insights:
 
 \section{Method}\label{sec:method}
 \begin{figure}
-\includegraphics[width=\linewidth]{scenegraph.pdf}
+\includegraphics[width=\linewidth]{figure/scenegraph.pdf}
 \caption{A subset of a potential scene graph consisting of two translation nodes for the solar system and the Earth system (1,3) and three rendering nodes for the Sun (2), Earth (4), and the Moon (5). Cameras (A, B) can be attached to different nodes, thus avoiding the introduction of large, error-prone translation values. The upper image shows their relative location, whereas the lower image shows their organization in the scene graph. \emilcomment{If the arrows are in the figure, we should also mention them in the caption, I think.} }
 \label{fig:scenegraph}
 \end{figure}
@@ -470,7 +470,7 @@ Conversely, whenever a camera location enters the sphere of influence of one of 
 
 \begin{figure}
 \centering
-\fbox{\includegraphics[width=\linewidth]{figure/white-sq.png}}
+\includegraphics[width=\linewidth]{figure/attachment-switch.pdf}
 \caption{When changing attachment nodes, a camera's coordinate system changes. It's old location \texttt{A} is expressed relative to \texttt{N}, where as the new location \texttt{B} is expressed relative to \texttt{M} instead.}
 \label{fig:coordsystems}
 \end{figure}
