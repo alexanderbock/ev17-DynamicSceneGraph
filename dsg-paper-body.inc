@@ -13,11 +13,11 @@
 
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
-\author[Axelsson \emph{et al.}]{Emil Axelsson$^{1}$, Jonathas Costa$^{2}$, Alexander Bock$^{1}$, Cl\'audio Silva$^{2}$, and Anders Ynnerman$^{1}$
-        \\
+\author[Axelsson \emph{et al.}]{Emil Axelsson$^{1}$, Jonathas Costa$^{2}$, Cl\'audio Silva$^{2}$, Carter Emmart$^{3}$, Alexander Bock$^{1}$, and Anders Ynnerman$^{1}$\\
 % For Computer Graphics Forum: Please use the abbreviation of your first name.
          $^1$ Linköping University\\
-         $^2$ New York University
+         $^2$ New York University\\
+         $^3$ American Museum of Natural History
        }
 
 % ------------------------------------------------------------------------
@@ -180,7 +180,18 @@ For IEEE754 float, $\epsilon$ is $2^{-24}\,\approx
 
 Double precision floating point numbers have a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notation, this corresponds to a precision of 15 significant figures. For quadruple precision the corresponding number is 34 significant figures.
 
-Since the precision limitations are inherently dependent on the size of the numbers involved, the precision of mathematical operations is heavily dependent on the size and ordering of their arguments as small numbers might be below the $\epsilon\left|v\right|$ of the larger numbers.
+In a computer graphics pipeline, the limitation posed by the machine epsilon imposes that vertices are represented with less precision the further way from the coordinate system origin they are. Figure~\ref{fig:degradation-circles} shows a simulation where the number of mantissa bits has been set to 5, causing $\epsilon = 2^{-6} = \frac{1}{64}$. 
+
+In a real world example using IEEE754 floats, at Pluto's distance from the Sun (about $5.102 \cdot 10^9 \, \text{km}$) the distance between two adjacent floating point numbers is approximately $5.102 \cdot 10^9 \cdot 2^{-24} \, \text{km} = 304.1 \, \text{km}$, which is equivalent to about an eighth of Pluto's diameter ($2374 \, \text{km}$). 
+
+
+%Pluto number of floats: (Diameter / Distance) / Machine Epsilon
+%Distance: $5102004914.623568$\,km
+%Diameter: about $2374$\,km
+%Machine Epsilon: 5.96e-08
+%Pluto epsilon: $(2374 / 5102004914.623568) / 5.96e-08 = 7.807169030929783$
+
+
 
 \subsection{Interval arithmetic}
 In order to reason about the precision of the different floating point operations, it is possible to use interval arithmetic as a mathematical tool to track potential sources of rounding error~\cite{Hickey2001}. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$. Using interval arithmetic, the interval can be rewritten as $v(1 + u[-1,1])$.
@@ -453,11 +464,6 @@ This section has provided several insights:
 \item Perspective division scales down the floating point error intervals in vertex coordinates for distant objects.
 \end{itemize}
 
-Pluto epsilon:  (Diameter / Distance) / Machine Epsilon
-Distance: $5102004914.623568$\,km
-Diameter: about $2374$\,km
-Machine Epsilon: 5.96e-08
-Pluto epsilon: $(2374 / 5102004914.623568) / 5.96e-08 = 7.807169030929783$
 
 \section{Method}\label{sec:method}
 \begin{figure}
