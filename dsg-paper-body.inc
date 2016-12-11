@@ -510,20 +510,28 @@ If the scene graph node containing New Horizons would be a child of the solar sy
 In order to avoid this, we enable scene graph nodes to dynamically attach to different nodes under specialized circumstances, that is, being highly mobile objects such as space craft, asteroids, or comets.
 
 \subsection{Dynamic Scene Graph Traversal} \label{sec:method:dsgt}
+\alexcomment{This needs some more work; the explanations are not very good}
 At all times, the camera is attached to a specific scene graph node \texttt{N} as described in the previous sections.
 For the traversal, in comparison to other methods, our proposed framework does not construct the necessary matrices by a depth-first traversal originating from the root node.
-Instead, in order to maintain high precision for all objects in the scene, we use \texttt{N} as the traversal origin.
-This effectively places the origin of the coordinate system in the center of the node \texttt{N} and thus enables the highest precision for \texttt{N}.
+Instead, in order to maintain high precision for all objects in the scene, we use \texttt{N} as the origin for the traversal.
+%Conceptually, this is equivalent to rearranging the entire scene graph such that \texttt{N} becomes the new root node.
+%This rearranging
+Conceptually, this places the origin of the coordinate system in the center of the node \texttt{N} and thus enables the highest precision for \texttt{N} with precision decreasing with growing distance from the center of \texttt{N}.
 That fact that this is permissible is based on the observation that high-frequency changes are only visible in objects that are close to the camera.
 As described in Section~\ref{sec:theoretical}, the representable precision decreases with increasing numbers, such that small details in large objects with great distances would become prone to precision error.
 However, projected changes that are smaller than a fraction of a pixel will not be visible and, thus, do not need to be represented in the first place.
 
 The traversal of the scene graph works as follows: For each scene graph node \texttt{M}, the shortest path between \texttt{M} and the currently attached node \texttt{N} is computed in the graph.
 Figure~\ref{fig:scenegraph}~(b) shows two examples of this with the camera being attached to node \texttt{3} and node \texttt{5} respectively.
-For each step along this path, the transformation matrices have to be collected in the following way.
+For each step along this path, the transformation matrices are concatenated.
 If the transition is done towards the root node of the graph (red arrows in Figure~\ref{fig:scenegraph}~(b)), the inverse of the transformation has to be applied.
 If the transition is downwards (blue arrows in Figure~\ref{fig:scenegraph}~(b)), the the transformations are concatenated.
+The final transformation matrix is the applied to \texttt{M}.
 
+By utilizing the shortest path between \texttt{M} and \texttt{N} we avoid large the translations which would otherwise be necessary if the all transformations originate from the root node and which would lead to catastrophic cancellation.
+
+As an example, we use $v_{i,j}$ as a notation to denote the translation from node \texttt{i} to \texttt{j} in the scene graph depicted in Figure~\ref{fig:scenegraph}~(b).
+The rendering of the Sun (node \texttt{2}) as viewed from camera A would include the transformations $-v_{1,2} \cdot v_{1,3}$ whereas there for camera B, the transformations are $-v_{1,2} \cdot v_{1,3} \cdot v_{3,5}$.
 
 
 
@@ -663,6 +671,7 @@ If the transition is downwards (blue arrows in Figure~\ref{fig:scenegraph}~(b)),
 %How to calculate the final Model View Matrix...
 %
 \subsection{Depth Sorting}
+\cite{cozzi20113d}
 
 \subsection{Volume rendering and Order Independent Transparency}
 
@@ -694,6 +703,11 @@ If the transition is downwards (blue arrows in Figure~\ref{fig:scenegraph}~(b)),
 
 %-------------------------------------------------------------------------
 \section{Conclusions}
+\alexcomment{This needs checking}
+In this work, we presented a framework that supports high-precision transformations in a scene graph by dynamically attaching the camera to the closest node and using this node as an origin for the scene traversal.
+The scene traversal uses a shortest path for each other scene graph node and thus circumvents potentially high translational values that would otherwise lead to precision degredation.
+
+
 
 \subsection{Future Work}
 \begin{enumerate}
