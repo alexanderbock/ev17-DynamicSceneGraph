@@ -15,11 +15,23 @@ export default class extends React.Component {
     this._running = true;
     this._frame = 0;
     let self = this;
-    requestAnimationFrame(function r() {
+    
+    function r() {
       self.forceUpdate();
       self._frame++;
       if (self._running) {
           requestAnimationFrame(r);
+      }
+    }
+
+    requestAnimationFrame(r);
+
+    window.addEventListener('keypress', (evt) => {
+      if (evt.key === ' ') {
+        this._running = !this._running;
+        if (this._running) {
+          r();
+        }
       }
     });
   }

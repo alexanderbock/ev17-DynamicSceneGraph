@@ -10,8 +10,10 @@ const content = ((
   	<Scene method='merged'/>
   	<Scene method='ours'/>
   	<FloatingPointOptions/>
-  	<Circles method = 'merged'/>
   </div>
 ));
 
 render(content, document.getElementById('main-container'));
+
+
+//<Circles method = 'merged'/>
