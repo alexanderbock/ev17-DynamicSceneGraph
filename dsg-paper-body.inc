@@ -119,7 +119,7 @@ Furthermore, the method does not provide a general solution for depth sorting ob
 %Furthermore, the work does not address stereoscopic rendering of objects across sub-scenes.
 The traversal of sub-scenes in this work formed the bases for our algorithm of the dynamic traversal of a scene graph.
 
-\section{Theoretical foundation}\label{sec:theoretical}
+\section{Theoretical motivation}\label{sec:theoretical}
 The co-evolution of graphics hardware, software, and content, largely pushed forward by
 the gaming industry, has led to modern graphics processing units that are optimized for
 operating efficiently on floating point numbers, vectors, and matrices.
@@ -213,13 +213,13 @@ a(1 + [e_1]) \oplus b( 1 + [e_2]) \\
 \end{split}
 \end{equation}
 
-\noindent Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_4u| + |bc_5u|$. The relative error of the floating point sum depends on the absolute value of the individual terms. By applying the equation iteratively, we see that for floating point sums $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, Equation~\ref{eq:errortermsum} holds regardless of the order of operations.
+\noindent Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_4u| + |bc_5u|$. The relative error of the floating point sum depends on the absolute value of the individual terms. By applying the equation iteratively, we see that for floating point sums $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, with $[x_i] = x_i(1 + [e_i])$ Equation~\ref{eq:errortermsum} holds regardless of the order of operations.
 
 \begin{equation} \label{eq:errortermsum} 
 \osum_i [x_i] \subseteq \sum_i [x_i](1 + [e'_i])
 \end{equation}
 
-Floating point sums will accumulate errors from all contributing terms, creating a risk for catastrophic cancellation if both large and small terms are involved in the computation.
+Floating point sums will accumulate errors from all contributing terms, creating a risk for catastrophic cancellation if both large positive and negative terms are involved in a computation with relatively small expected result. 
 
 Given a matrix $X$ with components $X_{ij}$ and a matrix $[E]$ with interval components $[E_{ij}]$, let $[X^E]$ denote a matrix with the interval components $X_{ij}(1 + [E_{ij}])$. We use the operator $\otimes$ to denote matrix multiplication, in which output components are computed as sums of products. By combining Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get Equation~\ref{eq:matrixmult} where all interval matrix components $[E_{ij}], [F_{ij}] \in \mathds{E}$ and $e_{ijk} \in \mathds{E}$. The number of terms $m$ equals the number of columns in $A$ as well as the number of rows in $B$.
 
@@ -285,7 +285,7 @@ $M$ and $V$ are commonly composed from three types of transformations that are e
 \mright)
 \end{equation}
 
-After evaluating the possible effects of the scaling, translation, and rotation we continue with a similar analysis for the projection matrix, the perspective division, and conversion of to depth buffer representation.
+After evaluating the possible effects of the scaling, translation, and rotation we continue with a similar analysis for the projection matrix, the perspective division, and the mapping to a depth buffer representation.
 
 \subsubsection{Scaling}
 Equation \ref{eq:scaling} describes a floating point matrix multiplication of a scaling matrix $[S]$ and a matrix $[A]$. $[S']$ is a diagonal matrix with one scaling component per dimension $x$, $y$, and $z$. 
@@ -393,7 +393,7 @@ The same analysis is performed for floating point rotation in Equation \ref{eq:r
 
 When applying a rotation matrix to a general matrix $A$, the potential rounding error of any output component $A_{ij}$ will be equal to $\sum_{k = 1}^3 |R'_{ik}\,A'_{kj} [e_{ijk}]|$. For a general rotation matrix $R$ written on the same form as in Equation~\ref{eq:rotation}, all the components of $R'$ are in the interval $[-1, 1]$, which means that the maximum possible precision loss is governed by the values of $A$. When applying $R$ on a matrix or vector with both large and close-to-zero components, the precision in the small components may be lost. However, the loss of precision in the most significant matrix components will be minimal. This means that when using $R$ to transform the coordinate vector $\mathbf{a} = (x, y, z)^t = \mathbf{\hat{a}}|\mathbf{a}|$, neither the precision of the direction $\mathbf{\hat{a}}$ nor the magnitude $|\mathbf{a}|$ will be affected significantly. The same is true for the column vectors in $A'$, which means that the significant properties of $A'$ are preserved in $\hat{R}'$
 
-\subsubsection{Projection}
+\subsubsection{Perspective and depth}
 A typical matrix for symmetric perspective projection $P$ can be written as in Equation \ref{eq:perspectiveprojection}, where
 $\theta_h$ and $\theta_v$ are the horizontal and vertical field of view, and $n$ and $f$ are the distances from the camera to the near and far planes.
 
@@ -411,37 +411,28 @@ P = \mleft(
 
 When $P$ is multiplied with a homogeneous view coordinate vector $\mathbf{v} = (x, y, z, 1)^t$, the sums of products to compute the output x, y, and w components will only consist of one non-zero term. Hence, there is no significant loss of relative precision in these components.
 
-However, the output z-component $c_z = (P\mathbf{v})_z$ is given by Equation \ref{eq:nearfar}.
+Furthermore, while the perspective division shrinks the projection image of distant objects, this also has the effect of scaling down any floating point precision errors present in distant vertex coordinates. Hence, the sesnsitivity of visible vertex displacement of a vertex is inversely proportional to the depth of the vertex in view space.
+
+The z-component in clip space, $c_z = (P\mathbf{v})_z$, is given by Equation \ref{eq:nearfar}.
 
 \begin{equation} \label{eq:nearfar}
 \begin{split}
 \lambda_1 = -\frac{f + n}{f - n} \\
 \lambda_2 = \frac{2fn}{f - n} \\
-c_z = \lambda_1 v_z + \lambda_2
+c_z = \lambda_1 \mathbf{v}_z + \lambda_2
 \end{split}
 \end{equation}
 
-The result is an affine mapping of depths such that for vertices in the near plane yield $c_z = 0$ and vertices in the far plane results in $c_z = -z_w$. If the quote $\frac{n}{f}$ approaches the machine epsilon $\epsilon$, the possible floating point error of $f + n$ will exceed the value of $n$, risking that $\lambda_1 = 1$ and $\lambda_2 = 0$, causing the equality $\mathbf{c}_z = \mathbf{c}_w$.
-
-In this case, the perspective division step would yield $n_z = 1$ for all vertices, thus resulting in the exact same depth buffer value. 
-
-\subsubsection{Perspective division}
-The perspective division, carried out to bring coordinates from clip space to normalized device coordinates, is a division of all vector components by the $w$-component. While the reason for this is to make distant objects appear smaller on the screen, this also has the effect of scaling down any floating point precision errors present in distant vertex coordinates.
-
-We conclude the key to minimizing the absolute floating point error leading to visible vertex displacement in screen space is to minimize the relaitve error clip space.
-
-
-\subsubsection{Depth buffer representation}
+\noindent The result is an affine mapping of depths such that vertices in the near plane yield $\mathbf{c}_z = 0$ and vertices in the far plane give $\mathbf{c}_z = \mathbf{c}_w$. Subsequently, the perspective division maps $\mathbf{n}_z$ into the range $[0, 1]$. When depths are subsequently stored in an integer buffer to enable hidden surface removal, this non-linear mapping results in a higher depth resolution for close objects than for distant ones.
 
 \subsection{Sources of precision errors}
-A number of conclusions can be drawn from the previous section:
+This section has provided several insights:
 \begin{itemize}
 \item Large translation matrices acting on small vectors or translations may lead to significant loss of precision.
 \item Rotation matrices may cause loss of relative precision of small matrix components when applied to matrices with both small and huge numbers. 
 \item There is no significant loss of relative precision associated with applying scaling matrices.
-\item Projection matrices. TODO.
-\item Perspective division. TODO.
-\item Integer depths. TODO.
+\item Projection matrices and depth mapping TODO.
+\item Perspective division scales down the floating point error intervals in vertex coordinates for distant objects.
 \end{itemize}
 
 \section{Method}\label{sec:method}
