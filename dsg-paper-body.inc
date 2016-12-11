@@ -454,7 +454,7 @@ Figure~\ref{fig:scenegraph} shows a subset of a possible scene graph with 5 node
 \subsection{Dynamic camera attachment} \label{sec:method:dca}
 In our framework, a camera is always attached to a scenegraph node.
 The \emph{attachment node} (AN) is the lowest node in the tree whose sphere of influence fully encompasses the camera position.
-In Figure~\ref{fig:scenegraph} camera \texttt{A} is located in nodes \texttt{1} and \texttt{3}, but is attached to node \texttt{3}. Likewise, camera \texttt{B} is inside nodes \texttt{1}, \texttt{2} and \texttt{5} and is attached to node \texttt{5}.
+In Figure~\ref{fig:scenegraph} camera \texttt{A} is located in nodes \texttt{1} and \texttt{3}, and is attached to node \texttt{3}. Likewise, camera \texttt{B} is inside nodes \texttt{1}, \texttt{2} and \texttt{5} and is attached to node \texttt{5}.
 
 We have to consider two cases for the update of a camera's AN.
 A camera can either attach to the child of the current AN, thus moving down the scene graph, or it attaches to the parent of the AN, thus moving up the scene graph.
@@ -472,9 +472,9 @@ Conversely, whenever a camera location enters the sphere of influence of one of 
 
 In both transition cases, the location of the camera most changes reference frames.
 Figure~\ref{fig:coordsystems} shows a camera's old (\texttt{A}) and new (\texttt{B}) location before and after a attachment node change. 
-\texttt{A} is expressed relative to \texttt{N} by the vector $v$, whereas \texttt{B} is expressed relative to \texttt{M} as the vector $w$.
-The old and new locations are related by $w = -v - n$.
-The expression for the new position of the camera provides a design constraint for the scene graph node, as $[-v - n] \subseteq [w]$ or otherwise the new camera position would not be expressed precisely in the coordinate system of \texttt{M}.
+\texttt{A} is expressed relative to \texttt{N} by the vector $v$, whereas \texttt{B} is expressed relative to \texttt{M} as the vector $\mathbf{w}$.
+The old and new locations are related by $\mathbf{w} = \mathbf{v} + \mathbf{n}$.
+The expression for the new position of the camera provides a design constraint for the scene graph node, as $|\mathbf{n}| + |\mathbf{v}| \leq |\mathbf{w}|$ \emilcomment{Figure out how to describe this properly.} or otherwise the new camera position would not be expressed precisely in the coordinate system of \texttt{M}.
 This can be mediated by choosing node extents appropriately.
 %Restriction; the distance differences between parent and child cannot be too big
 Similarly to the translation, the rotation of the camera has to be inverted by applying the inverse of the rotation of \texttt{N} towards \texttt{M}.
@@ -505,8 +505,8 @@ Figure~\ref{fig:imagesequence} shows an example these transition in a flight fro
 \subsection{Dynamic object attachment} \label{sec:method:doa}
 In addition to the dynamic camera attachment, where the camera can reattached to children or parent nodes based on its movement, the same technique can also be required for scene graph nodes themselves.
 When dealing with dynamic astronomical objects it is possible for distinct sibling objects to approach each other.
-A typical example is a New Horizons~\cite{stern2009new}, which launched from Earth and approached both Jupiter and Pluto.
-If the scene graph node containing New Horizons would be a child of the solar system, catastrophic cancellation would occur on Earth, Jupiter, and Pluto.
+An exameple of when dynamic object attachment is required to achieve adequate prection is when visualizing the New Horizons mission~\cite{stern2009new}, whereas a spacecraft launched from Earth and approached both Jupiter and Pluto.
+If the scene graph node containing New Horizons would statically be a direct child of the solar system, floating point precision would not suffice for accurately representing distances from the probe and Earth, Jupiter, and Pluto, respectively.
 In order to avoid this, we enable scene graph nodes to dynamically attach to different nodes under specialized circumstances, that is, being highly mobile objects such as space craft, asteroids, or comets.
 
 \subsection{Dynamic Scene Graph Traversal} \label{sec:method:dsgt}
