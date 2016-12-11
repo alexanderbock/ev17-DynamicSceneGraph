@@ -49,9 +49,7 @@ In this work, we address the challenges of limited numerical range and precision
 
 %-------------------------------------------------------------------------
 \section{Introduction}
-\anderscomment{I have now rewritten parts of the introduction. It is still focused on precision but reads a bit more general. I have also taken away a number of repeated statements about the multiple scales :-)}
-
-Over the past centuries the ability to observe and collect data representing the physical world has been one of the great accomplishments of mankind. This includes observations ranging from the diminutive to the unimaginably large. Everything we know and everything we can possibly know is constrained in size and distance by two boundaries. The upper limit is given by the size of the observable universe with a comoving diameter of about $10^{27}$ meters. The lower limit is the Planck length, at which the structure of space-time is dominated by quantum effects, of $10^{-35}$ meters. Seamless positioning and navigation across this tremendous range of scales, over roughly 60 orders of magnitude, generates many challenges to visualization systems. Besides the issue of creating visual metaphores for objects and their interrelated positions, based on different abstraction levels and contracted distance representations, one challenge not immediately obvious is related to the limited precision of floating point numbers. Following a na\"ive approach using a conventional computer graphics pipeline, with a coordinate origin at the center of the earth object locations cannot be described with the necessary precision, for example when viewing models of a space craft at the edge of our solar system, or watching micrometer-scaled scans on the surface of Mars. The location of objects thus need to be expressed in huge value ranges with great precision. Current computer hardware is, however, limited to hardware accelerated computations of single and double precision floating point numbers, which are insufficient to represent microscopic objects and cosmological distances simultaneously. This lack of precision causes well-known visual rendering artifacts, such as displaced vertices or z-fighting, and generate intricate problems when displaying volumetric content. Furthermore, overflow and underflow of the available value ranges results in undesirable clipping of near and far geometry.
+Over the past centuries the ability to observe and collect data representing the physical world has been one of the great accomplishments of mankind. This includes observations ranging from the diminutive to the unimaginably large. Everything we know and everything we can possibly know is constrained in size and distance by two boundaries. The upper limit is given by the size of the observable universe with a comoving diameter of about $10^{27}$ meters. The lower limit is the Planck length, at which the structure of space-time is dominated by quantum effects, of $10^{-35}$ meters. Seamless positioning and navigation across this tremendous range of scales, over roughly 60 orders of magnitude, generates many challenges to visualization systems. Besides the issue of creating visual metaphors for objects and their interrelated positions, based on different abstraction levels and contracted distance representations, one challenge not immediately obvious is related to the limited precision of floating point numbers. Following a na\"ive approach using a conventional computer graphics pipeline, with a coordinate origin at the center of the Earth object locations cannot be described with the necessary precision, for example when viewing models of a space craft at the edge of our solar system, or watching micrometer-scaled scans on the surface of Mars. The location of objects thus need to be expressed in huge value ranges with great precision. Current computer hardware is, however, limited to hardware accelerated computations of single and double precision floating point numbers, which are insufficient to represent microscopic objects and cosmological distances simultaneously. This lack of precision causes well-known visual rendering artifacts, such as displaced vertices or z-fighting, and generate intricate problems when displaying volumetric content. Furthermore, overflow and underflow of the available value ranges results in undesirable clipping of near and far geometry.
 
 %Through various means of scientific discovery, humanity now has collected detailed information and measurements of structures in the surrounding cosmos that range from the diminutive to the unimaginably large. Everything we know and everything we can possibly know is constrained in size and distance by two boundaries. The upper boundary is given by the size of the observable universe with a comoving diameter of about $10^{27}$ meters. The lower boundary is the Planck length, at which the structure of space-time is dominated by quantum effects and the concept of locality loses physical meaning, with an approximate size of $10^{-35}$ meters. These two boundaries pose absolute limits to the resolution that a software system dealing data of any size has to support.
 
@@ -62,17 +60,14 @@ Over the past centuries the ability to observe and collect data representing the
 % Removed this part as it would be a large repeat of the related works section
 %Previous work by the visualization community has provided solutions to some of these issues, such as the Power Scaled Coordinates by Hanson~\etal~\cite{hanson2000very} and the ScaleGraph by Klashed~\etal~\cite{KHECY10}. However, only partial solutions to the precision issues have been provided thus far and the root cause of these problems remains unsolved. \anderscomment{Hansen would disagree and kill the paper here if he were the reviewer, which is likely. In what way are they partial? We have to very precise here to make a case}
 
-In this work, we propose a general framework, a dynamic scene graph, which enables fast and accurate scaling, positioning and navigation without loss of precision. The concept is applicable to a variety of application domains with large scale differences and not limited to astronomical data. The framework is based on an analysis of the sources of precision errors and range overflow problems in a conventional computer graphics pipeline. Using interval arithmetic to track floating point rounding errors, we are able to identify which set of operations that may introduce precision problems. We combine this information with the observation that high level of detail is only required for nearby objects. The underlying technique relies on a dynamic updates and traversals of a scene graph whereby cameras automatically attach and detach to the closest object of interest. This object of interest is then used as a new coordinate origin and, thus, automatically ensures the highest possible numerical precision for salient objects.
+In this work, we propose a general framework, a dynamic scene graph, which enables fast and accurate scaling, positioning, and navigation without significant loss of precision. The concept is applicable to a variety of application domains with large scale differences and not limited to astronomical data. The framework is based on an analysis of the sources of precision errors and range overflow problems in a conventional computer graphics pipeline. Using interval arithmetic to track floating point rounding errors, we are able to identify which set of operations that may introduce precision problems. We combine this information with the observation that high level of detail is only required for nearby objects. The underlying technique relies on a dynamic updates and traversals of a scene graph whereby cameras automatically attach and detach to the closest object of interest. This object of interest is then used as a new coordinate origin and, thus, automatically ensures the highest possible numerical precision for salient objects.
 
-The dynamic scene graph has been implemented in the \emph{OpenSpace} project. \anderscomment{Reference to OpenSpace repository here?}
-OpenSpace is an open source software project with the goal of interactively visualizing and contextualizing a range of astrophysical data, including the most current updates and even concurrent visualization of captured and simulated data. 
+The dynamic scene graph has been implemented in the \emph{OpenSpace} project which is available online~\cite{github16openspace}. OpenSpace is an open source software project with the goal of interactively visualizing and contextualizing a range of astrophysical data, including the most current updates and even concurrent visualization of captured and simulated data. 
 The software framework is primarily designed for immersive environments, such as dome theaters of planetariums, and is targeting public engagement in science. Examples of data that can be simultaneously visualized covers a wide range from sub-atomic particle simulations, via micrometer-scale discoveries made by rovers the Martian surface, to volumetric simulations of entire galaxies.
 
 Many state-of-the-art dome theaters and planetariums support stereoscopic viewing and recently the interest in immersive visualization in VR environments has increased. Thus the software needs to support high-fidelity stereoscopic rendering and the ability to render on multi-pipeline systems and complex display configurations. This poses yet another challenge when dealing with multiple scales as the eye separation needs to be adjusted to the current scale of interest. Our dynamic scene graph approach offers a seamless solution to this problem. 
 
 It should be noted that our dynamic scene graph is applicable to any visualization tool that uses scene graphs to represent objects, and is compatible with techniques for volumetric rendering as well as order-independent transparency techniques.
-
-\anderscomment{I have taken away the references to\cite{magnor2010progress}, \cite{nakasone2009astrosim} and \cite{liu20013}. They should be included somwhere in the related works i believe}
 
 In summary, our contributions include:
 
@@ -86,7 +81,7 @@ The paper is structured as follows: After describing the related work in the fol
 
 \section{Related work}
 Computer graphics and interactive visualization have proven to be immensely valuable tools for communicating scientific findings and contextualizing information.
-Notable examples of applications where huge scale differences are visualized together include movie productions, such as \emph{Powers of Ten} by Eames~\cite{powersOfTen} from 1977, as well as interactive software for digital planetariums, such as Uniview~\cite{KHECY10}, DigiStar~\cite{ES16} or DigitalSky~\cite{Sky16}, which are based on curated datasets containing information about our universe~\cite{abbott2006digital}.
+Notable examples of applications where huge scale differences are visualized together include movie productions, such as \emph{Powers of Ten} by Eames~\cite{powersOfTen} from 1977, as well as interactive software for digital planetariums, such as Uniview~\cite{KHECY10}, DigiStar~\cite{ES16} or DigitalSky~\cite{Sky16}, which are based on curated datasets containing information about our universe~\cite{abbott2006digital}. Virtual reality environments such as planetariums~\cite{magnor2010progress, liu20013} have always been in the focus of educators, but a shift towards supporting data inspection on consumer grade hardware is ongoing~\cite{nakasone2009astrosim}.
 
 Fu~\etal~\cite{fu2006navigation} separated the problem of large scale navigation into two categories.
 \emph{Techniques for travel} place constrains on user input with the goal of supporting the travel towards and already selected target, whereas techniques for wayfinding support the user in selecting a target by providing a spatial context.
@@ -487,13 +482,12 @@ As stated in Section~\ref{sec:theory:rotation} no significant precision error wi
 
 \begin{figure*}
 \centering
-\newcommand{\abWidth}{0.175\linewidth}
+\newcommand{\abWidth}{0.3\linewidth}
 \subfigure[Surface of the Earth]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-1.png}}}
 %\hfill
 \subfigure[Earth from  orbit]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-2.png}}}
-%\hfill
 \subfigure[Saturnian sphere of influence]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-3.png}}}
-%\hfill
+\\
 \subfigure[Titan with Saturn in the background]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-4.png}}}
 %\hfill
 \subfigure[Surface of Titan]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-5.png}}}
@@ -527,18 +521,6 @@ Figure~\ref{fig:scenegraph}~(b) shows two examples of this with the camera being
 For each step along this path, the transformation matrices have to be collected in the following way.
 If the transition is done towards the root node of the graph (red arrows in Figure~\ref{sec:scenegraph}~(b)), the inverse of the transformation has to be applied.
 If the transition is downwards (blue arrows in Figure~\ref{sec:scenegraph}~(b)), the the transformations are concatenated.
-
-
-
-For the traversal of the scene graph, for each of the scene graph nodes the shortest path 
-
-
-For the traversal of the scene graph , the relative transformations between nodes might be inverted, depending on the location of the camera.
-Figure~\ref{fig:scenegraph}~(b) shows two situations, one (A) where the camera is attached to node \texttt{3} and one (B) where the camera is attached to node \texttt{5}. 
-
-locations A and B of a camera inside the sceen graph. 
-
-
 
 
 
@@ -696,6 +678,13 @@ How to calculate the final Model View Matrix...
 \fbox{\includegraphics[width=\linewidth]{figure/mars.png}}
 \caption{A rendering of the surface features on Mars as captured and reconstructed from the HiRISE camera, showing details of structures with up to 25\,cm per pixel in resolution.}
 \label{fig:res:mars}
+\end{figure}
+
+\begin{figure}
+\centering
+\fbox{\includegraphics[width=\linewidth]{figure/stereo.png}}
+\caption{Rendering of XXX using anaglyph stereoscopic rendering. Our framework is agnostic to the stereo technique employed.}
+\label{fig:res:stereo}
 \end{figure}
 
 
