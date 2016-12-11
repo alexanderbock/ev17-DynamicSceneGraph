@@ -474,11 +474,8 @@ In both transition cases, the location of the camera most changes reference fram
 Figure~\ref{fig:coordsystems} shows a camera's old (\texttt{A}) and new (\texttt{B}) location before and after a attachment node change. 
 \texttt{A} is expressed relative to \texttt{N} by the vector $v$, whereas \texttt{B} is expressed relative to \texttt{M} as the vector $\mathbf{w}$.
 The old and new locations are related by $\mathbf{w} = \mathbf{v} + \mathbf{n}$.
-The expression for the new position of the camera provides a design constraint for the scene graph node, as $|\mathbf{n}| + |\mathbf{v}| \leq |\mathbf{w}|$ \emilcomment{Figure out how to describe this properly.} or otherwise the new camera position would not be expressed precisely in the coordinate system of \texttt{M}.
-This can be mediated by choosing node extents appropriately.
-%Restriction; the distance differences between parent and child cannot be too big
-Similarly to the translation, the rotation of the camera has to be inverted by applying the inverse of the rotation of \texttt{N} towards \texttt{M}.
 
+Similarly to the translation, the rotation of the camera has to be inverted by applying the inverse of the rotation of \texttt{N} towards \texttt{M}.
 As stated in Section~\ref{sec:theory:rotation} no significant precision error with the rotation will occur.
 
 \begin{figure*}
@@ -505,9 +502,10 @@ Figure~\ref{fig:imagesequence} shows an example these transition in a flight fro
 \subsection{Dynamic object attachment} \label{sec:method:doa}
 In addition to the dynamic camera attachment, where the camera can reattached to children or parent nodes based on its movement, the same technique can also be required for scene graph nodes themselves.
 When dealing with dynamic astronomical objects it is possible for distinct sibling objects to approach each other.
-An exameple of when dynamic object attachment is required to achieve adequate prection is when visualizing the New Horizons mission~\cite{stern2009new}, whereas a spacecraft launched from Earth and approached both Jupiter and Pluto.
+An exameple of when dynamic object attachment is required to achieve adequate precision is when visualizing the New Horizons mission~\cite{stern2009new}, whereas a spacecraft launched from Earth and approached both Jupiter and Pluto.
 If the scene graph node containing New Horizons would statically be a direct child of the solar system, floating point precision would not suffice for accurately representing distances from the probe and Earth, Jupiter, and Pluto, respectively.
 In order to avoid this, we enable scene graph nodes to dynamically attach to different nodes under specialized circumstances, that is, being highly mobile objects such as spacecraft, asteroids, or comets.
+In Figure~\ref{fig:teaser}, the New Horizons spacecraft scene graph node has been dynamically attached to the Pluto barycenter node, in order to allow simultanueous high fidelity rendering of the probe as well as the planetary system.
 
 \subsection{Dynamic Scene Graph Traversal} \label{sec:method:dsgt}
 \alexcomment{This needs some more work; the explanations are not very good}
