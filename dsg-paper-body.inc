@@ -8,16 +8,18 @@
 % How about this? ---abock
 
 % suggestion from Anders
-\title{Dynamic Scene Graph:\\Scaling, Positioning, and Navigation in the Universe}
+\title{Dynamic Scene Graph:\\Enabling Scaling, Positioning, and Navigation in the Universe}
 %\title[]{Dynamic Scene Graph: Avoiding Floating Point Inaccuracies in Large Scale Astrovisualization}
 
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
-\author[Axelsson \emph{et al.}]{Emil Axelsson$^{1}$, Jonathas Costa$^{2}$, Cl\'audio Silva$^{2}$, Carter Emmart$^{3}$, Alexander Bock$^{1}$, and Anders Ynnerman$^{1}$\\
+
+\author[Axelsson \emph{et al.}]{Emil Axelsson$^{1}$, Jonathas Costa$^{2}$, Cl\'audio Silva$^{2}$, Carter Emmart$^{3}$, Alexander Bock$^{1}$, and Anders Ynnerman$^{1}$
+        \\
 % For Computer Graphics Forum: Please use the abbreviation of your first name.
-         $^1$ Linköping University\\
-         $^2$ New York University\\
-         $^3$ American Museum of Natural History
+         $^1$~Linköping University\\
+         $^2$~New York University\\
+         $^3$~American Museum of Natural History
        }
 
 % ------------------------------------------------------------------------
@@ -180,9 +182,7 @@ For IEEE754 float, $\epsilon$ is $2^{-24}\,\approx
 
 Double precision floating point numbers have a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notation, this corresponds to a precision of 15 significant figures. For quadruple precision the corresponding number is 34 significant figures.
 
-In a computer graphics pipeline, the limitation posed by the machine epsilon imposes that vertices are represented with less precision the further way from the coordinate system origin they are. Figure~\ref{fig:degradation-circles} shows a simulation where the number of mantissa bits has been set to 5, causing $\epsilon = 2^{-6} = \frac{1}{64}$. 
-
-In a real world example using IEEE754 floats, at Pluto's distance from the Sun (about $5.102 \cdot 10^9 \, \text{km}$) the distance between two adjacent floating point numbers is approximately $5.102 \cdot 10^9 \cdot 2^{-24} \, \text{km} = 304.1 \, \text{km}$, which is equivalent to about an eighth of Pluto's diameter ($2374 \, \text{km}$). 
+In a computer graphics pipeline, the limitation posed by the machine epsilon imposes that vertices are represented with less precision the further way from the coordinate system origin they are. Figure~\ref{fig:degradation-circles} shows a simulation where the number of mantissa bits has been set to 5, causing $\epsilon = 2^{-6} = \frac{1}{64}$. In a real world example using IEEE754 floats, at Pluto's distance from the Sun (about $5.102 \cdot 10^9 \, \text{km}$) the distance between two adjacent floating point numbers is approximately $5.102 \cdot 10^9 \cdot 2^{-24} \, \text{km} = 304.1 \, \text{km}$, which is equivalent to about an eighth of Pluto's diameter ($2374 \, \text{km}$). 
 
 
 %Pluto number of floats: (Diameter / Distance) / Machine Epsilon
@@ -717,11 +717,11 @@ Figure~\ref{fig:teaser} shows the New Horizons space craft at 80000\,km distance
 
 \noindent \textbf{Navigation. } Figure~\ref{fig:imagesequence} shows individual frames of a seamless nagivation from the surface of Earth, where the mountains of the Alps are rendered with their correct height and textures, out to the surface of Titan orbiting Saturn, showing color images of the moon's surface. At no point during this $1.65$\, billion km journey artifacts are visible.
 
-\noindent \textbf{Virtual globes. } Figure~\ref{fig:res:mars}
+\noindent \textbf{Virtual globes. } Figure~\ref{fig:res:mars} Figure~\ref{fig:res:pluto}
 
 \noindent \textbf{Volumetric data. } Figure~\ref{fig:res:galaxy}
 
-\noindent \textbf{Planets. } Figure~\ref{fig:res:pluto}. Computation of the 9 quantization levels taking into account the distance of Pluto from the coordinate system origin. Comparing that to the quantization levels we get with the dynamic scene graph
+\noindent \textbf{Planets. } Figure~\ref{fig:res:plutocomp}. Computation of the 9 quantization levels taking into account the distance of Pluto from the coordinate system origin. Comparing that to the quantization levels we get with the dynamic scene graph
 
 \noindent \textbf{Stereoscopic rendering. } Figure~\ref{fig:res:stereo}
 
@@ -736,8 +736,15 @@ Figure~\ref{fig:teaser} shows the New Horizons space craft at 80000\,km distance
 
 \begin{figure}
 \centering
+\fbox{\includegraphics[width=\linewidth]{figure/pluto.png}}
+\caption{A rendering of the surface of Pluto with a height field reconstructed from images from the New Horizons spacecraft showing the Zheng He Montes and al-Idrisi Montes in front of Tombaugh Regio.}
+\label{fig:res:pluto}
+\end{figure}
+
+\begin{figure}
+\centering
 \fbox{\includegraphics[width=\linewidth]{figure/stereo.png}}
-\caption{Rendering of XXX using anaglyph stereoscopic rendering. Our framework is agnostic to the stereo technique employed.}
+\caption{Amber/blue anaglyph stereoscopic rendering of ESA's Rosetta/Philae separation in preparation for the landing on the comet 67P/Churyumov-Gerasimenko on November 12th, 2014.}
 \label{fig:res:stereo}
 \end{figure}
 
@@ -752,7 +759,7 @@ Figure~\ref{fig:teaser} shows the New Horizons space craft at 80000\,km distance
 \centering
 \fbox{\includegraphics[width=\linewidth]{figure/precision.png}}
 \caption{Comparison rendering of Pluto using our proposed method (a) and conventional scene graph methods (b). 9 quantization levels of floating point numbers are visible at Pluto's distance of 5.1 billion km from the Sun without our method.}
-\label{fig:res:pluto}
+\label{fig:res:plutocomp}
 \end{figure}
 
 
