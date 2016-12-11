@@ -437,8 +437,8 @@ This section has provided several insights:
 
 \section{Method}\label{sec:method}
 \begin{figure}
-\includegraphics[width=10cm,height=10cm,keepaspectratio]{scenegraph.pdf}
-\caption{A subset of a potential scene graph consisting of two translation nodes for the solar system and the Earth system (1,3) and three rendering nodes for the Sun (2), Earth (4), and the Moon (5). Cameras can be attached to different scenes (A, B), thus avoiding the introduction of large, error-prone translation values. The upper image shows their relative location, whereas the lower image shows their organization in the scene graph.}
+\includegraphics[width=\linewidth]{scenegraph.pdf}
+\caption{A subset of a potential scene graph consisting of two translation nodes for the solar system and the Earth system (1,3) and three rendering nodes for the Sun (2), Earth (4), and the Moon (5). Cameras (A, B) can be attached to different nodes, thus avoiding the introduction of large, error-prone translation values. The upper image shows their relative location, whereas the lower image shows their organization in the scene graph. \emilcomment{If the arrows are in the figure, we should also mention them in the caption, I think.} }
 \label{fig:scenegraph}
 \end{figure}
 
@@ -459,14 +459,14 @@ Figure~\ref{fig:scenegraph} shows a subset of a possible scene graph with 5 node
 \subsection{Dynamic camera attachment} \label{sec:method:dca}
 In our framework, a camera is always attached to a scenegraph node.
 The \emph{attachment node} (AN) is the lowest node in the tree whose sphere of influence fully encompasses the camera position.
-In Figure~\ref{fig:scenegraph} camera\texttt{A} is located in nodes \texttt{1} and \texttt{2}, but is attached to node \texttt{2} as it is a child of node \texttt{1}. Likewise, camera \texttt{B} is attached to node \texttt{4} instead.
+In Figure~\ref{fig:scenegraph} camera \texttt{A} is located in nodes \texttt{1} and \texttt{3}, but is attached to node \texttt{3}. Likewise, camera \texttt{B} is inside nodes \texttt{1}, \texttt{2} and \texttt{5} and is attached to node \texttt{5}.
 
 We have to consider two cases for the update of a camera's AN.
 A camera can either attach to the child of the current AN, thus moving down the scene graph, or it attaches to the parent of the AN, thus moving up the scene graph.
-In order to determine the reattachment all involved distances are specified \emph{relative} to the AN.
-This circumvents the potential of catastrophic cancellation and makes the distance computations independent of the location of the AN relative to the global coordinate system origin.
+In order to determine the reattachment all involved distances are specified \emph{relative to the AN}, as opposed to relative to the global coordinate system origin. 
+This circumvents the risk of catastrophic cancellation by ensuring that unneccesarily large vectors are not involved in the computation.
 A camera attaches to the AN's parent node iff the distance from the camera to the center of the AN is larger than the AN's extent. 
-If, however, a camera location enters the sphere of influence of one of the AN's child nodes, the child node becomes the camera's new AN.
+Conversely, whenever a camera location enters the sphere of influence of one of the AN's child nodes, the child node becomes the camera's new AN.
 
 \begin{figure}
 \centering
@@ -484,7 +484,7 @@ The expression for the new position of the camera provides a design constraint f
 This can be mediated by choosing node extents appropriately.
 %Restriction; the distance differences between parent and child cannot be too big
 Similarly to the translation, the rotation of the camera has to be inverted by applying the inverse of the rotation of \texttt{N} towards \texttt{M}.
-As stated in Section~\ref{sec:theory:rotation} no precision error with the rotation will occur.
+As stated in Section~\ref{sec:theory:rotation} no significant precision error with the rotation will occur.
 
 \begin{figure*}
 \centering
