@@ -438,11 +438,12 @@ This section has provided several insights:
 \section{Method}\label{sec:method}
 \begin{figure}
 \includegraphics[width=10cm,height=10cm,keepaspectratio]{scenegraph.pdf}
-\caption{A subset of a potential scene graph consisting of two translation nodes for the solar system and the Earth system (1,2) and three rendering nodes for the Sun (3), Earth (5), and the Moon (4). Cameras can be attached to different scenes (A, B), thus avoiding the introduction of large, error-prone translation values. The upper image shows their relative location, whereas the lower image shows their organization in the scene graph.}
+\caption{A subset of a potential scene graph consisting of two translation nodes for the solar system and the Earth system (1,3) and three rendering nodes for the Sun (2), Earth (4), and the Moon (5). Cameras can be attached to different scenes (A, B), thus avoiding the introduction of large, error-prone translation values. The upper image shows their relative location, whereas the lower image shows their organization in the scene graph.}
 \label{fig:scenegraph}
 \end{figure}
 
-Having identified the sources of potential floating point precision inaccuracies in the computer graphics pipeline, we will now elaborate on our proposed framework, the \emph{Dynamic Scene Graph} that utilizes these insights such that it becomes possible to achieve a high-fidelity rendering regardless of the location of the coordinate system origin.
+Having identified the sources of potential floating point precision inaccuracies in the computer graphics pipeline, we will now elaborate on our proposed framework.
+The \emph{Dynamic Scene Graph} utilizes these insights such that it becomes possible to achieve a high-fidelity rendering regardless of the location of the coordinate system origin.
 This is achieved by utilizing a \emph{dynamic camera attachment} and a \emph{relative scene traversal} performed with respect to the attached object.
 
 The framework is based on a traditional scene graph structure in which the traversal order is not fixed, but dependent on the location of the camera in the scene instead.
@@ -453,7 +454,7 @@ Each scene graph node has a radial \emph{extent}, which determines the node's sp
 % Specify limitation of the graph? Or later?
 %The location and sizes of the scene graph nodes have to be specified such that 
 
-Figure~\ref{fig:scenegraph} shows a subset of a possible scene graph with 5 nodes; (1,2) transformation node centered on the solar system and the Earth barycenter respectively, (3,4,5) rendering node containing the surface of the Sun, the Moon, and Earth.
+Figure~\ref{fig:scenegraph} shows a subset of a possible scene graph with 5 nodes; (1,3) transformation nodes centered on the solar system and the Earth barycenter respectively, (2,4,5) rendering nodes containing the surface of the Sun, the Earth, and the Moon.
 
 \subsection{Dynamic camera attachment} \label{sec:method:dca}
 In our framework, a camera is always attached to a scenegraph node.
