@@ -13,7 +13,6 @@
 
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
-
 \author[Axelsson \emph{et al.}]{Emil Axelsson$^{1}$, Jonathas Costa$^{2}$, Cl\'audio Silva$^{2}$, Carter Emmart$^{3}$, Alexander Bock$^{1}$, and Anders Ynnerman$^{1}$
         \\
 % For Computer Graphics Forum: Please use the abbreviation of your first name.
