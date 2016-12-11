@@ -492,7 +492,7 @@ As stated in Section~\ref{sec:theory:rotation} no significant precision error wi
 \subfigure[Titan with Saturn in the background]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-4.png}}}
 %\hfill
 \subfigure[Surface of Titan]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-5.png}}}
-\subfigure[Scene Graph Representation]{\includegraphics[width=\abWidth]{figure/white-sq3.png}}
+\subfigure[Scene Graph Representation]{\includegraphics[width=\abWidth]{figure/earth-titan-graph.pdf}}
 
 
 %\fbox{\includegraphics[width=\linewidth]{figure/white-teaser.png}}
