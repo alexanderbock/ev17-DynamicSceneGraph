@@ -696,18 +696,32 @@ The rendering of the Sun (node \texttt{2}) as viewed from camera A would include
 \label{fig:res:stereo}
 \end{figure}
 
+\begin{figure}
+\centering
+\fbox{\includegraphics[width=\linewidth]{figure/galaxy.png}}
+\caption{A volumetric rendering of a three-channel time-varying simulation of the Milky Way with a bounding box size of about $10^{20}$\,m.}
+\label{fig:res:galaxy}
+
+\end{figure}
+
+
 
 \joncomment{OS Scenes?}
 
 %-------------------------------------------------------------------------
 \section{Conclusions}
-\alexcomment{This needs checking}
+\alexcomment{This needs checking and some addtions}
 In this work, we presented a framework that supports high-precision transformations in a scene graph by dynamically attaching the camera to the closest node and using this node as an origin for the scene traversal.
-The scene traversal uses a shortest path for each other scene graph node and thus circumvents potentially high translational values that would otherwise lead to precision degredation.
 
+By supporting an efficient dynamic reattachment of the camera to attachment nodes, it becomes possible to navigate a scene encompassing scales and distances much bigger than floating point precision would normally allow.
+The same reattachment technique can be applied to other scene graph nodes to provide the ability for scene graph nodes to posess a high precision in multiple locations, for example a space craft that requires high precision at multiple planets.
+The scene graph traversal uses a shortest path every other scene graph node and thus circumvents potentially high translation values that would otherwise lead to precision degredation during the rendering.
 
+We implemented the framework in the open-source software platform OpenSpace which has the goal of being able to visualize and contextualize a wide range of astrophysical data.
+The framework was successfully tested on the visualization of multiple space craft missions~\cite{Bock_2015}, on virtual globes, and volumetric rendering.
 
 \subsection{Future Work}
+
 \begin{enumerate}
 \item Dragging along problem when a planet moves into a camera, not a camera into the planet
 \end{enumerate}
