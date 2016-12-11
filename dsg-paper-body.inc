@@ -472,9 +472,9 @@ Conversely, whenever a camera location enters the sphere of influence of one of 
 
 In both transition cases, the location of the camera most changes reference frames.
 Figure~\ref{fig:coordsystems} shows a camera's old (\texttt{A}) and new (\texttt{B}) location before and after a attachment node change. 
-\texttt{A} is expressed relative to \texttt{N} ($v$), whereas \texttt{B} is expressed relative to \texttt{M}.
-Thus, the new location of \texttt{B} $w$ is given by $b + v$.
-The expression for the new position of the camera provides a design constraint for the scene graph node, as $[b+v] \subset [w]$ or otherwise the new camera position would not be expressed precisely in the coordinate system of \texttt{M}.
+\texttt{A} is expressed relative to \texttt{N} by the vector $v$, whereas \texttt{B} is expressed relative to \texttt{M} as the vector $w$.
+The old and new locations are related by $w = -v - n$.
+The expression for the new position of the camera provides a design constraint for the scene graph node, as $[-v - n] \subseteq [w]$ or otherwise the new camera position would not be expressed precisely in the coordinate system of \texttt{M}.
 This can be mediated by choosing node extents appropriately.
 %Restriction; the distance differences between parent and child cannot be too big
 Similarly to the translation, the rotation of the camera has to be inverted by applying the inverse of the rotation of \texttt{N} towards \texttt{M}.
@@ -512,38 +512,16 @@ In order to avoid this, we enable scene graph nodes to dynamically attach to dif
 \subsection{Dynamic Scene Graph Traversal} \label{sec:method:dsgt}
 At all times, the camera is attached to a specific scene graph node \texttt{N} as described in the previous sections.
 For the traversal, in comparison to other methods, our proposed framework does not construct the necessary matrices by a depth-first traversal originating from the root node.
-Instead, in order to maintain high precision for all objects in the scene, we utilize \texttt{N} as the traversal origin.
-
-
-
-
-
-Instead, in order to maintain high precision for all objects in the scene, we construct the required matrices relative to \texttt{N} during the traversal of the scene graph.
+Instead, in order to maintain high precision for all objects in the scene, we use \texttt{N} as the traversal origin.
 This effectively places the origin of the coordinate system in the center of the node \texttt{N} and thus enables the highest precision for \texttt{N}.
 That fact that this is permissible is based on the observation that high-frequency changes are only visible in objects that are close to the camera.
 As described in Section~\ref{sec:theoretical}, the representable precision decreases with increasting numbers, such that small details in large objects with great distances would become prone to precision error.
 However, projected changes that are smaller than a fraction of a pixel will not be visible and, thus, do not need to be represented in the first place.
 
-The traversal of the scene graph works as follows: For each scene graph node \texttt{N}, the shortest path between \texttt{N} and the currently attached node \texttt{M} is computed in the graph.
+The traversal of the scene graph works as follows: For each scene graph node \texttt{M}, the shortest path between \texttt{M} and the currently attached node \texttt{N} is computed in the graph.
 Figure~\ref{fig:scenegraph}~(b) shows two examples of this with the camera being attached to node \texttt{3} and node \texttt{5} respectively.
 For each step along this path, the transformation matrices have to be collected in the following way.
-If the transition is done towards the root node of the graph (red arrows in Figure~\ref{sec:scenegraph}~(b)), the inverse of the transformation has to be applied.
-If the transition is downwards (blue arrows in Figure~\ref{fig:scenegraph}~(b)), the the transformations are concatenated.
-
-
-
-For the traversal of the scene graph, for each of the scene graph nodes the shortest path 
-
-
-For the traversal of the scene graph , the relative transformations between nodes might be inverted, depending on the location of the camera.
-Figure~\ref{fig:scenegraph}~(b) shows two situations, one (A) where the camera is attached to node \texttt{3} and one (B) where the camera is attached to node \texttt{5}. 
-
-locations A and B of a camera inside the sceen graph. 
-
-The traversal of the scene graph works as follows: For each scene graph node \texttt{N}, the shortest path between \texttt{N} and the currently attached node \texttt{M} is computed in the graph.
-Figure~\ref{fig:scenegraph}~(b) shows two examples of this with the camera being attached to node \texttt{3} and node \texttt{5} respectively.
-For each step along this path, the transformation matrices have to be collected in the following way.
-If the transition is done towards the root node of the graph (red arrows in Figure~\ref{sec:scenegraph}~(b)), the inverse of the transformation has to be applied.
+If the transition is done towards the root node of the graph (red arrows in Figure~\ref{fig:scenegraph}~(b)), the inverse of the transformation has to be applied.
 If the transition is downwards (blue arrows in Figure~\ref{fig:scenegraph}~(b)), the the transformations are concatenated.
 
 
