@@ -127,7 +127,7 @@ In a standard computer graphics pipeline, $4 \times 4$ matrices are used to repr
 transformations operating on 4-dimensional homogeneous coordinate vectors with floating point components. In order to understand the precision and range limitations of the graphics pipeline used in visualization, we need to base our reasoning on properties on floating point numbers and the operations that we perform on them.
 
 \begin{figure}
-\includegraphics[width=8.4cm,height=8.4cm,keepaspectratio]{degradation-circles.pdf}
+\includegraphics[width=8.4cm,height=8.4cm,keepaspectratio]{figure/degradation-circles.pdf}
 \caption{The problem of coordinate precision for vertices far from the origin is amplified by limiting the number of mantissa bits to 5. Circle A, being close to the origin, is represented relatively well despite the limited bit depth. The circles marked B have poor precision for one of their vector components, while C is heavily distorted in both dimensions. \alexcomment{I'd remove the outer most layer on the top and right as they only repeat the inner values. Also the axes need labels.}}
 \label{fig:degradation-circles}
 \end{figure}
