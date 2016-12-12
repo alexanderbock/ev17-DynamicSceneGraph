@@ -137,6 +137,8 @@ Furthermore, the method does not provide a general solution for depth sorting ob
 %Furthermore, the work does not address stereoscopic rendering of objects across sub-scenes.
 The traversal of sub-scenes in this work formed the bases for our algorithm of the dynamic traversal of a scene graph.
 
+Upchurch and Desbrun~\cite{upchurch2012tightening} study the effects of floating point arithmetic involved in perspective projection. \emilcomment{todo.}
+
 \section{Theoretical motivation}\label{sec:theoretical}
 The co-evolution of graphics hardware, software, and content, largely pushed forward by
 the gaming industry, has led to modern graphics processing units that are optimized for
@@ -302,7 +304,7 @@ Using column vectors, the interval vector $[\mathbf{n}]$ of possible normalized 
  
 Here, $[P]$ is the projection matrix, $[V]$ is the view matrix, $[M]$ is the model matrix, and $[\mathbf{x}]$, $[\mathbf{c}]$ and $[\mathbf{n}]$ are interval vectors on the form $([x], [y], [z], [w])^t$. The error interval size of the normalized device coordinates depends on the collective effects of $[M]$, $[V]$, $[P]$, and the perspective division as they act on $[\mathbf{x}]$. 
 
-$M$ and $V$ are commonly composed from three types of transformations that are encoded in the scene graph: scaling, translation, and rotation. We study the effects of applying scaling, translation, and rotation on a generalized interval model matrix or view matrix $[A]$, composed of a translation vector $\mathbf{[a]}$ and a combined rotation/scaling 3x3-matrix $[A']$, as given by Equation \ref{eq:matrixa}. To observe how the matrices act on a coordinate vector we can study the fourth column in $[A]$.
+$M$ and $V$ are commonly composed from three types of transformations that are encoded in the scene graph: scaling, translation, and rotation. We study the effects of applying scaling, translation, and rotation on a generalized interval model matrix or view matrix $[A]$, composed of a translation vector $\mathbf{[a]}$ and a combined rotation/scaling 3x3-matrix $[A']$, as given by Equation \ref{eq:matrixa}. Scaling, rotation and translation matrices can all be written on the same form as $[A]$. To observe how the matrices act on a coordinate vector we can study the fourth column in $[A]$.
 \begin{equation} \label{eq:matrixa}
 [A] = \mleft(
 \begin{array}{c|c}
@@ -316,142 +318,49 @@ $M$ and $V$ are commonly composed from three types of transformations that are e
 After evaluating the possible effects of the scaling, translation, and rotation we continue with a similar analysis for the projection matrix, the perspective division, and the mapping to a depth buffer representation.
 
 \subsubsection{Scaling}
-Equation \ref{eq:scaling} describes a floating point matrix multiplication of a scaling matrix $[S]$ and a matrix $[A]$. $[S']$ is a diagonal matrix with one scaling component per dimension $x$, $y$, and $z$. 
-\begin{equation} \label{eq:scaling}
-\begin{split}
-[\hat{S}] = [S] \otimes [A] \\ = \mleft(
-\begin{array}{c|c}
-  [S'] & \{\mathbf{0}\} \\
-  \hline
-  \{\mathbf{0}\} & \{1\}
-\end{array}\mright)
-\otimes
-\mleft(
-\begin{array}{c|c}
-  [A'] & [\mathbf{a}]\\
-  \hline
-  \{\mathbf{0}\} & \{1\}
-\end{array}
-\mright) = 
-\mleft(
-\begin{array}{c|c}
-  [\hat{S}'] & [\hat{\mathbf{s}}]\\ 
-  \hline
-  \{\mathbf{0}\} & \{1\}
-\end{array}\mright)
-\end{split}
-\end{equation}
-
-\noindent Since the diagonal matrix components $S'_{ij}$ are $\{0\}$ for all $i \neq j$ the output matrix components $\hat{S}'_{ij}$ and $\hat{\mathbf{s}}_i $ can be written as in Equation \ref{eq:scalingconclusion}.
+Consider an interval 4x4-matrix $[S]$ composed of the 3x3 interval matrix $[S']$, interval vector $\mathbf{[s]}$ and a bottom row of degenerate intervals analogously to the matrix A. Let the components of $[S]$ be scaling coefficient intervals, and let all other components of $[S]$ and $\mathbf{[s]}$ equal the degenerate interval $[0, 0]$. Equation \ref{eq:scalingconclusion} expresses the components of the output matrix $\hat{S}$, which is also a matrix on the form of A.
 
 \begin{align} \label{eq:scalingconclusion}
-[\hat{S}'_{ij}] = ([S'] \otimes [A'])_{ij} &\subseteq S'_{ii}\,A'_{ij}(1 + [e_{ij}]) \\
-[\hat{\mathbf{s}}_i] = ([S'] \otimes [\mathbf{a}])_{i} &\subseteq S'_{ii}\,\mathbf{a}_i(1 + [e_{j}])
+[\hat{S}] = ([S'] \otimes [A'])_{ij} &\subseteq [S'_{ii}]\,[A'_{ij}](1 + [e_{ij}]) \\
+[\hat{\mathbf{s}}] = ([S'] \otimes [\mathbf{a}])_{i} &\subseteq [S'_{ii}]\,[\mathbf{a}_i](1 + [e_{j}])
 \end{align}
 
-The rounding error introduced by a scaling matrix $S$ is proportional to the scaling factors in $S'$. Any error interval in $A'$ and $\mathbf{a}$ will be scaled proportionally. Thus, we conclude that applying a scaling matrix to a matrix $A$ \emph{preserves the relative precision} of all components of $A$. \alexcomment{This is technically not part of the theoretical background, but already a contribution. Should I be moved elsewhere?}
+The rounding error introduced by an interval scaling matrix $[S]$ is proportional to the size of the scaling factors in $[S']$.  Any error interval in $A'$ and $\mathbf{a}$ will be scaled proportionally. Thus, we conclude that applying a scaling matrix to a matrix $A$ \emph{does not cause a significant loss of relative precision in any matrix component}.  
 
 \subsubsection{Translation} \label{sec:theory:translation}
-In addition to the scaling, we can also represent the translation by a vector using floating point inteval arithmatic. In Equation \ref{eq:translation} a translation matrix $T$ is applied to $A$ using floating point matrix multiplication. $I$ denotes a 3$\times$3 identity matrix, and $\mathbf{t}$ represents the translation vector. 
-
-\begin{equation} \label{eq:translation}
-\hat{T} = T \otimes A = 
-\mleft(
-\begin{array}{c|c}
-  I & \mathbf{t}\\
-  \hline
-  \mathbf{0} & 1 
-\end{array}\mright)
-\otimes
-\mleft(
-\begin{array}{c|c}
-  A' & \mathbf{a}\\
-  \hline
-  \mathbf{0} & 1 
-\end{array}
-\mright) =  
-\mleft(
-\begin{array}{c|c}
-  \hat{T}' & \hat{\mathbf{t}}\\
-  \hline
-  \mathbf{0} & 1 
-\end{array}\mright)
-\end{equation}
-
-\noindent where 
+A corresponding analysis is made for translation matrices, composed out of $[T']$ and $[\mathbf{t}]$, with degernate intervals $[T'_{ij}] = [I_{ij}, I_{ij}]$, where $I$ is the identity matrix. The components of $[\mathbf{t}]$ representing a translation interval vector.
 
 \begin{align} \label{eq:translationconclusion}
-\hat{T}_{ij} = (I \otimes A')_{ij} = A'_{ij}\\
-\hat{t}_i = t_i \oplus a_i \subseteq (t_i + a_i)(1 + [e_i])
+[\hat{T}_{ij}] = ([T'] \otimes [A'])_{ij} = [A'_{ij}]\\
+[\hat{\mathbf{t}}_i] = [\mathbf{t}_i] \oplus [\mathbf{a}_i] \subseteq ([\mathbf{t}_i] + [\mathbf{a}_i])(1 + [e_i])
 \end{align}
 
-\noindent We note that the precision in $\hat{T}_{ij}$ is preserved from $A'$ when any translation matrix $T$ is applied. However, any error intervals encoded in $t_i$ and $a_i$ will propagate to $\hat{t}_i$, and will \emph{not} be scaled down even if $|\hat{t}_i|$ is orders of magnitude smaller than $|t_i|$ and $|a_i|$. This scenario \emph{may lead to catastrophic cancellation} in the component $\hat{t}_i$.
+\noindent We note that the precision in $\hat{T}_{ij}$ is preserved from $A'$ when any translation matrix $T$ is applied. However, any error intervals encoded in $[\mathbf{t}_i]$ and $[\mathbf{a}_i]$ will propagate to $\hat{\mathbf[t]}_i$, and will \emph{not} be scaled down even if $|[\hat{\mathbf{t}}_i]|$ is orders of magnitude smaller than $|[\mathbf{t}_i]|$ and $|[\mathbf{a}_i]|$. This scenario \emph{may lead to catastrophic cancellation} in the component $[\hat{\mathbf{t}}_i]$.
 
 \subsubsection{Rotation} \label{sec:theory:rotation}
-The same analysis is performed for floating point rotation in Equation \ref{eq:rotation}.
-
-\begin{equation} \label{eq:rotation}
-\hat{R} = R \otimes A = 
-\mleft(
-\begin{array}{c|c}
-  R' & \mathbf{0}\\
-  \hline
-  \mathbf{0} & 1 
-\end{array}\mright)
-\otimes
-\mleft(
-\begin{array}{c|c}
-  A' & \mathbf{a}\\
-  \hline
-  \mathbf{0} & 1 
-\end{array}
-\mright) =  
-\mleft(
-\begin{array}{c|c}
-  \hat{R}' & \hat{\mathbf{r}}\\
-  \hline
-  \mathbf{0} & 1 
-\end{array}\mright)
-\end{equation}
+Using $[R]$ to denote a rotation interval matrix, composed of the upper left 3x3 matrix $[R']$ and a upper right 3-dimensional column vector $\mathbf{r}$, with the interval components $[R'_{ij}] \subseteq [-1, 1]$, and $\mathbf{r}_i = [0, 0]$, we study the effect of multiplying $[R]$ with the interval matrix $[A]$.
 
 \begin{align} \label{eq:rotationconclusion}
 \hat{R}'_{ij} = (R' \otimes A')_{ij} &\subseteq \sum_{k = 1}^3 R'_{ik}\,A'_{kj}(1 + [e_{ijk}]) \\
 \hat{\mathbf{r}}_i = (R' \otimes \mathbf{a})_{i} &\subseteq \sum_{k = 1}^3 R'_{ik}\,\mathbf{a}_k(1 + [e_{ijk}])
 \end{align}
 
-When applying a rotation matrix to a general matrix $A$, the potential rounding error of any output component $A_{ij}$ will be equal to $\sum_{k = 1}^3 |R'_{ik}\,A'_{kj} [e_{ijk}]|$. For a general rotation matrix $R$ written on the same form as in Equation~\ref{eq:rotation}, all the components of $R'$ are in the interval $[-1, 1]$, which means that the maximum possible precision loss is governed by the values of $A$. When applying $R$ on a matrix or vector with both large and close-to-zero components, the precision in the small components may be lost. However, the loss of precision in the most significant matrix components will be minimal. This means that when using $R$ to transform the coordinate vector $\mathbf{a} = (x, y, z)^t = \mathbf{\hat{a}}|\mathbf{a}|$, neither the precision of the direction $\mathbf{\hat{a}}$ nor the magnitude $|\mathbf{a}|$ will be affected significantly. The same is true for the column vectors in $A'$, which means that the significant properties of $A'$ are preserved in $\hat{R}'$
+The potential rounding error of any output component $A_{ij}$ will be equal to $\sum_{k = 1}^3 |[R'_{ik}]\,[A'_{kj}][e_{ijk}]|$. Given the fact that the intervals in $[R]$ are confined to $[-1, 1]$, we see that the maximum possible precision loss in any matrix component is governed by the values of $A$. When applying $[R]$ on a matrix or vector with both large and close-to-zero components, the precision in the small components may be lost. However, the loss of precision in the most significant matrix components will be minimal. This means that when using $[R]$ to transform the coordinate vector $[\mathbf{a}] = ([x], [y], [z])^t \subseteq [\mathbf{\hat{a}}][|\mathbf{a}|]$, neither the precision of the direction $[\mathbf{\hat{a}}]$ nor the magnitude $[|\mathbf{a}|]$ will be affected significantly. The same is true for the column vectors in $[A']$, which means that the significant properties of $[A']$ are preserved in $[\hat{R}']$.
 
 \subsubsection{Perspective and depth}
-A typical matrix for symmetric perspective projection $P$ can be written as in Equation \ref{eq:perspectiveprojection}, where
-$\theta_h$ and $\theta_v$ are the horizontal and vertical field of view, and $n$ and $f$ are the distances from the camera to the near and far planes.
-
-\begin{equation} \label{eq:perspectiveprojection}
-P = \mleft(
-\begin{array}{cccc}
-  \arctan(\frac{\theta_{h}}{2}) & 0 & 0 & 0\\
-  0 & \arctan(\frac{\theta_{v}}{2}) & 0 & 0\\
-  0 & 0 & -\frac{f+n}{f-n} & \frac{2fn}{f-n}\\
-  0 & 0 & -1 & 0
-\end{array}\mright)
-\end{equation}
-
-\joncomment{Why did you prefer to use the version with $arctan$ instead of the version with $\frac{2n}{r-l}$ and $\frac{2n}{t-b}$ elements? Any reason in particular?}
-
-When $P$ is multiplied with a homogeneous view coordinate vector $\mathbf{v} = (x, y, z, 1)^t$, the sums of products to compute the output x, y, and w components will only consist of one non-zero term. Hence, there is no significant loss of relative precision in these components.
+When a typical perspective matrix $P$ is multiplied with a homogeneous view coordinate vector $\mathbf{v} = (x, y, z, 1)^t$, the sums of products to compute the output x, y, and w components will only consist of one non-zero term. Hence, there is no significant loss of relative precision in these components.
 
 Furthermore, while the perspective division shrinks the projection image of distant objects, this also has the effect of scaling down any floating point precision errors present in distant vertex coordinates. Hence, the sensitivity of visible vertex displacement of a vertex is inversely proportional to the depth of the vertex in view space.
 
-\noindent The z-component in clip space $c_z = (P\mathbf{v})_z$ is given by Equation \ref{eq:nearfar}.
+The z-component in clip space $c_z = (P\mathbf{v})_z$ is given by Equation \ref{eq:nearfar}, where n and f are the distance from the camera to the near and far plane respectively.
 
 \begin{equation} \label{eq:nearfar}
-\begin{split}
-\lambda_1 = -\frac{f + n}{f - n} \\
-\lambda_2 = \frac{2fn}{f - n} \\
-c_z = \lambda_1 \mathbf{v}_z + \lambda_2
-\end{split}
+\lambda_1 = -\frac{f + n}{f - n}, \; \lambda_2 = \frac{2fn}{f - n}, \; [\mathbf{c}_z] = [\lambda_1] \otimes [\mathbf{v}_z] \oplus \lambda_2
 \end{equation}
 
-\noindent The result is an affine mapping of depths such that vertices in the near plane yield $\mathbf{c}_z = 0$ and vertices in the far plane give $\mathbf{c}_z = \mathbf{c}_w$. Subsequently, the perspective division maps $\mathbf{n}_z$ into the range $[0, 1]$. When depths are subsequently stored in an integer buffer to enable hidden surface removal, this non-linear mapping results in a higher depth resolution for close objects than for distant ones.
+\noindent The result is an affine mapping of depths such that vertices in the near plane yield $\mathbf{c}_z = 0$ and vertices in the far plane give $\mathbf{c}_z = \mathbf{c}_w$.
+Subsequently, the perspective division maps $[\mathbf{n}_z]$ into the range $[0, 1]$.
+If an integer depth buffer is used, this non-linear mapping results in a higher depth resolution for close objects than for distant ones. Setting $n$ to a small number may cause distant vertices to collapse to the same $\mathbf{n}_z$ and cause z-fighting.
 
 \subsection{Sources of precision errors}
 This section has provided several insights:
