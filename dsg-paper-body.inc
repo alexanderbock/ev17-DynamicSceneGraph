@@ -378,26 +378,59 @@ This section has provided several insights:
 \label{fig:scenegraph}
 \end{figure}
 
-Having identified the sources of potential floating point precision inaccuracies in the computer graphics pipeline, we will now elaborate on our proposed framework.
-The \emph{Dynamic Scene Graph} utilizes these insights such that it becomes possible to achieve a high-fidelity rendering regardless of the location of the coordinate system origin.
-This is achieved by utilizing a \emph{dynamic camera attachment} and a \emph{relative scene traversal} performed with respect a special node; the attachment node.
+After identifying the sources of potential floating point precision inaccuracies in the computer graphics pipeline, we can now elaborate on our proposed framework.
+The \emph{Dynamic Scene Graph} (DSG) utilizes these insights such that it becomes possible to achieve a high-fidelity rendering throughout the scene graph independent of the location of the coordinate system origin.
+This is achieved by utilizing a \emph{dynamic camera attachment} and a \emph{relative scene traversal} performed with respect to a special node; the attachment node (AN).
+First, we describe the relative scene traversal assuming a static camera, and then in the following section describe the attachment changes of moving cameras.
 
-The framework is based on a traditional scene graph structure, but where the traversal order is dependent on the location of the camera in the scene. 
+The DSG is based on a traditional scene graph structure, but instead of a regular traversal order that starts at the root node of the graph downward, we propose a traversal order that starts at the AN and can traverse both upwards and downwards.
 Each node in the scene graph can contain a \emph{transformation}, consisting of a \emph{translation}, \emph{rotation}, and \emph{scaling}, which are all described relative to a node's parent.
-In addition, nodes may contain a visual object, for example a planet or a spacecraft, specified in a local coordinate system.
+In addition, nodes may contain a visual object representation, for example a planet or a spacecraft, specified in the node's local coordinate system.
 If a scene graph node contains a visible object, we refer to it as a \emph{rendering node}, otherwise it is a \emph{transformation node}.
-Unlike traditional scene graphs, each scene graph node has a radial \emph{extent}, which determines the node's sphere of influence.
+Unlike traditional scene graphs, each scene graph node has a radial \emph{extent}, which determines the node's sphere of influence. each scene graph node's extent has to cover at least all the children's spheres of influence.
 % Specify limitation of the graph? Or later?
 %The location and sizes of the scene graph nodes have to be specified such that 
 
-Figure~\ref{fig:scenegraph} shows a subset of a possible scene graph with 5 nodes; (1,3) transformation nodes centered on the solar system and the Earth barycenter respectively, (2,4,5) rendering nodes containing the surface of the Sun, the Earth, and the Moon.
+Figure~\ref{fig:scenegraph} shows a possible scene graph with 5 nodes with their extents; (1,3) are transformation nodes centered on the solar system and the Earth barycenter respectively, (2, 4, 5) are rendering nodes containing the surface of the Sun, the Earth, and the Moon. Two cameras (A, B) are attached to the scene at different attachment nodes.
+
+\subsection{Dynamic Scene Graph Traversal} \label{sec:method:dsgt}
+As described in the previous section, the camera is attached to a specific scene graph node \texttt{N}.
+Rendering, or otherwise accessing, the contents of the scene graph requires a traversal, which in a traditional scene graph is started at the root node and traverses through the child nodes.
+In our proposed framework, this traversal starts at the attached node \texttt{N} instead with the ability of moving up and down in the scene graph with the ability of inverting the involved relative transformations..
+
+The traversal of the scene graph works as follows: For each scene graph node \texttt{M}, the shortest path between \texttt{M} and the currently attached node \texttt{N} is computed in the graph.
+Figure~\ref{fig:scenegraph}~(b) shows two examples of this with the camera being attached to node \texttt{3} and node \texttt{5} respectively.
+For each step along this path, the transformation matrices are concatenated.
+If the transition is performed downwards towards the leaf nodes (blue arrows in Figure~\ref{fig:scenegraph}~(b)), the transformation matrices are concatenated analogous to traditional scene graphs.
+If the transition is performed up towards the root node of the graph (red arrows in Figure~\ref{fig:scenegraph}~(b)), the transformation is inverted before concatenated.
+The final transformation matrix is the applied to the scene graph node \texttt{M}.
+
+As an example, we use $v_{i,j}$ as a notation to denote the transformation from node \texttt{i} to \texttt{j} and $v{j_i} = -v_{i,j}$ as the inverse of this transformation in the scene graph depicted in Figure~\ref{fig:scenegraph}~(b).
+$v_{i,i}$ specifies the local translation that the scene graph node \texttt{i} uses.
+For camera \texttt{A}, the rendering of the Sun (node \texttt{2}) is performed using the transformations $v_{2,1} \cdot v_{1,3} \cdot v_{3,3}$.
+The rendering of the Earth (node \texttt{4}) however, is performed only with the translation $v_{4,3} \cdot v_{3,3}$, ignoring all other scene graph nodes and thus not being affected by their values.
+For camera \texttt{B}, the transformation for the Sun are $v_{2,1} \cdot v_{1,3} \cdot v_{3,5} \cdot v_{5,5}$ and for the Earth $v_{4,3} \cdot v_{3,5} \cdot v_{5,5}$.
+
+First, this means that when different cameras are present in the scene graph, each camera might have its own traversal path.
+More importantly, this means that for two nodes \texttt{N} and \texttt{M} only the subtree with the closest common parent at the root needs to be traversed in order to retrieve all information necessary to transform \texttt{M} into the local coordinate system of \texttt{N} and vice versa.
+Without the requirement of including the root node in every traversal, the location of the local subtree does not have an impact on the precision of the objects contained within thus evading the potential of catastrophic cancellation that are stated in Section~\ref{sec:theory:translation}.
+This is at the heart of our proposed method as it leads to a high-precision rendering independent of the location of the nodes within the extended scene graph.
+By utilizing the shortest path between \texttt{M} and \texttt{N} we avoid large the translations which would otherwise be necessary if the all transformations originate from the root node and which would lead to precision problems.
+
+This technique enables the highest precision for \texttt{N} where precision decreases with growing distance from the center of \texttt{N}.
+This is based on the observation that high-frequency changes are only visible in objects that are close to the camera and thus cover more pixel on the screen.
+As described in Section~\ref{sec:theoretical}, the representable precision decreases with increasing numbers, such that small details in large objects with great distances would become prone to precision error.
+However, projected changes that are smaller than a fraction of a pixel will not be visible and, thus, do not need to be represented in the first place.
+Conceptually, this pivots the scene graph in such a way that the node \texttt{N} is placed at the root, all necessary transformation inversions are performed , and a traditional traversal algorithm is used.
 
 \subsection{Dynamic camera attachment} \label{sec:method:dca}
-In our framework, a camera is always attached to a single scene graph node.
-The \emph{attachment node} (AN) is the lowest node in the scene graph whose sphere of influence fully encompasses the camera position.
+In our scene graph, a camera is always attached to a single node, the AN, and the camera's position and orientiation is expressed in AN's coordinate system.
+At all times, the AN is the deepest node in the scene graph whose sphere of influence fully encompasses the camera position.
 In Figure~\ref{fig:scenegraph} camera \texttt{A} is located in nodes \texttt{1} and \texttt{3}, and is thus attached to node \texttt{3}. Likewise, camera \texttt{B} is inside nodes \texttt{1}, \texttt{2} and \texttt{5} and is thus attached to node \texttt{5}.
 
-We have to consider two cases for updating a camera's AN.
+Figure~\ref{fig:imagesequence} shows an example of the dynamic camera attachment in a flight from the surface of Earth to Saturn's moon Titan. The camera changes its AN four times on this transition.
+
+There are two cases for updating a camera's AN in response to a user's interaction.
 If a camera enters the sphere of influence of a current AN's child, the child becomes the new AN the camera thus moves down the scene graph.
 If the camera leaves the sphere of influence of the current AN, the AN's parent becomes the new AN and the camera thus moves up the scene graph.
 At each step, the distances of the camera to the AN center and the distances to all children are computed and specified \emph{relative to the AN} as opposed to specifying the values relative to the global coordinate system origin.
@@ -413,10 +446,9 @@ This circumvents the risk of catastrophic cancellation by ensuring that unnecess
 \end{figure}
 
 In both transition cases, the location of the camera must change reference frames.
-Figure~\ref{fig:coordsystems} shows a camera's old (\texttt{A}) and new (\texttt{B}) location before and after an attachment node change. 
+Figure~\ref{fig:coordsystems} shows a camera's old (\texttt{A}) and new (\texttt{B}) location before and after an AN change. 
 \texttt{A} is expressed relative to \texttt{N} by the vector $v$, whereas \texttt{B} is expressed relative to \texttt{M} as the vector $\mathbf{w}$.
 The old and new locations are related by $\mathbf{w} = \mathbf{v} + \mathbf{n}$.
-
 To allow for this remapping to be computed without precision problems, extents of the scene graph nodes must be chosen such that the ratio between child and parent nodes' extent is significantly larger than the machine epsilon. In order to circumvent rounding errors related to translation as described in \ref{sec:theory:translation}, extents are chosen such that the camera attaches to a child render node before the details of the render node becomes visible.
 
 Similarly to the translation, the rotation of the camera has to be inverted by applying the inverse of the rotation of \texttt{N} towards \texttt{M}.
@@ -439,8 +471,6 @@ As stated in Section~\ref{sec:theory:rotation} no significant precision error wi
 \label{fig:imagesequence}
 \end{figure*}
 
-Figure~\ref{fig:imagesequence} shows an example these transition in a flight from the surface of Earth to Saturn's moon Titan. The camera changes its AN four times on this transition.
-
 \subsection{Dynamic object attachment} \label{sec:method:doa}
 In addition to the dynamic camera attachment, where the camera can be reattached to children or parent nodes, the same technique is also required for scene graph nodes themselves.
 When dealing with dynamic astronomical objects it is possible for distinct sibling objects to approach each other.
@@ -449,39 +479,6 @@ If the scene graph node containing New Horizons would statically be a direct chi
 In order to avoid this, we enable scene graph nodes to dynamically attach to different nodes under specialized circumstances, that is, being highly mobile objects such as spacecraft, asteroids, or comets.
 In Figure~\ref{fig:teaser}, the New Horizons spacecraft scene graph node has been dynamically attached to the Pluto barycenter node, in order to allow simultanueous high fidelity rendering of the probe as well as the planetary system.
 
-\subsection{Dynamic Scene Graph Traversal} \label{sec:method:dsgt}
-\alexcomment{This needs some more work; the explanations are not very good}
-As described in the previous section, the camera is attached to a specific scene graph node \texttt{N}.
-Rendering, or otherwise accessing, the contents of the scene graph requires a traversal, which in a traditional scene graph is started at the root node.
-In our proposed framework, this traversal starts at the attached node \texttt{N} instead with the ability of moving up and down in the scene graph.
-First, this means that when different cameras are present in the scene graph, each camera might have its own traversal scheme.
-More importantly, this means that for two nodes \texttt{N} and \texttt{M} only the subtree with the closest common parent at the root needs to be traversed.
-This is at the heart of our proposed method as it leads to a high-precision rendering independent of the location of the nodes within the extended scene graph.
-%More importantly, this means that objects which are close to each other do not require the  traversal
-%
-% Different traversals for different cameras
-%
-%When rendering, or otherwise accessing, the contents of the scene graph it needs to 
-%For the traversal, in comparison to other methods, our proposed framework does not construct the necessary matrices by a depth-first traversal originating from the root node.
-%Instead, in order to maintain high precision for all objects in the scene, we use \texttt{N} as the origin for the traversal.
-%Conceptually, this is equivalent to rearranging the entire scene graph such that \texttt{N} becomes the new root node.
-%This rearranging
-Conceptually, this places the origin of the coordinate system in the center of the node \texttt{N} and thus enables the highest precision for \texttt{N} with precision decreasing with growing distance from the center of \texttt{N}.
-That fact that this is permissible is based on the observation that high-frequency changes are only visible in objects that are close to the camera.
-As described in Section~\ref{sec:theoretical}, the representable precision decreases with increasing numbers, such that small details in large objects with great distances would become prone to precision error.
-However, projected changes that are smaller than a fraction of a pixel will not be visible and, thus, do not need to be represented in the first place.
-
-The traversal of the scene graph works as follows: For each scene graph node \texttt{M}, the shortest path between \texttt{M} and the currently attached node \texttt{N} is computed in the graph.
-Figure~\ref{fig:scenegraph}~(b) shows two examples of this with the camera being attached to node \texttt{3} and node \texttt{5} respectively.
-For each step along this path, the transformation matrices are concatenated.
-If the transition is done towards the root node of the graph (red arrows in Figure~\ref{fig:scenegraph}~(b)), the inverse of the transformation has to be applied.
-If the transition is downwards (blue arrows in Figure~\ref{fig:scenegraph}~(b)), the the transformations are concatenated.
-The final transformation matrix is the applied to \texttt{M}.
-
-By utilizing the shortest path between \texttt{M} and \texttt{N} we avoid large the translations which would otherwise be necessary if the all transformations originate from the root node and which would lead to catastrophic cancellation.
-
-As an example, we use $v_{i,j}$ as a notation to denote the translation from node \texttt{i} to \texttt{j} in the scene graph depicted in Figure~\ref{fig:scenegraph}~(b).
-The rendering of the Sun (node \texttt{2}) as viewed from camera A would include the transformations $-v_{1,2} \cdot v_{1,3}$ whereas there for camera B, the transformations are $-v_{1,2} \cdot v_{1,3} \cdot v_{3,5}$.
 
 
 
