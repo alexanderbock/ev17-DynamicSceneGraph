@@ -197,14 +197,14 @@ By studying the effect of transformation matrices acting on coordinate vectors, 
 
 %By using interval arithmetic to trace the errors in $x$ and $y$ it is possible to predict vertex displacement issues. Similarly, the accumulated error interval of the z-component can be used to determine when there is a risk for z-fighting. By studying the effect of transformation matrices acting on coordinate vectors, we can also develop a means to identify the risk of precision loss in various shading operations.
 
-Content is commonly organized in a \emph{scene graph} that represents coordinate transformations hierarchically.
-Each node in the graph can contain transformations affecting all children, which means that the transformation matrices of the ancestor nodes are concatenated to a final \emph{model matrix}.
+Content is commonly organized in a \emph{scene graph} representing coordinate transformations hierarchically.
+Each node in the graph can contain transformations affecting all children, which means that the transformation matrices of all ancestor nodes are concatenated to a final \emph{model matrix}.
 %
 %In order to transform an object to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatenated to a final \emph{model matrix} which is combined with the \emph{view matrix}, and \emph{projection matrix} 
 %
 %, transformed into view space, through the use of a \emph{view matrix} and then mapped onto the screen using a \emph{projection matrix} and \emph{perspective division}.
 %
-Thus, the interval vector $[\mathbf{n}]$ of normalized device coordinates is derived from the model coordinates $[\mathbf{x}]$ by
+The interval vector $[\mathbf{n}]$ of normalized device coordinates is derived from the model coordinates $[\mathbf{x}]$ by
 
 \begin{equation} \label{eq:mvp}
 \begin{split}
@@ -213,9 +213,13 @@ Thus, the interval vector $[\mathbf{n}]$ of normalized device coordinates is der
 \end{split}
 \end{equation}
  
-\noindent where $[P]$ is the projection matrix, $[V]$ is the view matrix, $[M]$ is the model matrix, and $[\mathbf{x}]$, $[\mathbf{c}]$ and $[\mathbf{n}]$ are interval vectors. The error interval size of the normalized device coordinates depends on the collective effects of $[M]$, $[V]$, $[P]$, and the perspective division as they act on $[\mathbf{x}]$. 
+\noindent where $[P]$ is the projection matrix, $[V]$ is the view matrix, $[M]$ is the model matrix, and $[\mathbf{x}]$, $[\mathbf{c}]$ and $[\mathbf{n}]$ are interval vectors.
+The error interval size of the normalized device coordinates depends on the collective effects of $[M]$, $[V]$, $[P]$, and the perspective division as they act on $[\mathbf{x}]$. 
 
-$M$ and $V$ are commonly composed from three types of transformations that are encoded in the scene graph: scaling, translation, and rotation. We study the effects of applying scaling, translation, and rotation on a generalized interval model matrix or view matrix $[A]$, composed of a translation vector $\mathbf{[a]}$ and a combined rotation/scaling 3x3-matrix $[A']$, as given by Equation \ref{eq:matrixa}. Scaling, rotation and translation matrices can all be written on the same form as $[A]$. To observe how the matrices act on a coordinate vector we can study the fourth column in $[A]$.
+$M$ and $V$ are composed from three types of transformations: scaling, translation, and rotation.
+We study the effects of applying scaling, translation, and rotation on a generalized interval model matrix or view matrix $[A]$, composed of a translation vector $\mathbf{[a]}$ and a combined rotation/scaling 3$\times$3-matrix $[A']$, as given by Equation~\ref{eq:matrixa}.
+Scaling, rotation, and translation matrices can all be written on the same form as $[A]$.
+In order to observe how the matrices act on a coordinate vector, we study the fourth column in $[A]$.
 \begin{equation} \label{eq:matrixa}
 [A] = \mleft(
 \begin{array}{c|c}
@@ -229,41 +233,55 @@ $M$ and $V$ are commonly composed from three types of transformations that are e
 After evaluating the possible effects of the scaling, translation, and rotation we continue with a similar analysis for the projection matrix, the perspective division, and the mapping to a depth buffer representation.
 
 \subsubsection{Scaling}
-Consider an interval 4x4-matrix $[S]$ composed of the 3x3 interval matrix $[S']$, interval vector $\mathbf{[s]}$ and a bottom row of degenerate intervals analogously to the matrix A. Let the components of $[S]$ be scaling coefficient intervals, and let all other components of $[S]$ and $\mathbf{[s]}$ equal the degenerate interval $[0, 0]$. Equation \ref{eq:scalingconclusion} expresses the components of the output matrix $\hat{S}$, which is also a matrix on the form of A.
+Consider an interval 4$\times$4-matrix $[S]$ composed of the 3$\times$3 interval matrix $[S']$, interval vector $\mathbf{[s]}$, and a bottom row of degenerate intervals analogously to the matrix A.
+Let the components of $[S]$ be scaling coefficient intervals, and let all other components of $[S]$ and $\mathbf{[s]}$ equal the degenerate interval $[0, 0]$.
+Equation \ref{eq:scalingconclusion} expresses the components of the output matrix $\hat{S}$, which is also a matrix on the form of A.
 
 \begin{align} \label{eq:scalingconclusion}
 [\hat{S}] = ([S'] \otimes [A'])_{ij} &\subseteq [S'_{ii}]\,[A'_{ij}](1 + [e_{ij}]) \\
 [\hat{\mathbf{s}}] = ([S'] \otimes [\mathbf{a}])_{i} &\subseteq [S'_{ii}]\,[\mathbf{a}_i](1 + [e_{j}])
 \end{align}
 
-The rounding error introduced by an interval scaling matrix $[S]$ is proportional to the size of the scaling factors in $[S']$.  Any error interval in $A'$ and $\mathbf{a}$ will be scaled proportionally. Thus, we conclude that applying a scaling matrix to a matrix $A$ \emph{does not cause a significant loss of relative precision in any matrix component}.  
+The rounding error introduced by an interval scaling matrix $[S]$ is thus proportional to the size of the scaling factors in $[S']$.
+Any error interval in $A'$ and $\mathbf{a}$ will be scaled proportionally.
+Thus, we conclude that applying a scaling matrix to a matrix $A$ \emph{does not cause a significant loss of relative precision in any matrix component}.  
 
 \subsubsection{Translation} \label{sec:theory:translation}
-A corresponding analysis is made for translation matrices, composed out of $[T']$ and $[\mathbf{t}]$, with degernate intervals $[T'_{ij}] = [I_{ij}, I_{ij}]$, where $I$ is the identity matrix. The components of $[\mathbf{t}]$ representing a translation interval vector.
+A corresponding analysis is made for translation matrices, composed of $[T']$ and $[\mathbf{t}]$, with degenerate intervals $[T'_{ij}] = [I_{ij}, I_{ij}]$, where $I$ is the identity matrix.
+The components of $[\mathbf{t}]$ representing a translation interval vector.
 
 \begin{align} \label{eq:translationconclusion}
 [\hat{T}_{ij}] = ([T'] \otimes [A'])_{ij} = [A'_{ij}]\\
 [\hat{\mathbf{t}}_i] = [\mathbf{t}_i] \oplus [\mathbf{a}_i] \subseteq ([\mathbf{t}_i] + [\mathbf{a}_i])(1 + [e_i])
 \end{align}
 
-\noindent We note that the precision in $\hat{T}_{ij}$ is preserved from $A'$ when any translation matrix $T$ is applied. However, any error intervals encoded in $[\mathbf{t}_i]$ and $[\mathbf{a}_i]$ will propagate to $\hat{\mathbf[t]}_i$, and will \emph{not} be scaled down even if $|[\hat{\mathbf{t}}_i]|$ is orders of magnitude smaller than $|[\mathbf{t}_i]|$ and $|[\mathbf{a}_i]|$. This scenario \emph{may lead to catastrophic cancellation} in the component $[\hat{\mathbf{t}}_i]$.
+We note that the precision in $\hat{T}_{ij}$ is preserved from $A'$ when any translation matrix $T$ is applied.
+However, error intervals in $[\mathbf{t}_i]$ and $[\mathbf{a}_i]$ will propagate to $\hat{\mathbf[t]}_i$, and will \emph{not} be scaled down even if $|[\hat{\mathbf{t}}_i]|$ is much smaller than $|[\mathbf{t}_i]|$ and $|[\mathbf{a}_i]|$.
+This scenario \emph{may lead to catastrophic cancellation} in the component $[\hat{\mathbf{t}}_i]$.
 
 \subsubsection{Rotation} \label{sec:theory:rotation}
-Using $[R]$ to denote a rotation interval matrix, composed of the upper left 3x3 matrix $[R']$ and a upper right 3-dimensional column vector $\mathbf{r}$, with the interval components $[R'_{ij}] \subseteq [-1, 1]$, and $\mathbf{r}_i = [0, 0]$, we study the effect of multiplying $[R]$ with the interval matrix $[A]$.
+Using a rotation interval matrix $[R]$ composed of the upper left 3$\times$3 matrix $[R']$ and a upper right 3-dimensional column vector $\mathbf{r}$ with the interval components $[R'_{ij}] \subseteq [-1, 1]$, and $\mathbf{r}_i = [0, 0]$, we study the effect of multiplying $[R]$ with the interval matrix $[A]$:
 
 \begin{align} \label{eq:rotationconclusion}
 \hat{R}'_{ij} = (R' \otimes A')_{ij} &\subseteq \sum_{k = 1}^3 R'_{ik}\,A'_{kj}(1 + [e_{ijk}]) \\
 \hat{\mathbf{r}}_i = (R' \otimes \mathbf{a})_{i} &\subseteq \sum_{k = 1}^3 R'_{ik}\,\mathbf{a}_k(1 + [e_{ijk}])
 \end{align}
 
-The potential rounding error of any output component $A_{ij}$ will be equal to $\sum_{k = 1}^3 |[R'_{ik}]\,[A'_{kj}][e_{ijk}]|$. Given the fact that the intervals in $[R]$ are confined to $[-1, 1]$, we see that the maximum possible precision loss in any matrix component is governed by the values of $A$. When applying $[R]$ on a matrix or vector with both large and close-to-zero components, the precision in the small components may be lost. However, the loss of precision in the most significant matrix components will be minimal. This means that when using $[R]$ to transform the coordinate vector $[\mathbf{a}] = ([x], [y], [z])^t \subseteq [\mathbf{\hat{a}}][|\mathbf{a}|]$, neither the precision of the direction $[\mathbf{\hat{a}}]$ nor the magnitude $[|\mathbf{a}|]$ will be affected significantly. The same is true for the column vectors in $[A']$, which means that the significant properties of $[A']$ are preserved in $[\hat{R}']$.
+The potential error of any output component $A_{ij}$ will be equal to $\sum_{k = 1}^3 |[R'_{ik}]\,[A'_{kj}][e_{ijk}]|$.
+Given that the intervals in $[R]$ are confined to $[-1, 1]$, we see that the maximum possible precision loss in any matrix component is dominated by the values of $A$.
+When applying $[R]$ on a matrix or vector with both large and close-to-zero components, the precision in the small components may be lost.
+However, the loss of precision in the most significant matrix components will be minimal.
+This means that when using $[R]$ to transform the coordinate vector $[\mathbf{a}] = ([x], [y], [z])^t \subseteq [\mathbf{\hat{a}}][|\mathbf{a}|]$, neither the precision of the direction $[\mathbf{\hat{a}}]$ nor the magnitude $[|\mathbf{a}|]$ will be affected significantly.
+The same is true for the column vectors in $[A']$, which means that the significant properties of $[A']$ are preserved in $[\hat{R}']$.
 
 \subsubsection{Perspective and depth}
-When a typical perspective matrix $P$ is multiplied with a homogeneous view coordinate vector $\mathbf{v} = (x, y, z, 1)^t$, the sums of products to compute the output x, y, and w components will only consist of one non-zero term. Hence, there is no significant loss of relative precision in these components.
+When a perspective matrix $P$ is multiplied with a homogeneous view coordinate vector $\mathbf{v} = (x, y, z, 1)^t$, the sums of products to compute the output $x$, $y$, and $w$ components will only consist of one non-zero term.
+Hence, there is no significant loss of relative precision in these components.
 
-Furthermore, while the perspective division shrinks the projection image of distant objects, this also has the effect of scaling down any floating point precision errors present in distant vertex coordinates. Hence, the sensitivity of visible vertex displacement of a vertex is inversely proportional to the depth of the vertex in view space.
+Furthermore, while the perspective division shrinks the projected image of distant objects, this also has the effect of scaling down any precision errors in distant vertex coordinates.
+Hence, the sensitivity of visible vertex displacement of a vertex is inversely proportional to the distance of the vertex in view space.
 
-The z-component in clip space $c_z = (P\mathbf{v})_z$ is given by Equation \ref{eq:nearfar}, where n and f are the distance from the camera to the near and far plane respectively.
+The z-component in clip space $c_z = (P\mathbf{v})_z$ is given by Equation~\ref{eq:nearfar}, where $n$ and $f$ are the distance from the camera to the near and far plane respectively.
 
 \begin{equation} \label{eq:nearfar}
 \lambda_1 = -\frac{f + n}{f - n}, \; \lambda_2 = \frac{2fn}{f - n}, \; [\mathbf{c}_z] = [\lambda_1] \otimes [\mathbf{v}_z] \oplus \lambda_2
