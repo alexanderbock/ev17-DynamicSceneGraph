@@ -147,7 +147,7 @@ transformations operating on 4-dimensional homogeneous coordinate vectors with f
 \begin{figure}
 \centering
 \includegraphics[width=\linewidth]{figure/degradation-circles.pdf}
-\caption{The problem of coordinate precision for vertices far from the origin is amplified by limiting the number of mantissa bits to 5. Circle A, being close to the origin, is represented relatively well despite the limited bit depth. The circles marked B have poor precision for one of their vector components, while C is heavily distorted in both dimensions.}
+\caption{The problem of coordinate precision for vertices far from the origin is amplified by limiting the number of mantissa bits to 5. In (a) the circle A, being close to the origin, is represented relatively well despite the limited bit depth. The circles marked B have poor precision for one of their vector components, while C is heavily distorted in both dimensions. (b) shows a time series of of a scene graph representing a simplified solar system, with the Moon (gray) orbiting the Earth (blue) that in turn is orbiting the Sun (yellow).}
 \label{fig:degradation-circles}
 \end{figure}
 
@@ -169,9 +169,11 @@ v = \begin{cases}
 An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits, and 52 bits for the mantissa. Using 128-bits (quadruple precision), it is possible to further increase the precision and exponent range. Increasing the bit depth will naturally require more computational resources, and might lack common hardware support, thus making their usage unfeasible for real-time visualization.
 
 \subsubsection{Exponent underflow and overflow}
-The exponent range $[-126, 127]$ in 32-bit IEEE754 floats provides a possible scale range of approximately 76 orders of magnitude (OM). Computations that yield exponents outside that range will cause exponent underflow or overflow and result in loss of data. This range is insufficient for representing astronomical data as a straight-forward computation of the length of a vector using the Pythagorean theorem requires storing of the squared length in a floating point value as an intermediate step, thus halving the range of valid input exponents and limiting the input scale differences to 38 OM.
+The exponent range $[-126, 127]$ in 32-bit IEEE754 floats provides a possible scale range of approximately 76 orders of magnitude (OM).
+Computations that yield exponents outside that range will cause exponent underflow or overflow and result in loss of data.
+While this range is larger than the 60 OM of scales present in the known cosmos, problems may arrise in situations such as when distances need to be squared which may generate numbers in a range of 120 OM.
+This problem can be mitigated using a logarithmic representation as done in Power Scaled Coordinates or by using IEEE754 doubles, which have the exponent range $[-1022, 1023]$ resulting in representablity of approximately 616 OM.
 
-\alexcomment{What are the numbers for double? Otherwise people might argue that the range for doubles is enough}
 %The scale difference between the Planck length and the diameter of the observable universe is approximately $62$ OM. While 32-bit floats are able to represent this scale difference, a conventional approach to computing lengths and normalizing vectors would break down.
 
 \subsubsection{Precision limitations}
@@ -181,15 +183,13 @@ For IEEE754 float, $\epsilon$ is $2^{-24}\,\approx
 
 Double precision floating point numbers have a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notation, this corresponds to a precision of 15 significant figures. For quadruple precision the corresponding number is 34 significant figures.
 
-In a computer graphics pipeline, the limitation posed by the machine epsilon imposes that vertices are represented with less precision the further way from the coordinate system origin they are. Figure~\ref{fig:degradation-circles} shows a simulation where the number of mantissa bits has been set to 5, causing $\epsilon = 2^{-6} = \frac{1}{64}$. In a real world example using IEEE754 floats, at Pluto's distance from the Sun (about $5.102 \cdot 10^9 \, \text{km}$) the distance between two adjacent floating point numbers is approximately $5.102 \cdot 10^9 \cdot 2^{-24} \, \text{km} = 304.1 \, \text{km}$, which is equivalent to about an eighth of Pluto's diameter ($2374 \, \text{km}$). 
-
+In a computer graphics pipeline, the limitation posed by the machine epsilon imposes that vertices are represented with less precision the further way from the coordinate system origin they are. Figure~\ref{fig:degradation-circles} shows a simulation where the number of mantissa bits has been set to 5, causing $\epsilon = 2^{-6} = \frac{1}{64}$. In a real world example using IEEE754 floats, at Pluto's distance from the Sun (about $5.102 \cdot 10^9 \, \text{km}$) the distance between two adjacent floating point numbers is approximately $5.102 \cdot 10^9 \cdot 2^{-24} \, \text{km} = 304.1 \, \text{km}$, which is equivalent to about an eighth of Pluto's diameter ($2374 \, \text{km}$). When visualized, this leads results such the one shown in Figure~\ref{fig:res:plutocomp}. By using double precision, the corresponding distance between floating point numbers on Pluto becomes $5.102 \cdot 10^9 \cdot 2^{-54} \, \text{km} = \SI{28.32}{\micro\metre}$. Even at this relatively high resolution it is impossible to represent and contextualize tiny structures such as molecules. \emilcomment{Do we need to motivate this better? Who would ever want to look at molecules at Pluto?}
 
 %Pluto number of floats: (Diameter / Distance) / Machine Epsilon
 %Distance: $5102004914.623568$\,km
 %Diameter: about $2374$\,km
 %Machine Epsilon: 5.96e-08
 %Pluto epsilon: $(2374 / 5102004914.623568) / 5.96e-08 = 7.807169030929783$
-
 
 
 \subsection{Interval arithmetic}
