@@ -129,7 +129,7 @@ The \emph{ScaleGraph}, introduced by Klashed~\etal \cite{KHECY10} as a part of t
 It employs a scene graph structure with sub-scenes to which the camera can attach.
 The content of the current sub-scene is rendered in its local coordinate system, maintaining high precision and allowing multiple regions to be represented with high relative precision.
 When rendering content outside the current sub-scene, objects are translated onto the bounding sphere of the scene and scaled to compensate for perspective effects.
-This translation, however, leads to inconsistencies in stereoscopic rendering when switching scenes as objects jump from the bounding sphere of a scene to a finite location.
+This translation, however, leads to inconsistencies in stereoscopic rendering when switching scenes as objects jump from the bounding sphere of a scene to its physical location. 
 %Vectors between sub-scenes are computed by traversing the scene graph through the closest common ancestor in the tree, to avoid introducing precision errors caused by handling unnecessarily large numbers.
 %By moving objects onto the bounding sphere of the current scene, object depths are mapped to a manageable range.
 Furthermore, the method does not provide a general solution for depth sorting objects that are outside the current sub-scene.
@@ -182,6 +182,14 @@ For IEEE754 float, $\epsilon$ is $2^{-24}\,\approx
 Double precision floating point numbers have a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notation, this corresponds to a precision of 15 significant figures. For quadruple precision the corresponding number is 34 significant figures.
 
 In a computer graphics pipeline, the limitation posed by the machine epsilon imposes that vertices are represented with less precision the further way from the coordinate system origin they are. Figure~\ref{fig:degradation-circles} shows a simulation where the number of mantissa bits has been set to 5, causing $\epsilon = 2^{-6} = \frac{1}{64}$. In a real world example using IEEE754 floats, at Pluto's distance from the Sun (about $5.102 \cdot 10^9 \, \text{km}$) the distance between two adjacent floating point numbers is approximately $5.102 \cdot 10^9 \cdot 2^{-24} \, \text{km} = 304.1 \, \text{km}$, which is equivalent to about an eighth of Pluto's diameter ($2374 \, \text{km}$). When visualized, this leads results such the one shown in Figure~\ref{fig:res:plutocomp}. By using double precision, the corresponding distance between floating point numbers on Pluto becomes $5.102 \cdot 10^9 \cdot 2^{-53} \, \text{km} = \SI{56.64}{\micro\metre}$. Even at this relatively high resolution it is impossible to represent and contextualize tiny structures such as molecules. \emilcomment{Do we need to motivate this better? Who would ever want to look at molecules at Pluto?}
+
+\begin{figure}
+\centering
+\fbox{\includegraphics[width=\linewidth]{figure/precision.png}}
+\caption{Comparison rendering of Pluto. Using Power Scaled Coordinates, 9 quantization levels of floating point numbers are visible at Pluto's distance of 5.1 billion km from the Sun. Our method achieves high fidelity renderings while still representing objects with single precision floating point numbers. }
+\label{fig:res:plutocomp}
+\end{figure}
+
 
 %Pluto number of floats: (Diameter / Distance) / Machine Epsilon
 %Distance: $5102004914.623568$\,km
@@ -358,7 +366,7 @@ The z-component in clip space $c_z = (P\mathbf{v})_z$ is given by Equation \ref{
 Subsequently, the perspective division maps $[\mathbf{n}_z]$ into the range $[0, 1]$.
 If an integer depth buffer is used, this non-linear mapping results in a higher depth resolution for close objects than for distant ones. Setting $n$ to a small number may cause distant vertices to collapse to the same $\mathbf{n}_z$ and cause z-fighting. 
 
-The problems of depth buffer precision are well known and have been subject to thorough analysis \cite{cozzi20113d}. Furthermore, Upchurch and Desbrun~\cite{upchurch2012tightening} show how good depth resolution can be maintained even with a far plane placed in $\infty$. However, precision problems for distant objects remain an issue for small $n$.
+The problems of depth buffer precision are well known and have been subject to thorough analysis \cite{cozzi20113d}. Upchurch and Desbrun~\cite{upchurch2012tightening} show that good depth resolution can be maintained even with a far plane placed in $\infty$. However, precision problems for distant objects remain an issue for small $n$.
 
 \subsection{Sources of precision errors}
 This section has provided several insights:
@@ -616,12 +624,16 @@ In Figure~\ref{fig:teaser}, the New Horizons spacecraft scene graph node has bee
 %
 %How to calculate the final Model View Matrix...
 %
-\subsection{Depth Sorting}
-In our approach, we use a modified perspective matrix with $\lambda_1 = \lambda_2 = 0$, yielding $\mathbf{z}_c = 0$ for all vertices and disabling the near and far planes. Geometry behind the camera is discarded due to the criterion of $-\mathbf{c}_w < \mathbf{c}_w$ imposed by the OpenGL pipeline. For depth comparisons, we use 32-bit floating point numbers representing the distance to the fragment being rendered.
+\subsection{Representation of depth}
+In our approach, we use a modified perspective matrix with $\lambda_1 = \lambda_2 = 0$, yielding $\mathbf{z}_c = 0$ for all vertices, thus disabling the near and far planes.
+Geometry behind the camera is discarded due to the criterion of $-\mathbf{c}_w < \mathbf{c}_w$ imposed by the OpenGL pipeline.
+For depth comparisons, we use 32-bit floating point numbers representing the distance to the fragment being rendered.
 
 To avoid exponent overflow and underflow for distant and close fragments, we first divide the view coordinate vector $v$ by its component with largest magnitude $\mathbf{v}_{\text{max}}$, perform the computation using the pythagoran theorem, and multiply by $\mathbf{v}_{\text{max}}$.
 
-Depth sorting is performed using conventional z-buffering with a 32-bit floating point buffer. For scenes with volumetric content or transparent geometry, we use the A-buffer technique\cite{lindholm2015hybrid} for order independent transparency. When using ray casting for volumetric rendering, the distance taken along the ray can be compared with the distance of rendered geometry in order to perform early ray termination.
+Depth sorting is performed using conventional z-buffering with a 32-bit floating point buffer. For scenes with volumetric content or transparent geometry, we use the A-buffer technique\cite{lindholm2015hybrid} for order-independent transparency. When using ray casting for volumetric rendering, the distance taken along the ray can be compared with the distance of rendered geometry in order to perform early ray termination.
+
+By always rendering objects in their physical location, as opposed to the reprojection of objects performed in the ScaleGraph approach, our method transparently handles stereoscopic rendering.
 
 \section{Results} \label{sec:result}
 We have applied our framework to a variety of use cases, some of which have been shown to an audience at public events.
@@ -672,12 +684,6 @@ Figure~\ref{fig:teaser} shows the New Horizons space craft at 80000\,km distance
 \label{fig:res:galaxy}
 \end{figure}
 
-\begin{figure}
-\centering
-\fbox{\includegraphics[width=\linewidth]{figure/precision.png}}
-\caption{Comparison rendering of Pluto using our proposed method (a) and conventional scene graph methods (b). 9 quantization levels of floating point numbers are visible at Pluto's distance of 5.1 billion km from the Sun without our method.}
-\label{fig:res:plutocomp}
-\end{figure}
 
 
 %-------------------------------------------------------------------------
