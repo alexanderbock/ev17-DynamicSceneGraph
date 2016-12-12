@@ -309,8 +309,8 @@ The problems of depth buffer precision are well known and have been subject to t
 \label{fig:scenegraph}
 \end{figure}
 
-After identifying the sources of potential floating point precision inaccuracies in the computer graphics pipeline, we can now elaborate on our proposed method.
-The \emph{Dynamic Scene Graph} (DSG) utilizes these insights such that it becomes possible to achieve a high-fidelity rendering at any point in the scene graph independent of the location of the global coordinate system origin.
+The need for accurate, effective and seamless positioning and navigation, together with the analysis of precision inaccuracies described above, form the basis for our proposed 
+\emph{Dynamic Scene Graph} (DSG), which enables high-fidelity rendering at any point in the scene graph independent of the location of the global coordinate system origin.
 This is achieved by utilizing a \emph{dynamic camera attachment} and a \emph{relative scene traversal} performed with respect to the camera's attachment node (AN).
 The AN is a regular node in the scene graph and does not have any special meaning aside from serving as the center for the camera that has it as its AN.
 The initial attachment node for each camera is determined by specifying the node and a position in its local coordinate system.
@@ -338,7 +338,7 @@ Figure~\ref{fig:scenegraph}~(b) shows two examples of this with the camera being
 For each step along this path, the transformation matrices are concatenated.
 If the transition is performed downwards towards the leaf nodes (blue arrows in Figure~\ref{fig:scenegraph}~(b)), the transformation matrices are concatenated analogous to traditional scene graphs.
 If the transition is performed up towards the root node of the graph (red arrows in Figure~\ref{fig:scenegraph}~(b)), the transformation is inverted before concatenated.
-The final transformation matrix is the applied to the scene graph node \texttt{M}.
+The final transformation matrix is then applied to the scene graph node \texttt{M}.
 
 As an example, we use $v_{i,j}$ as a notation to denote the transformation from node \texttt{i} to \texttt{j} and $v{j_i} = -v_{i,j}$ as the inverse of this transformation in the scene graph depicted in Figure~\ref{fig:scenegraph}~(b).
 $v_{i,i}$ specifies the local translation that the scene graph node \texttt{i} uses.
@@ -348,18 +348,18 @@ For camera \texttt{B}, the transformation for the Sun are $v_{2,1} \cdot v_{1,3}
 
 First, this means that when different cameras are present in the scene graph, each camera might have its own traversal path.
 More importantly, this means that for two nodes \texttt{N} and \texttt{M} only the subtree with the closest common parent at the root needs to be traversed in order to retrieve all information necessary to transform \texttt{M} into the local coordinate system of \texttt{N} and vice versa.
-Without the requirement of including the root node in every traversal, the location of the local subtree does not have an impact on the precision of the objects contained within, thus evading the potential of catastrophic cancellation that are stated in Section~\ref{sec:theory:translation}.
-This is at the heart of our proposed method as it leads to a high-precision rendering independent of the location of the nodes within the extended scene graph.
+Without the requirement of including the root node in every traversal, the location of the local subtree does not have an impact on the precision of the objects contained within, thus evading the potential of catastrophic cancellation as discussed in Section~\ref{sec:theory:translation}.
+This is fact lies at the core of our proposed method as it leads to a high-precision rendering independent of the location of the nodes within the extended scene graph.
 By utilizing the shortest path between \texttt{M} and \texttt{N} we avoid large the translations which would otherwise be necessary if the all transformations originate from the root node and which would lead to precision problems.
 
 This technique enables the highest precision for \texttt{N} where precision decreases with growing distance from the center of \texttt{N}.
-This is based on the observation that high-frequency changes are only visible in objects that are close to the camera and thus cover more pixel on the screen.
+This is based on the observation that high-frequency changes are only visible in objects that are close to the camera.
 As described in Section~\ref{sec:theoretical}, the representable precision decreases with increasing numbers, such that small details in large objects with great distances would become prone to precision error.
 However, projected changes that are smaller than a fraction of a pixel will not be visible and, thus, do not need to be represented in the first place.
 Conceptually, this pivots the scene graph in such a way that the node \texttt{N} is placed at the root, all necessary transformation inversions are performed , and a traditional traversal algorithm is used.
 
 \subsection{Dynamic camera attachment} \label{sec:method:dca}
-In our scene graph, a camera is always attached to a single node, the AN, and the camera's position and orientiation is expressed in AN's coordinate system.
+In our scene graph, a camera is always attached to a single node, the AN, and the camera's position and orientation is expressed in AN's coordinate system.
 At all times, the AN is the deepest node in the scene graph whose sphere of influence fully encompasses the camera position.
 In Figure~\ref{fig:scenegraph} camera \texttt{A} is located in nodes \texttt{1} and \texttt{3}, and is thus attached to node \texttt{3}. Likewise, camera \texttt{B} is inside nodes \texttt{1}, \texttt{2} and \texttt{5} and is thus attached to node \texttt{5}.
 
@@ -655,7 +655,7 @@ We would like to acknowledge the Swedish e-Science Research Center (SeRC) for th
 %-------------------------------------------------------------------------
 
 \section*{Appendix A}
-\subsection{Floating point numbers}
+\subsection*{Floating point numbers}
 The IEEE754 standard for floating point numbers~\cite{zuras2008ieee} enables the representation of a large number range by encoding values as a sign, a mantissa, and an exponent.
 Single precision numbers use 1 sign bit, 8 exponent bits, and 23 mantissa bits.
 This encoding results in high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range.
@@ -709,10 +709,10 @@ Figure~\ref{fig:degradation-circles} shows a simulation with 5 mantissa bits.
 %, causing $\epsilon = 2^{-6} = \frac{1}{64}$.
 Using IEEE754 floats, at Pluto's distance from the Sun the distance between two adjacent floating point numbers is approximately $5.102 \cdot 10^9 \cdot 2^{-24}$\, km $= 304.1$\,km, which is about an eighth of Pluto's diameter and leads to visble artifacts (see Figure~\ref{fig:res:plutocomp}). %By using double precision, the corresponding distance between floating point numbers on Pluto becomes $5.102 \cdot 10^9 \cdot 2^{-53} \, \text{km} = \SI{56.64}{\micro\metre}$. Even at this relatively high resolution it is impossible to represent and contextualize tiny structures such as molecules. \emilcomment{Do we need to motivate this better? Who would ever want to look at molecules at Pluto?}
 
-\subsection{Interval arithmetic}
+\subsection*{Interval arithmetic}
 It is possible to use interval arithmetic as a mathematical tool to track potential sources of rounding error~\cite{Hickey2001}. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$. Using interval arithmetic, the interval can be rewritten as $v(1 + u[-1,1])$.
 
-We use $\oplus$, $\ominus$, $\odot$, and $\oslash$ to denote floating point addition, subtraction, multiplication, and division respectively. The IEEE754 standard requires the result of each of these operations is identical to the result of an infinitely precise computation followed by a rounding to the closest representable float. The operators are commutative and yield the possible output intervals given two real number intervals $[x] = [x_1, x_2]$ and $[y] = [y_1, y_2]$ as described in Equation \ref{eq:floatoperations}.
+For the remainder of the following sections, $\oplus$, $\ominus$, $\odot$, and $\oslash$ will be used to denote floating point addition, subtraction, multiplication, and division respectively. The IEEE754 standard requires the result of each of these operations is identical to the result of an infinitely precise computation followed by a rounding to the closest representable float. The operators are commutative and yield the possible output intervals given two real number intervals $[x] = [x_1, x_2]$ and $[y] = [y_1, y_2]$ as described in Equation \ref{eq:floatoperations}.
 
 \begin{equation} \label{eq:floatoperations}
 \begin{split}
@@ -731,7 +731,7 @@ We use $\oplus$, $\ominus$, $\odot$, and $\oslash$ to denote floating point addi
 \end{split}
 \end{equation}
 
-\subsection{Propagation of error intervals}
+\subsection*{Propagation of error intervals}
 When a result from one floating point operation is used in further computations, rounding errors will propagate and compound through the whole series of operations. This, for example, may lead to scenarios where expressions on the form $(a + b) - b$ may evaluate to $0$ for a sufficiently small $a$ and large $b$. This phenomena is known as 
 \emph{catastrophic cancellation}~\cite{Cuyt2001}. In any rendering pipeline where, for example, matrix multiplications or vector additions result in these types of operations, there is a risk for floating point precision problems.
 
