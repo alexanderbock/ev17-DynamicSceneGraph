@@ -16,9 +16,12 @@
 \author[Axelsson \emph{et al.}]{Emil Axelsson$^{1}$, Jonathas Costa$^{2}$, Cl\'audio Silva$^{2}$, Carter Emmart$^{3}$, Alexander Bock$^{1}$, and Anders Ynnerman$^{1}$
         \\
 % For Computer Graphics Forum: Please use the abbreviation of your first name.
-         $^1$~Linköping University \qquad
-         $^2$~New York University \qquad
-         $^3$~American Museum of Natural History
+%         $^1$~Linköping University \qquad
+%         $^2$~New York University \qquad
+%         $^3$~American Museum of Natural History
+         $^1$~Linköping University\\%
+         $^2$~New York University\vspace*{-0.1em}\\%
+          \small{$^3$~American Museum of Natural History}
        }
 
 % ------------------------------------------------------------------------
@@ -44,7 +47,8 @@
 \maketitle
 
 \begin{abstract}
-In this work, we address the challenge of seamlessly visualizing astronomical data exhibiting huge scale differences in distance, size and resolution. One of the hurdles to overcome is accurate, fast and dynamic positioning and navigation to enable seamless scaling over orders magnitude, far beyond the precision of the floating point arithmetic on GPUs. To this end we propose a framework that utilizes a dynamically assigned frame of reference to provide the highest possible numerical precision for all salient objects in a scene graph. This makes it possible to smoothly navigate and interactively render, for example, surface structures on Mars and the Milky Way simultaneously. Our work is based on an analysis of tracking and quantification of the propagation precision errors through the computer graphics pipeline using interval arithmetic. Furthermore, we identify sources of precision degradation, leading to incorrect object positions in screen-space and z-fighting. Our proposed method operates without near and far planes while maintaining high depth precision through the use of floating point depth buffers. By providing interoperability with order-independent transparency algorithms, direct volume rendering, and stereoscopy, our approach is well suited for scientific visualization. We provide the mathematical background, a thorough description of the method, and a reference implementation.
+
+In this work, we address the challenge of seamlessly visualizing astronomical data exhibiting huge scale differences in distance, size and resolution. One of the hurdles to overcome is accurate, fast and dynamic positioning and navigation to enable scaling over orders of magnitude, far beyond the precision of the floating point arithmetic on GPUs. To this end we propose a method that utilizes a dynamically assigned frame of reference to provide the highest possible numerical precision for all salient objects in a scene graph. This makes it possible to smoothly navigate and interactively render, for example, surface structures on Mars and the Milky Way simultaneously. Our work is based on an analysis of tracking and quantification of the propagation of precision errors through the computer graphics pipeline using interval arithmetic. Furthermore, we identify sources of precision degradation, leading to incorrect object positions in screen-space and z-fighting. Our proposed method operates without near and far planes while maintaining high depth precision through the use of floating point depth buffers. By providing interoperability with order-independent transparency algorithms, direct volume rendering, and stereoscopy, our approach is well suited for scientific visualization. We provide the mathematical background, a thorough description of the method, and a reference implementation.
 
 %Old Abstract: In this work, we address the challenges of limited numerical range and precision of floating point numbers when simultaneously visualizing astronomical objects with huge scale differences, both in size and distance. Due to the limited precision of floating point numbers, it is impossible to represent comparatively small objects far away from the coordinate system origin. We propose a framework that utilizes a dynamically assigned coordinate system origin to provide the highest possible numerical precision for all salient objects in a scene graph. This makes it possible to navigate and interactively render, for example, surface structures on Mars and the Milky Way simultaneously. We track and quantify the propagation of numerical precision errors through the computer graphics pipeline using interval arithmetic for cases of large differences in scale. Furthermore, we identify sources of precision degradation, leading to incorrect object positions in screen-space and z-fighting, mathematically. Our proposed method operates without near and far planes while maintaining high depth precision through the use of floating point depth buffers. By providing interoperability with order-independent transparency algorithms, direct volume rendering, and stereoscopy, our approach is well suited for scientific visualization. We provide the mathematical background, a thorough description of the method, and a reference implementation.}
 
@@ -106,171 +110,62 @@ In summary, our contributions include:
 The paper is structured as follows: After describing the related work in the following section, we provide a theoretical background for the sources of floating point inaccuracies in Section~\ref{sec:theoretical}, followed by a description of our proposed dynamic scene graph framework in Section~\ref{sec:method} and its results in Section~\ref{sec:result}.
 
 \section{Related work}
-Computer graphics and interactive visualization have proven to be immensely valuable tools for communicating scientific findings and contextualizing information.
-Notable examples of applications where huge scale differences are visualized together include movie productions, such as \emph{Powers of Ten} by Eames~\cite{powersOfTen} from 1977, as well as interactive software for digital planetariums, such as Uniview~\cite{KHECY10}, DigiStar~\cite{ES16} or DigitalSky~\cite{Sky16}, which are based on curated datasets containing information about our universe~\cite{abbott2006digital}. Virtual reality environments such as planetariums~\cite{magnor2010progress, liu20013} have always been in the focus of educators, but a shift towards supporting data inspection on consumer grade hardware is ongoing~\cite{nakasone2009astrosim}.
+Computer graphics and interactive visualization are immensely valuable tools for communicating scientific findings and contextualizing information.
+Notable examples of applications in which huge scale differences are visualized include movie productions, such as \emph{Powers of Ten} by Eames~\cite{powersOfTen} from 1977, as well as interactive software, such as Uniview~\cite{KHECY10}, DigiStar~\cite{ES16}, or DigitalSky~\cite{Sky16}, which are based on curated datasets containing information about our universe~\cite{abbott2006digital}.
+Virtual reality environments such as planetariums~\cite{magnor2010progress, liu20013} have always been in the focus of educators, but a shift towards supporting data inspection on consumer grade hardware is ongoing~\cite{nakasone2009astrosim}.
 
-Fu~\etal~\cite{fu2006navigation} separated the problem of large scale navigation into two categories.
-\emph{Techniques for travel} place constrains on user input with the goal of supporting the travel towards and already selected target, whereas techniques for wayfinding support the user in selecting a target by providing a spatial context.
-Our travel component is based on the \emph{Spatial Scaling Navigation Model} described in this work operating on a logarithmic camera model in which the navigation speed is dependent on the distance to the object of interest.
+Fu~\etal~\cite{fu2006navigation} categorized the problem of large scale navigation.
+\emph{Techniques for travel} constrain the user input with the goal of supporting the travel towards a selected target, whereas \emph{techniques for wayfinding} support the user in selecting a target by providing a spatial context.
+Our travel component is based on their description of a \emph{Spatial Scaling Navigation Model} operating on a logarithmic camera model in which the navigation speed is dependent on the distance to the object of interest.
 In terms of \emph{Techniques for wayfinding}, Li~\etal~\cite{li2006scalable} introduce a world-in-miniature techniques based on logarithmic landmarks for navigation support in astronomical data.
-Combining this with the concept of power cubes, described in earlier works~ \cite{fu2006navigation}, allows the creation of paths in this logarithmic space to aid in the large-scale navigation.
+Combining this with the concept of power cubes, described in earlier works~\cite{fu2006navigation}, enables the creation of paths in this logarithmic space to aid in the large-scale navigation.
 
-The concept of \emph{Power Scaled Coordinates} or \emph{Power Homogeneous Coordinates}, introduced by Hanson~\etal , is a technique introduced to address the travel challenge when creating animations with large scale differences~\cite{hanson2000very}.
-The method uses four-dimensional floating point vectors where the first three components determine the direction of the vector, and the fourth encodes a scaling coefficient as a power of ten.
-The authors successfully utilize to create a powers-of-ten animation flythrough of the universe in which increasingly larger objects are shown with increasing distance to the Earth.
+The concept of \emph{Power Scaled Coordinates} (PSC) or \emph{Power Homogeneous Coordinates}, introduced by Hanson~\etal , addresses the travel challenge when creating animations showing large scale differences~\cite{hanson2000very}.
+The method uses four-dimensional floating point vectors where the first three components determine the direction and the fourth encodes a logarithmic scaling coefficient.
+The authors successfully create a powers-of-ten animation in which increasingly larger objects are shown with increasing distance to the Earth.
 This elegant solution is viable for scenes where the required precision decreases with distance from the origin, as it does not solve the problem of catastrophic cancellation and thus prohibits high-precision regions in large distances from the origin.
 %The proposed system can operate with floating point numbers close to unit scale, which solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors.
 %However, the challenge of representing multiple disjoint regions in which high precision is required a great distance from the coordinate origin is not addressed in this work.
 
-Fu~\etal~\cite{fu2007transparently} introduce a depth buffer remapping to Power Scales Coordinates to cover a wider range of distances than what is possible with a fixed point depth buffer and a conventional near and far plane.
-The depth buffer range is divided into three regions where small and huge depth values are remapped using logarithmic scales and mid-range values are mapped linearly.
-Their method 
-While this method may be beneficial for some specific type of scene content, the method does not provide a generic way to select appropriate threshold values, and the choice of three separate regions with different mapping does not necessarily provide better results than one single logarithmic mapping.
+Fu~\etal~also introduced a depth buffer remapping to cover a wider range of distances than what is possible with a fixed point depth buffer and conventional near and far planes~\cite{fu2007transparently}.
+The depth buffer range is divided into regions where small and large values are remapped logarithmically.
+While this method is beneficial for some specific type of scene content, the method does not provide a generic way to select appropriate threshold values and the choice of separate regions with different mapping is cumbersome.
 
 The \emph{ScaleGraph}, introduced by Klashed~\etal \cite{KHECY10} as a part of the Uniview software, is the most similar to our proposed framework.
-It employs a scene graph structure with sub-scenes to which the camera can attach.
-The content of the current sub-scene is rendered in its local coordinate system, maintaining high precision and allowing multiple regions to be represented with high relative precision.
-When rendering content outside the current sub-scene, objects are translated onto the bounding sphere of the scene and scaled to compensate for perspective effects.
-This translation, however, leads to inconsistencies in stereoscopic rendering when switching scenes as objects jump from the bounding sphere of a scene to its physical location. 
+It employs a scene graph with sub-scenes to which cameras belong.
+The content of the current sub-scene is rendered in a local coordinate system with high precision and thus allowing multiple regions to be represented with high relative precision.
+Content outside the current sub-scene is translated onto the scene's boundary and scaled to compensate for perspective effects.
+This translation, however, leads to inconsistencies in stereoscopic rendering when switching scenes as objects jump from the bounding sphere of a scene to its physical location.
+As their work was focussed on the Uniview system, the detailed ScaleGraph descriptions are lacking and thus make it impossible to reproduce.
 %Vectors between sub-scenes are computed by traversing the scene graph through the closest common ancestor in the tree, to avoid introducing precision errors caused by handling unnecessarily large numbers.
 %By moving objects onto the bounding sphere of the current scene, object depths are mapped to a manageable range.
-Furthermore, the method does not provide a general solution for depth sorting objects that are outside the current sub-scene.
+%Furthermore, the method does not provide a general solution for depth sorting objects that are outside the current sub-scene.
 %Furthermore, the work does not address stereoscopic rendering of objects across sub-scenes.
-The traversal of sub-scenes in this work formed the bases for our algorithm of the dynamic traversal of a scene graph.
-
-\section{Theoretical motivation}\label{sec:theoretical}
-The co-evolution of graphics hardware, software, and content, largely pushed forward by
-the gaming industry, has led to modern graphics processing units that are optimized for
-operating efficiently on floating point numbers, vectors, and matrices.
-In order to understand the precision and range limitations of the standard computer graphics pipeline used in visualization, we need to base our reasoning on properties on floating point numbers and the operations that we perform on them.
+%The traversal of sub-scenes in this work formed the bases for our algorithm of the dynamic traversal of a scene graph.
 
 \begin{figure}
 \centering
 \includegraphics[width=\linewidth]{figure/degradation-circles.pdf}
-\caption{The problem of coordinate precision for vertices far from the origin is amplified by limiting the number of mantissa bits to 5, when visualizing a system of celestial bodies represented in a common coordinate system, analogous to a world coordinate system in a conventional scnene graph. }
+\caption{An illustration of the effects of limited coordinate precision where the number of mantissa bits is limited to 5 when visualizing a system analogous to a world coordinate system in a scene graph. Increasing distance leads to decreasing precision.}
 \label{fig:degradation-circles}
 \end{figure}
 
-\subsection{Floating point numbers}
-The widely used IEEE754 standard for representing 32-bit floating point numbers \cite{zuras2008ieee} enables the possibility to express numbers in a much larger range than what is possible using 32-bit integers. While a 32-bit signed integer type can only represent numbers in the range $[-2^{31},\, 2^{31} - 1]$, an IEEE754 single precision floating point number approximately supports the range $[-2^{127},\, 2^{127}]$.
+\section{Theoretical motivation}\label{sec:theoretical}
+Improvments in hardware and software has led to optimized modern graphics processing units that work efficiently on floating points.
+In order to understand precision and range limitations of the computer graphics pipeline, it is necessary to consider floating point number properties and the available operations.
 
-In floating point data types, values are represented as a sign, a mantissa, and an exponent. This representation has the attributes of resulting in high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range. The IEEE754 single precision floating point format uses 1 sign bit, 8 exponent bits, and 23 mantissa bits. Equation \ref{eq:floatingpoint} yields the value $v$ represented by the sign bit $s$, the mantissa bits $\mathbf{m}_i$, and the integer $e \in [-127, 128]$ which is encoded in the exponent bits. 
-
-\begin{equation} \label{eq:floatingpoint}
-v = \begin{cases}
-(-1)^s \sum_{i = 1}^{23}\mathbf{m}_i\,2^{-i} 2^{-126}, & \text{for } e = -127 \\
-(-1)^s (1 + \sum_{i = 1}^{23}\mathbf{m}_i\,2^{-i}) 2^e, & \text{for } -126 \leq e \leq 127 \\
-\text{Special numbers such as NaN or }\infty, & \text{for } e = 128
-\end{cases}
-\end{equation}
-
-\noindent Only values that can be composed by this set of bits are valid 32-bit floating point numbers. If exponent of a number is not in the range $[-126, 127]$ it will be represented as $\infty$ or $-\infty$. One critical characteristic of valid IEEE754 floating point numbers $\mathds{R}_f$ \alexcomment{Is there a better symbol for this?} is their inability to represent all possible numbers $\mathds{R}$. All numbers $\mathds{R} \setminus \mathds{R}_f$ that are not representable are rounded to their closest representable number in $\mathds{R}_f$. This characteristic is at the heart of the problem of floating point inaccuracies.
-
-An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits, and 52 bits for the mantissa. Using 128-bits (quadruple precision), it is possible to further increase the precision and exponent range. Increasing the bit depth will naturally require more computational resources, and might lack common hardware support, thus making their usage unfeasible for real-time visualization.
-
-\subsubsection{Exponent underflow and overflow}
-The exponent range $[-126, 127]$ in 32-bit IEEE754 floats provides a possible scale range of approximately 76 orders of magnitude (OM).
-Computations that yield exponents outside that range will cause exponent underflow or overflow and result in loss of data.
-While this range is larger than the 60 OM of scales present in the known cosmos, problems may arrise in situations such as when distances need to be squared which may generate numbers in a range of 120 OM.
-This problem can be mitigated using a logarithmic representation as done in Power Scaled Coordinates or by using IEEE754 doubles, which have the exponent range $[-1022, 1023]$ resulting in representablity of approximately 616 OM. \emilcomment{Maybe add something about length calculation by division of largest component, to show that double and psc is not necessary.}
-
-%The scale difference between the Planck length and the diameter of the observable universe is approximately $62$ OM. While 32-bit floats are able to represent this scale difference, a conventional approach to computing lengths and normalizing vectors would break down.
-
-\subsubsection{Precision limitations} \label{sec:theory:pl}
-Due to the limited number of mantissa bits, values need to be rounded in order to be represented as floating point numbers. An upper bound of the absolute spacing between a floating point number $v$ and adjacent numbers can be expressed as $\epsilon|v|$\cite{higham2002accuracy}, where the \emph{machine epsilon} $\epsilon$ is a constant given by $2^{-(n + 1)}$ where $n$ is the number of mantissa bits. Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, with the rounding error coefficient $u = \frac{\epsilon}{2}$.
-For IEEE754 float, $\epsilon$ is $2^{-24}\,\approx
-\, 5.96 \cdot 10^{-8}$, meaning that values are precise to about 7 significant figures in decimal notation.
-
-Double precision floating point numbers have a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notation, this corresponds to a precision of 15 significant figures. For quadruple precision the corresponding number is 34 significant figures.
-
-In a computer graphics pipeline, the limitation posed by the machine epsilon imposes that vertices are represented with less precision the further way from the coordinate system origin they are. Figure~\ref{fig:degradation-circles} shows a simulation where the number of mantissa bits has been set to 5, causing $\epsilon = 2^{-6} = \frac{1}{64}$. In a real world example using IEEE754 floats, at Pluto's distance from the Sun (about $5.102 \cdot 10^9 \, \text{km}$) the distance between two adjacent floating point numbers is approximately $5.102 \cdot 10^9 \cdot 2^{-24} \, \text{km} = 304.1 \, \text{km}$, which is equivalent to about an eighth of Pluto's diameter ($2374 \, \text{km}$). When visualized, this leads results such the one shown in Figure~\ref{fig:res:plutocomp}. By using double precision, the corresponding distance between floating point numbers on Pluto becomes $5.102 \cdot 10^9 \cdot 2^{-53} \, \text{km} = \SI{56.64}{\micro\metre}$. Even at this relatively high resolution it is impossible to represent and contextualize tiny structures such as molecules. \emilcomment{Do we need to motivate this better? Who would ever want to look at molecules at Pluto?}
+The derivation of floating point precision errors can be found in Appendix A for the interested reader.
+There, the origin of decreasing precision of floating point error for increasing values is examined; the effect of which is visible in an illustration in Figure~\ref{fig:degradation-circles} and in a real world example in Figure~\ref{fig:res:plutocomp}.
 
 \begin{figure}
 \centering
 \fbox{\includegraphics[width=\linewidth]{figure/precision.png}}
-\caption{Comparison rendering of Pluto. Using Power Scaled Coordinates, 9 quantization levels of floating point numbers are visible at Pluto's distance of 5.1 billion km from the Sun. Our method achieves high fidelity renderings while still representing objects with single precision floating point numbers. }
+\caption{Real world floating point error at Pluto. Using power scaled coordinates, 8 quantization levels of floating point numbers are visible at Pluto's distance of 5.1 billion km from the Sun. Our method achieves high fidelity renderings while still representing objects with single precision floating point numbers.}
 \label{fig:res:plutocomp}
 \end{figure}
 
 
-%Pluto number of floats: (Diameter / Distance) / Machine Epsilon
-%Distance: $5102004914.623568$\,km
-%Diameter: about $2374$\,km
-%Machine Epsilon: 5.96e-08
-%Pluto epsilon: $(2374 / 5102004914.623568) / 5.96e-08 = 7.807169030929783$
-
-
-\subsection{Interval arithmetic}
-In order to reason about the precision of the different floating point operations, it is possible to use interval arithmetic as a mathematical tool to track potential sources of rounding error~\cite{Hickey2001}. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$. Using interval arithmetic, the interval can be rewritten as $v(1 + u[-1,1])$.
-
-For the remainder of the following sections, $\oplus$, $\ominus$, $\odot$, and $\oslash$ will be used to denote floating point addition, subtraction, multiplication, and division respectively. The IEEE754 standard requires that the result of each of these operations is identical to the result of an infinitely precise computation followed by a rounding to the closest representable float. The operators are commutative and yield the possible output intervals given two real number intervals $[x] = [x_1, x_2]$ and $[y] = [y_1, y_2]$ as described in Equation \ref{eq:floatoperations}.
-
-\begin{equation} \label{eq:floatoperations}
-\begin{split}
-[x] \oplus [y] & \subseteq ([x] + [y])(1 + u[-1, 1]) \\
-[x] \ominus [y] & \subseteq ([x] - [y])(1 + u[-1, 1]) \\
-[x] \odot [y] & \subseteq [x][y](1 + u[-1, 1]) \\
-[x] \oslash [y] & \subseteq \frac{[x]}{[y]}(1 + u[-1, 1]) \\
-\end{split}
-\end{equation}
- 
-\noindent For operations involving the degenerate intervals $[0, 0] = \{0\}$ and $[1, 1] = \{1\}$, we observe some special cases where it is possible to make stronger claims about the output intervals:
-\begin{equation} \label{eq:floatspecialcases}
-\begin{split}
-[x] \odot \{1\} & = [x] \\
-[x] \oplus \{0\} & = [x]
-\end{split}
-\end{equation}
-
-\subsection{Propagation of error intervals}
-When a result from one floating point operation is used in further computations, rounding errors will propagate and compound through the whole series of operations. This, for example, may lead to scenarios where expressions on the form $(a + b) - b$ may evaluate to $0$ for a sufficiently small $a$ and large $b$. This phenomena is known as 
-\emph{catastrophic cancellation}~\cite{Cuyt2001}. In any rendering pipeline where, for example, matrix multiplications or vector additions result in this type of operations there is a risk for floating point precision problems.
-
-Let $\mathds{E}$ be the set of intervals that can be written in the form $cu[-1, 1]$, where c is a non-negative constant that is not a function of any floating point value. For any intervals $[e_1], [e_2] \in \mathds{E}$, there are intervals $[e_3], [e_4] \in \mathds{E}$, such that
-$[e_1]+[e_2] \subseteq [e_3]$ and $[e_1e_2] \subseteq [e_4]$. 
-
-We let $[e_i] = c_iu[-1, 1] \in \mathds{E}$ and consider two intervals $a(1 + [e_1])$ and $b(1 + [e_2])$. First, we study the effects of floating point multiplication acting on these intervals.
-
-\begin{equation} \label{eq:errortermmult} 
-\begin{split}
-a(1 + [e_1]) \odot b(1 + [e_2]) \\
-\subseteq ab(1 + [e_1])(1 + [e_2])(1 + u[-1, 1]) \\
-\subseteq ab(1 + [e_3])
-\end{split}
-\end{equation}
-
-The output interval in Equation \ref{eq:errortermmult} has the size $|abc_3u|$, meaning that the maximum absolute rounding error of floating point multiplication is proportional to the absolute value of the product $ab$. However, the relative rounding error $c_3u$ is independent of these factors. We proceed with studying the properties of floating point addition.
-
-\begin{equation} \label{eq:errortermadd} 
-\begin{split}
-a(1 + [e_1]) \oplus b( 1 + [e_2]) \\
-\subseteq \big(a(1 + [e_1]) + b( 1 + [e_2])\big)(1 + u[-1, 1]) \\
-\subseteq a(1 + [e_4]) + b(1 + [e_5])
-\end{split}
-\end{equation}
-
-\noindent Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_4u| + |bc_5u|$. The relative error of the floating point sum depends on the absolute value of the individual terms. By applying the equation iteratively, we see that for floating point sums $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, with $[x_i] = x_i(1 + [e_i])$ Equation~\ref{eq:errortermsum} holds regardless of the order of operations.
-
-\begin{equation} \label{eq:errortermsum} 
-\osum_i [x_i] \subseteq \sum_i [x_i](1 + [e'_i])
-\end{equation}
-
-Floating point sums will accumulate errors from all contributing terms, creating a risk for catastrophic cancellation if both large positive and negative terms are involved in a computation with relatively small expected result. 
-
-Given a matrix $X$ with components $X_{ij}$ and a matrix $[E]$ with interval components $[E_{ij}]$, let $[X^E]$ denote a matrix with the interval components $X_{ij}(1 + [E_{ij}])$. We use the operator $\otimes$ to denote matrix multiplication, in which output components are computed as sums of products. By combining Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get Equation~\ref{eq:matrixmult} where all interval matrix components $[E_{ij}], [F_{ij}] \in \mathds{E}$ and $e_{ijk} \in \mathds{E}$. The number of terms $m$ equals the number of columns in $A$ as well as the number of rows in $B$.
-
-\begin{equation} \label{eq:matrixmult} 
-\begin{split}
-([A^E] \otimes [B^F])_{ij} \subseteq \osum_{k = 1}^m A_{ik} (1 + [e_{ij}])\odot B_{kj} (1 + [F_{kj}]) \\
-\subseteq \sum_{k = 1}^mA_{ik} B_{kj}(1 + [e_{ijk}])
-\end{split}
-\end{equation}
-
-\noindent We observe that the maximum floating point error associated with a component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$. Using the special cases from Equation \ref{eq:floatspecialcases}, we note that $e_{ijk} = 0$ if $A_{ik} = 0$ or $A_{ik} = 0$. Depending on the structure of the matrices $A$ and $B$, the output component may be subject to catastrophic cancellation. 
-
-With these quantifications of floating point errors introduced by scalar operations and vector multiplications, we can identify the components in the graphics pipeline that are prone to introduce visible precision problems.
-
-\subsection{Precision-related root causes of rendering artifacts}
+\subsection{Precision-related rendering artifacts}
 %Having observed how error intervals originate and propagate through various floating point operations, we can studying the operations performed in the graphics pipeline to identify sources of precision problems of vertex as well as fragment operations.
 
 
@@ -293,13 +188,23 @@ With these quantifications of floating point errors introduced by scalar operati
 
 %\subsection{Rendering artifacts}
 %\alexcomment{Merge this into 3.4, replacing most of 3.4 content and leaving a paragraph explaining the near/far plane}
-Lack of precision may give rise to several types of visual artifacts. If errors in the $x$ and $y$ components of the normalized device coordinates are in the same order as the size of the pixels on the screen, there will be a visible displacement of vertices. If the rounding error of $z$ when stored in the depth buffer is larger than the $z$ difference of any two fragments covering the same pixel, there is a risk for z-fighting, i.e. that the incorrect fragment is rendered on top. Rounding errors introduced in shading operations may result in in poor color precision.
+Lack of precision introduces several types of visual artifacts.
+If errors in the $x$ and $y$ coordinates of the normalized device coordinates are in the same order as pixel size, a vertex displacement is visible.
+If the rounding error of $z$ in the depth buffer is larger than the difference of two fragments, there is a risk for z-fighting.
 
-In the following sections, we study the precision error implications of the coordinate operations in the conventional graphics pipeline to determine the set of circumstances in which precision problems may be introduced. By using interval arithmetic to trace the errors in $x$ and $y$ it is possible to predict vertex displacement issues. Similarly, the accumulated error interval of the z-component can be used to determine when there is a risk for z-fighting. By studying the effect of transformation matrices acting on coordinate vectors, we can also develop a means to identify the risk of precision loss in various shading operations.
+In the following sections, we study the implications of the coordinate operations in the graphics pipeline to determine the circumstances in which precision problems may be introduced.
+By studying the effect of transformation matrices acting on coordinate vectors, we can predict vertex displacement issues and determine when there is a risk of z-fighting.
 
-In computer graphics, content is commonly organized in a \emph{scene graph} that allows coordinate transformations to be represented hierarchically. Each node in the graph may contain transformations affecting all children. In order to transform an object to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatenated to a final \emph{model matrix} using floating point matrix multiplications. Subsequently, world positions are transformed into view space, through the use of a \emph{view matrix} and then mapped onto the screen using a \emph{projection matrix} and \emph{perspective division}.
+%By using interval arithmetic to trace the errors in $x$ and $y$ it is possible to predict vertex displacement issues. Similarly, the accumulated error interval of the z-component can be used to determine when there is a risk for z-fighting. By studying the effect of transformation matrices acting on coordinate vectors, we can also develop a means to identify the risk of precision loss in various shading operations.
 
-Using column vectors, the interval vector $[\mathbf{n}]$ of possible normalized device coordinates is derived from the model coordinates $[\mathbf{x}]$ in Equation \ref{eq:mvp}.
+Content is commonly organized in a \emph{scene graph} that represents coordinate transformations hierarchically.
+Each node in the graph can contain transformations affecting all children, which means that the transformation matrices of the ancestor nodes are concatenated to a final \emph{model matrix}.
+%
+%In order to transform an object to a global \emph{world coordinate system}, the transformation matrices of the ancestor nodes are concatenated to a final \emph{model matrix} which is combined with the \emph{view matrix}, and \emph{projection matrix} 
+%
+%, transformed into view space, through the use of a \emph{view matrix} and then mapped onto the screen using a \emph{projection matrix} and \emph{perspective division}.
+%
+Thus, the interval vector $[\mathbf{n}]$ of normalized device coordinates is derived from the model coordinates $[\mathbf{x}]$ by
 
 \begin{equation} \label{eq:mvp}
 \begin{split}
@@ -308,7 +213,7 @@ Using column vectors, the interval vector $[\mathbf{n}]$ of possible normalized 
 \end{split}
 \end{equation}
  
-Here, $[P]$ is the projection matrix, $[V]$ is the view matrix, $[M]$ is the model matrix, and $[\mathbf{x}]$, $[\mathbf{c}]$ and $[\mathbf{n}]$ are interval vectors on the form $([x], [y], [z], [w])^t$. The error interval size of the normalized device coordinates depends on the collective effects of $[M]$, $[V]$, $[P]$, and the perspective division as they act on $[\mathbf{x}]$. 
+\noindent where $[P]$ is the projection matrix, $[V]$ is the view matrix, $[M]$ is the model matrix, and $[\mathbf{x}]$, $[\mathbf{c}]$ and $[\mathbf{n}]$ are interval vectors. The error interval size of the normalized device coordinates depends on the collective effects of $[M]$, $[V]$, $[P]$, and the perspective division as they act on $[\mathbf{x}]$. 
 
 $M$ and $V$ are commonly composed from three types of transformations that are encoded in the scene graph: scaling, translation, and rotation. We study the effects of applying scaling, translation, and rotation on a generalized interval model matrix or view matrix $[A]$, composed of a translation vector $\mathbf{[a]}$ and a combined rotation/scaling 3x3-matrix $[A']$, as given by Equation \ref{eq:matrixa}. Scaling, rotation and translation matrices can all be written on the same form as $[A]$. To observe how the matrices act on a coordinate vector we can study the fourth column in $[A]$.
 \begin{equation} \label{eq:matrixa}
@@ -370,14 +275,14 @@ If an integer depth buffer is used, this non-linear mapping results in a higher 
 
 The problems of depth buffer precision are well known and have been subject to thorough analysis \cite{cozzi20113d}. Upchurch and Desbrun~\cite{upchurch2012tightening} show that good depth resolution can be maintained even with a far plane placed in $\infty$. However, precision problems for distant objects remain an issue for small $n$.
 
-\subsection{Sources of precision errors}
-To summarize this section, we have seen that:
-\begin{itemize}
-\item Large translation matrices acting on small vectors or translations may lead to significant loss of precision.
-\item Rotation and scaling matrices do not induce significant precision loss when applied to vectors or other matrices 
-\item Perspective division scales down the floating point error intervals in vertex coordinates for distant objects.
-\item Close near planes cause poor depth precision for distant objects.
-\end{itemize}
+%\subsection{Sources of precision errors}
+%To summarize this section, we have seen that:
+%\begin{itemize}
+%\item Large translation matrices acting on small vectors or translations may lead to significant loss of precision.
+%\item Rotation and scaling matrices do not induce significant precision loss when applied to vectors or other matrices 
+%\item Perspective division scales down the floating point error intervals in vertex coordinates for distant objects.
+%\item Close near planes cause poor depth precision for distant objects.
+%\end{itemize}
 
 \section{Method}\label{sec:method}
 \begin{figure}
@@ -726,5 +631,132 @@ We would like to acknowledge the Swedish e-Science Research Center (SeRC) for th
 \bibliography{dsg-bib}
 
 %-------------------------------------------------------------------------
+
+\section*{Appendix A}
+\subsection{Floating point numbers}
+The IEEE754 standard for floating point numbers~\cite{zuras2008ieee} enables the representation of a large number range by encoding values as a sign, a mantissa, and an exponent.
+Single precision numbers use 1 sign bit, 8 exponent bits, and 23 mantissa bits.
+This encoding results in high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range.
+One important characteristic of floating point numbers is their inability to represent all real numbers.
+All numbers not representable are rounded to their closest representable number.
+Increasing the floating points bit depth will decrease the precision error at the cost of computational resources due to lacking efficient hardware support.
+
+%naturally require more computational resources, and might lack common hardware support, thus making their usage infeasible for real-time visualization.
+
+%While a 32-bit signed integer type can only represent numbers in the range $[-2^{31},\, 2^{31} - 1]$, an IEEE754 single precision floating point number approximately supports the range $[-2^{127},\, 2^{127}]$.
+
+
+%In floating point data types, values are represented as a sign, a mantissa, and an exponent. This representation has the attributes of resulting in high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range. The IEEE754 single precision floating point format uses 1 sign bit, 8 exponent bits, and 23 mantissa bits. Equation \ref{eq:floatingpoint} yields the value $v$ represented by the sign bit $s$, the mantissa bits $\mathbf{m}_i$, and the integer $e \in [-127, 128]$ which is encoded in the exponent bits. 
+
+%\begin{equation} \label{eq:floatingpoint}
+%v = \begin{cases}
+%(-1)^s \sum_{i = 1}^{23}\mathbf{m}_i\,2^{-i} 2^{-126}, & \text{for } e = -127 \\
+%(-1)^s (1 + \sum_{i = 1}^{23}\mathbf{m}_i\,2^{-i}) 2^e, & \text{for } -126 \leq e \leq 127 \\
+%\text{Special numbers such as NaN or }\infty, & \text{for } e = 128
+%\end{cases}
+%\end{equation}
+
+%\noindent Only values that can be composed by this set of bits are valid 32-bit floating point numbers. If exponent of a number is not in the range $[-126, 127]$ it will be represented as $\infty$ or $-\infty$. One critical characteristic of valid IEEE754 floating point numbers $\mathds{R}_f$ \alexcomment{Is there a better symbol for this?} is their inability to represent all possible numbers $\mathds{R}$. All numbers $\mathds{R} \setminus \mathds{R}_f$ that are not representable are rounded to their closest representable number in $\mathds{R}_f$. This characteristic is at the heart of the problem of floating point inaccuracies.
+
+%An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits, and 52 bits for the mantissa. Using 128-bits (quadruple precision), it is possible to further increase the precision and exponent range. Increasing the bit depth will naturally require more computational resources, and might lack common hardware support, thus making their usage unfeasible for real-time visualization.
+
+The exponent range in 32-bit floats provides a possible range of approximately 76 orders of magnitude (OM).
+%
+%\subsubsection{Exponent underflow and overflow}
+%The exponent range $[-126, 127]$ in 32-bit IEEE754 floats provides a possible scale range of approximately 76 orders of magnitude (OM).
+Exponents outside that range will cause exponent underflow or overflow and result in loss of data.
+While this range is larger than the 60 OM required for the known cosmos, problems may arise when distances need to be squared and thus generating numbers in a range of 120 OM.
+%This problem can be mitigated using a logarithmic representation as done in Power Scaled Coordinates or by using IEEE754 doubles, which have the exponent range $[-1022, 1023]$ resulting in representablity of approximately 616 OM. \emilcomment{Maybe add something about length calculation by division of largest component, to show that double and psc is not necessary.}
+
+%The scale difference between the Planck length and the diameter of the observable universe is approximately $62$ OM. While 32-bit floats are able to represent this scale difference, a conventional approach to computing lengths and normalizing vectors would break down.
+
+%\subsubsection{Precision limitations} \label{sec:theory:pl}
+Due to the limited number of mantissa bits, values need to be rounded in order to be represented as floating point numbers.
+An upper bound of the spacing between a floating point number $v$ and adjacent numbers can be expressed as $\epsilon|v|$, where $\epsilon$ is a constant given by $2^{-(n + 1)}$ with $n$ as the number of mantissa bits~\cite{higham2002accuracy}.
+%Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, with the rounding error coefficient $u = \frac{\epsilon}{2}$.
+For IEEE754 float, $\epsilon$ is $2^{-24}\,\approx
+\, 5.96 \cdot 10^{-8}$, meaning that values are precise to about 7 significant figures in decimal notation.
+Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, with the rounding error coefficient $u = \frac{\epsilon}{2}$.
+
+
+%Double precision floating point numbers have a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notation, this corresponds to a precision of 15 significant figures. For quadruple precision the corresponding number is 34 significant figures.
+
+For computer graphics, this limits the precision at which vertices can be represented.
+%In computer graphics, the limitation posed by the machine epsilon imposes that vertices are represented with less precision the further way from the coordinate system origin they are.
+Figure~\ref{fig:degradation-circles} shows a simulation with 5 mantissa bits.
+%, causing $\epsilon = 2^{-6} = \frac{1}{64}$.
+Using IEEE754 floats, at Pluto's distance from the Sun the distance between two adjacent floating point numbers is approximately $5.102 \cdot 10^9 \cdot 2^{-24}$\, km $= 304.1$\,km, which is about an eighth of Pluto's diameter and leads to visble artifacts (see Figure~\ref{fig:res:plutocomp}). %By using double precision, the corresponding distance between floating point numbers on Pluto becomes $5.102 \cdot 10^9 \cdot 2^{-53} \, \text{km} = \SI{56.64}{\micro\metre}$. Even at this relatively high resolution it is impossible to represent and contextualize tiny structures such as molecules. \emilcomment{Do we need to motivate this better? Who would ever want to look at molecules at Pluto?}
+
+\subsection{Interval arithmetic}
+It is possible to use interval arithmetic as a mathematical tool to track potential sources of rounding error~\cite{Hickey2001}. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$. Using interval arithmetic, the interval can be rewritten as $v(1 + u[-1,1])$.
+
+For the remainder of the following sections, $\oplus$, $\ominus$, $\odot$, and $\oslash$ will be used to denote floating point addition, subtraction, multiplication, and division respectively. The IEEE754 standard requires that the result of each of these operations is identical to the result of an infinitely precise computation followed by a rounding to the closest representable float. The operators are commutative and yield the possible output intervals given two real number intervals $[x] = [x_1, x_2]$ and $[y] = [y_1, y_2]$ as described in Equation \ref{eq:floatoperations}.
+
+\begin{equation} \label{eq:floatoperations}
+\begin{split}
+[x] \oplus [y] & \subseteq ([x] + [y])(1 + u[-1, 1]) \\
+[x] \ominus [y] & \subseteq ([x] - [y])(1 + u[-1, 1]) \\
+[x] \odot [y] & \subseteq [x][y](1 + u[-1, 1]) \\
+[x] \oslash [y] & \subseteq \frac{[x]}{[y]}(1 + u[-1, 1]) \\
+\end{split}
+\end{equation}
+ 
+\noindent For operations involving the degenerate intervals $[0, 0] = \{0\}$ and $[1, 1] = \{1\}$, we observe some special cases where it is possible to make stronger claims about the output intervals:
+\begin{equation} \label{eq:floatspecialcases}
+\begin{split}
+[x] \odot \{1\} & = [x] \\
+[x] \oplus \{0\} & = [x]
+\end{split}
+\end{equation}
+
+\subsection{Propagation of error intervals}
+When a result from one floating point operation is used in further computations, rounding errors will propagate and compound through the whole series of operations. This, for example, may lead to scenarios where expressions on the form $(a + b) - b$ may evaluate to $0$ for a sufficiently small $a$ and large $b$. This phenomena is known as 
+\emph{catastrophic cancellation}~\cite{Cuyt2001}. In any rendering pipeline where, for example, matrix multiplications or vector additions result in this type of operations there is a risk for floating point precision problems.
+
+Let $\mathds{E}$ be the set of intervals that can be written in the form $cu[-1, 1]$, where c is a non-negative constant that is not a function of any floating point value. For any intervals $[e_1], [e_2] \in \mathds{E}$, there are intervals $[e_3], [e_4] \in \mathds{E}$, such that
+$[e_1]+[e_2] \subseteq [e_3]$ and $[e_1e_2] \subseteq [e_4]$. 
+
+We let $[e_i] = c_iu[-1, 1] \in \mathds{E}$ and consider two intervals $a(1 + [e_1])$ and $b(1 + [e_2])$. First, we study the effects of floating point multiplication acting on these intervals.
+
+\begin{equation} \label{eq:errortermmult} 
+\begin{split}
+a(1 + [e_1]) \odot b(1 + [e_2]) \\
+\subseteq ab(1 + [e_1])(1 + [e_2])(1 + u[-1, 1]) \\
+\subseteq ab(1 + [e_3])
+\end{split}
+\end{equation}
+
+The output interval in Equation \ref{eq:errortermmult} has the size $|abc_3u|$, meaning that the maximum absolute rounding error of floating point multiplication is proportional to the absolute value of the product $ab$. However, the relative rounding error $c_3u$ is independent of these factors. We proceed with studying the properties of floating point addition.
+
+\begin{equation} \label{eq:errortermadd} 
+\begin{split}
+a(1 + [e_1]) \oplus b( 1 + [e_2]) \\
+\subseteq \big(a(1 + [e_1]) + b( 1 + [e_2])\big)(1 + u[-1, 1]) \\
+\subseteq a(1 + [e_4]) + b(1 + [e_5])
+\end{split}
+\end{equation}
+
+\noindent Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_4u| + |bc_5u|$. The relative error of the floating point sum depends on the absolute value of the individual terms. By applying the equation iteratively, we see that for floating point sums $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, with $[x_i] = x_i(1 + [e_i])$ Equation~\ref{eq:errortermsum} holds regardless of the order of operations.
+
+\begin{equation} \label{eq:errortermsum} 
+\osum_i [x_i] \subseteq \sum_i [x_i](1 + [e'_i])
+\end{equation}
+
+Floating point sums will accumulate errors from all contributing terms, creating a risk for catastrophic cancellation if both large positive and negative terms are involved in a computation with relatively small expected result. 
+
+Given a matrix $X$ with components $X_{ij}$ and a matrix $[E]$ with interval components $[E_{ij}]$, let $[X^E]$ denote a matrix with the interval components $X_{ij}(1 + [E_{ij}])$. We use the operator $\otimes$ to denote matrix multiplication, in which output components are computed as sums of products. By combining Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get Equation~\ref{eq:matrixmult} where all interval matrix components $[E_{ij}], [F_{ij}] \in \mathds{E}$ and $e_{ijk} \in \mathds{E}$. The number of terms $m$ equals the number of columns in $A$ as well as the number of rows in $B$.
+
+\begin{equation} \label{eq:matrixmult} 
+\begin{split}
+([A^E] \otimes [B^F])_{ij} \subseteq \osum_{k = 1}^m A_{ik} (1 + [e_{ij}])\odot B_{kj} (1 + [F_{kj}]) \\
+\subseteq \sum_{k = 1}^mA_{ik} B_{kj}(1 + [e_{ijk}])
+\end{split}
+\end{equation}
+
+\noindent We observe that the maximum floating point error associated with a component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$. Using the special cases from Equation \ref{eq:floatspecialcases}, we note that $e_{ijk} = 0$ if $A_{ik} = 0$ or $A_{ik} = 0$. Depending on the structure of the matrices $A$ and $B$, the output component may be subject to catastrophic cancellation. 
+
+With these quantifications of floating point errors introduced by scalar operations and vector multiplications, we can identify the components in the graphics pipeline that are prone to introduce visible precision problems.
+
+
 
 \end{document}
