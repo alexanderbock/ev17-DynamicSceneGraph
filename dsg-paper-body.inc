@@ -130,7 +130,7 @@ This elegant solution is viable for scenes where the required precision decrease
 %The proposed system can operate with floating point numbers close to unit scale, which solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors.
 %However, the challenge of representing multiple disjoint regions in which high precision is required a great distance from the coordinate origin is not addressed in this work.
 
-Fu~\etal~also introduced a depth buffer remapping to cover a wider range of distances than what is possible with a fixed point depth buffer and conventional near and far planes~\cite{fu2007transparently}.
+Fu and Hanson also introduced a depth buffer remapping to cover a wider range of distances than possible with a fixed point depth buffer and conventional near and far planes~\cite{fu2007transparently}.
 The depth buffer range is divided into regions where small and large values are remapped logarithmically.
 While this method is beneficial for some specific type of scene content, the method does not provide a generic way to select appropriate threshold values and the choice of separate regions with different mapping is cumbersome.
 
@@ -139,7 +139,7 @@ It employs a scene graph with sub-scenes to which cameras belong.
 The content of the current sub-scene is rendered in a local coordinate system with high precision and thus allowing multiple regions to be represented with high relative precision.
 Content outside the current sub-scene is translated onto the scene's boundary and scaled to compensate for perspective effects.
 This translation, however, leads to inconsistencies in stereoscopic rendering when switching scenes as objects jump from the bounding sphere of a scene to its physical location.
-As their work was focussed on the Uniview system, the detailed ScaleGraph descriptions are lacking and thus make it impossible to reproduce.
+As their work was focussed on the Uniview system as a whole, the detailed ScaleGraph descriptions are lacking and thus make it impossible to reproduce.
 %Vectors between sub-scenes are computed by traversing the scene graph through the closest common ancestor in the tree, to avoid introducing precision errors caused by handling unnecessarily large numbers.
 %By moving objects onto the bounding sphere of the current scene, object depths are mapped to a manageable range.
 %Furthermore, the method does not provide a general solution for depth sorting objects that are outside the current sub-scene.
@@ -410,11 +410,13 @@ As stated in Section~\ref{sec:theory:rotation} no significant precision error wi
 \end{figure*}
 
 \subsection{Dynamic object attachment} \label{sec:method:doa}
-In addition to the dynamic camera attachment, where the camera can be reattached to children or parent nodes, the same technique is also required for scene graph nodes themselves.
-When dealing with dynamic astronomical objects it is possible for distinct sibling objects to approach each other.
-An example of this is visualizing the New Horizons mission~\cite{stern2009new}, where the spacecraft launched from Earth and approached both Jupiter and Pluto.
-If the scene graph node containing New Horizons would statically be a direct child of the solar system, floating point precision would not suffice for accurately representing distances from the probe at Earth, Jupiter, and Pluto, respectively.
-In order to avoid this, we enable scene graph nodes to dynamically attach to different nodes under specialized circumstances, that is, being highly mobile objects such as spacecraft, asteroids, or comets.
+Analogous to the dynamic camera attachment, where the camera can be reattached to children or parent nodes, the same technique is also useful for scene graph nodes or entire sub trees.
+In a traditional scene graph, reattachment is not a useful feature as no precision is gained by moving a subtree at runtime.
+In our method however, it is beneficial when dealing with dynamic astronomical objects, such as spacecraft, asteroids, or comets, that can approach several objects of the scene graph at different times.
+One example is the New Horizons mission~\cite{stern2009new}, where the spacecraft launched from Earth and approached both Jupiter and Pluto.
+For this visualization, it is necessary to render the spacecraft at high resolution on the launchpad in Florida, in interplanetary space, during the gravity assist at Jupiter, on the flyby at Pluto, and eventually at its next flyby at 2014 MU69. 
+If the scene graph node containing New Horizons would statically be a direct child of the solar system, floating point precision would not suffice for accurately representing the probe at these various locations.
+%In order to avoid this, we enable scene graph nodes to dynamically attach to different nodes under specialized circumstances, that is, being highly mobile objects such as spacecraft, asteroids, or comets.
 In Figure~\ref{fig:teaser}, the New Horizons spacecraft scene graph node has been dynamically attached to the Pluto barycenter node, in order to allow simultanueous high fidelity rendering of the probe as well as the planetary system.
 
 
@@ -556,40 +558,21 @@ In Figure~\ref{fig:teaser}, the New Horizons spacecraft scene graph node has bee
 %How to calculate the final Model View Matrix...
 %
 \subsection{Representation of depth} \label{sec:method:ds}
-In our approach, we use a modified perspective matrix with $\lambda_1 = \lambda_2 = 0$, yielding $\mathbf{z}_c = 0$ for all vertices, thus disabling the near and far planes.
+In our approach, we use a modified perspective matrix with $\lambda_1 = \lambda_2 = 0$, yielding $\mathbf{z}_c = 0$ for all vertices, thus effectively disabling the near and far planes.
 Geometry behind the camera is discarded due to the criterion of $-\mathbf{c}_w < \mathbf{c}_w$ imposed by the OpenGL pipeline.
-For depth comparisons, we use 32-bit floating point numbers representing the distance to the fragment being rendered.
+For depth comparisons, we use 32-bit floating point numbers representing the distance to the rendered fragment.
 
 To avoid exponent overflow and underflow for distant and close fragments, we first divide the view coordinate vector $v$ by its component with largest magnitude $\mathbf{v}_{\text{max}}$, perform the computation using the pythagoran theorem, and multiply by $\mathbf{v}_{\text{max}}$.
 
-Depth sorting is performed using conventional z-buffering with a 32-bit floating point buffer. For scenes with volumetric content or transparent geometry, we use the A-buffer technique\cite{lindholm2015hybrid} for order-independent transparency. When using ray casting for volumetric rendering, the distance taken along the ray can be compared with the distance of rendered geometry in order to perform early ray termination.
+Depth sorting is performed using conventional z-buffering with a 32-bit floating point buffer.
+For scenes with volumetric content or transparent geometry, we use an A-buffer technique for order-independent transparency~\cite{lindholm2015hybrid}.
+When using ray casting for volumetric rendering, the distance taken along the ray is compared to the distance of rendered geometry in order to perform early ray termination.
 
 By always rendering objects in their physical location, as opposed to the reprojection of objects performed in the ScaleGraph approach, our method transparently handles stereoscopic rendering.
 
 %\subsection{Stereoscopic Rendering}
 
-
 \section{Results} \label{sec:result}
-We applied our framwork to a variety of use cases, most of which have been shown to audiences at public events.
-In this section, we shortly describe these use-cases and how our proposed method was used in four categories.
-
-\noindent \textbf{Space craft. }
-As one of the major motivations for developing this method, spacecraft are a inherently small objects that need to be visualized precisely with respect to a an object they are inspecting.
-One example is shown in Figure~\ref{fig:teaser} where New Horizons space craft is shown at 80\,Mm distance to Pluto and around $6 \cdot 10^{12}$\,m from the Sun.
-As described in Section~\ref{sec:theory:pl}, floating point numbers only have a precision of about 300\,km at the distance of Pluto, which would make a traditional approach infeasible.
-A second space craft is ESA's Rosetta shown in Figure~\ref{fig:res:stereo} as a stereoscopic rendering.
-
-\noindent \textbf{Navigation. }
-Figure~\ref{fig:imagesequence} shows individual frames of a seamless nagivation from the surface of Earth, where the mountains of the Alps are rendered with their correct height and surface textures, out to the surface of Titan orbiting Saturn, showing color images of the moon's surface.
-At no point during this $1.65$\, billion km user controlled journey artifacts are visible.
-
-\noindent \textbf{Virtual globes. }
-High resolution surface features are an additional challenge when representing an entire solar system in a single scene graph.
-Individual surface features are smaller than the available floating point precision.
-Figure~\ref{fig:res:pluto} shows an accurate rendering of the latest composite images and height maps on Pluto~\cite{stern2015pluto} with a resolution of between 2 and 5\,km/pixel.
-Figure~\ref{fig:res:mars} shows detailed structures on the surface of Mars as returned from the Mars Reconnaissance Orbiter's HiRISE camera~\cite{mcewen2007mars}.
-It shows details with a resolution of 25\,cm per pixel.
-
 \begin{figure}[b]
 \centering
 \fbox{\includegraphics[width=\linewidth]{figure/pluto.png}}
@@ -597,11 +580,32 @@ It shows details with a resolution of 25\,cm per pixel.
 \label{fig:res:pluto}
 \end{figure}
 
+The Dynamic Scene Graph approach has been deployed in several use case scenarios exemplifying the utility of the approach.
+We have here chosen to provide some selected examples with corresponding rendered images showing: dynamic objects, scaled navigation, globe browsing, and contextualization of scientific simulations.
+The DSG has been integrated into the OpenSpace software framework~\cite{Bock_2015}, which is targeting science communication events in immersive environments, such as dome theaters and planetariums.
+The images shown are captures from such interactive sessions using OpenSpace. In this section, we shortly describe these use-cases and how our proposed method was used in four categories.
+
+\noindent \textbf{Space craft. }
+As one of the major motivations for developing this method, spacecraft are inherently small objects that need to be visualized precisely with respect to an object, mostly planets, that they are inspecting.
+One example is shown in Figure~\ref{fig:teaser} where the New Horizons space craft is shown at 80\,Mm distance to Pluto and around $6 \cdot 10^{12}$\,m away from the Sun.
+As described in Section~\ref{sec:theory:pl}, floating point numbers only have a precision of about 300\,km at the distance of Pluto, which would make a traditional approach infeasible. With our method, however, it is possible to show the entire mission with the required precision.
+A second space craft is ESA's Rosetta shown in Figure~\ref{fig:res:stereo} as a stereoscopic rendering. In the figure, we show the separation of the lander Philae from Rosetta on its way to the comet.
+
+\noindent \textbf{Navigation. }
+Figure~\ref{fig:imagesequence} shows individual frames of a seamless nagivation through our solar system. Starting on the surface of Earth, where the mountains of the Alps are rendered with their correct height and surface textures, the Earth becomes visible further out before reaching the sphere of influence of Saturn and continuing to the surface of Titan, showing color images of the moon's surface.
+At no point during this $1.65$\, billion km user-controlled journey are artifacts visible due to the camera's seamless transitions between the scene graph nodes.
+
+\noindent \textbf{Virtual globes. }
+High resolution surface features are a big challenge when representing an entire solar system in a single scene graph.
+Individual surface features are much smaller than the available floating point precision for any planet.
+With our method however, we can produce an accurate rendering of the latest composite images and height maps on Pluto~\cite{stern2015pluto} with a resolution of between 2 and 5\,km/pixel (see Figure~\ref{fig:res:pluto}).
+Figure~\ref{fig:res:mars} shows detailed structures on the surface of Mars as returned from the Mars Reconnaissance Orbiter's HiRISE camera~\cite{mcewen2007mars}.
+It shows details with a resolution of 25\,cm per pixel.
 
 \noindent \textbf{Volumetric data. }
 As described in Section~\ref{sec:method:ds}, our system allows for the seamless integration of volumetric data.
-Figure~\ref{fig:res:galaxy} shows a frame of a three-channel time-varying volumetric rendering of the Milky Way~\cite{XXX}\alexcomment{Waiting for a citation from Vivian}.
-With this scene, the root node of the scene graph is the center of the Milky Way and the solar system and all its contents are at a distance of $2,5 \cdot 10^{20}$ from the center with the volume's bounding box of $\approx 10^{21} \times 10^{21} \times 1.5 \cdot 10^{19}$\,m.
+Figure~\ref{fig:res:galaxy} shows a frame of a three-channel time-varying volumetric rendering of the Milky Way~\cite{junichi2010interpretation,fujii2011dynamics}.
+In this scene, the root node of the scene graph is the center of the Milky Way and the solar system and all its contents are at a distance of $2,5 \cdot 10^{20}$ from the center inside the volume's bounding box of $\approx 10^{21} \times 10^{21} \times 1.5 \cdot 10^{19}$\,m.
 
 \begin{figure}
 \centering
@@ -619,7 +623,7 @@ With this scene, the root node of the scene graph is the center of the Milky Way
 \label{fig:res:stereo}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[b]
 \centering
 \fbox{\includegraphics[width=\linewidth]{figure/galaxy.png}}
 \caption{A volumetric rendering of a three-channel simulation of the Milky Way with a bounding box size in the order of $10^{20}$\,m.}
