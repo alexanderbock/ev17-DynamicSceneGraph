@@ -145,7 +145,7 @@ In order to understand the precision and range limitations of the standard compu
 \begin{figure}
 \centering
 \includegraphics[width=\linewidth]{figure/degradation-circles.pdf}
-\caption{The problem of coordinate precision for vertices far from the origin is amplified by limiting the number of mantissa bits to 5. In (a) the circle A, being close to the origin, is represented relatively well despite the limited bit depth. The circles marked B have poor precision for one of their vector components, while C is heavily distorted in both dimensions. (b) shows a time series of of a scene graph representing a simplified solar system, with the Moon (gray) orbiting the Earth (blue) that in turn is orbiting the Sun (yellow).}
+\caption{The problem of coordinate precision for vertices far from the origin is amplified by limiting the number of mantissa bits to 5, when visualizing a system of celestial bodies represented in a common coordinate system, analogous to a world coordinate system in a conventional scnene graph. }
 \label{fig:degradation-circles}
 \end{figure}
 
@@ -369,14 +369,13 @@ If an integer depth buffer is used, this non-linear mapping results in a higher 
 The problems of depth buffer precision are well known and have been subject to thorough analysis \cite{cozzi20113d}. Upchurch and Desbrun~\cite{upchurch2012tightening} show that good depth resolution can be maintained even with a far plane placed in $\infty$. However, precision problems for distant objects remain an issue for small $n$.
 
 \subsection{Sources of precision errors}
-This section has provided several insights:
+To summarize this section, we have seen that:
 \begin{itemize}
 \item Large translation matrices acting on small vectors or translations may lead to significant loss of precision.
 \item Rotation and scaling matrices do not induce significant precision loss when applied to vectors or other matrices 
 \item Perspective division scales down the floating point error intervals in vertex coordinates for distant objects.
-\item Perspective projection followed by perspective division 
+\item Close near planes cause poor depth precision for distant objects.
 \end{itemize}
-
 
 \section{Method}\label{sec:method}
 \begin{figure}
