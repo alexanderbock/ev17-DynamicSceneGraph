@@ -78,9 +78,9 @@ Furthermore, overflow and underflow of the available value ranges results in und
 % Removed this part as it would be a large repeat of the related works section
 %Previous work by the visualization community has provided solutions to some of these issues, such as the Power Scaled Coordinates by Hanson~\etal~\cite{hanson2000very} and the ScaleGraph by Klashed~\etal~\cite{KHECY10}. However, only partial solutions to the precision issues have been provided thus far and the root cause of these problems remains unsolved. \anderscomment{Hansen would disagree and kill the paper here if he were the reviewer, which is likely. In what way are they partial? We have to very precise here to make a case}
 
-In this work, we propose a general framework, a dynamic scene graph, which enables fast and accurate scaling, positioning, and navigation without significant loss of precision.
+In this work, we propose a general method, a dynamic scene graph, which enables fast and accurate scaling, positioning, and navigation without significant loss of precision.
 The concept is applicable to a variety of application domains with large scale differences and not limited to astronomical data.
-The framework is based on an analysis of the sources of precision errors and range overflow problems in a conventional computer graphics pipeline.
+The method is based on an analysis of the sources of precision errors and range overflow problems in a conventional computer graphics pipeline.
 Using interval arithmetic to track floating point rounding errors, we are able to identify sets of operations that may introduce precision problems.
 We combine this information with the observation that high level of detail is only required for nearby objects.
 The underlying technique relies on dynamic updates and traversals of a scene graph where cameras automatically attach and detach to the closest object of interest.
@@ -107,7 +107,7 @@ In summary, our contributions include:
 \item An analysis of floating point precision errors using interval arithmatic.
 \end{itemize}
 
-The paper is structured as follows: After describing the related work in the following section, we provide a theoretical background for the sources of floating point inaccuracies in Section~\ref{sec:theoretical}, followed by a description of our proposed dynamic scene graph framework in Section~\ref{sec:method} and its results in Section~\ref{sec:result}.
+The paper is structured as follows: After describing the related work in the following section, we provide a theoretical background for the sources of floating point inaccuracies in Section~\ref{sec:theoretical}, followed by a description of our proposed dynamic scene graph method in Section~\ref{sec:method} and its results in Section~\ref{sec:result}.
 
 \section{Related work}
 Computer graphics and interactive visualization are immensely valuable tools for communicating scientific findings and contextualizing information.
@@ -120,7 +120,7 @@ Our travel component is based on their description of a \emph{Spatial Scaling Na
 In terms of \emph{Techniques for wayfinding}, Li~\etal~\cite{li2006scalable} introduce a world-in-miniature techniques based on logarithmic landmarks for navigation support in astronomical data.
 Combining this with the concept of power cubes, described in earlier works~\cite{fu2006navigation}, enables the creation of paths in this logarithmic space to aid in the large-scale navigation.
 
-The concept of \emph{Power Scaled Coordinates} (PSC) or \emph{Power Homogeneous Coordinates}, introduced by Hanson~\etal , addresses the travel challenge when creating animations showing large scale differences~\cite{hanson2000very}.
+The concept of \emph{power scaled coordinates} (PSC) or \emph{power homogeneous coordinates}, introduced by Hanson~\etal , addresses the travel challenge when creating animations showing large scale differences~\cite{hanson2000very}.
 The method uses four-dimensional floating point vectors where the first three components determine the direction and the fourth encodes a logarithmic scaling coefficient.
 The authors successfully create a powers-of-ten animation in which increasingly larger objects are shown with increasing distance to the Earth.
 This elegant solution is viable for scenes where the required precision decreases with distance from the origin, as it does not solve the problem of catastrophic cancellation and thus prohibits high-precision regions in large distances from the origin.
@@ -131,7 +131,7 @@ Fu~\etal~also introduced a depth buffer remapping to cover a wider range of dist
 The depth buffer range is divided into regions where small and large values are remapped logarithmically.
 While this method is beneficial for some specific type of scene content, the method does not provide a generic way to select appropriate threshold values and the choice of separate regions with different mapping is cumbersome.
 
-The \emph{ScaleGraph}, introduced by Klashed~\etal \cite{KHECY10} as a part of the Uniview software, is the most similar to our proposed framework.
+The \emph{ScaleGraph}, introduced by Klashed~\etal \cite{KHECY10} as a part of the Uniview software, is the most similar to our proposed method.
 It employs a scene graph with sub-scenes to which cameras belong.
 The content of the current sub-scene is rendered in a local coordinate system with high precision and thus allowing multiple regions to be represented with high relative precision.
 Content outside the current sub-scene is translated onto the scene's boundary and scaled to compensate for perspective effects.
@@ -302,32 +302,36 @@ The problems of depth buffer precision are well known and have been subject to t
 %\item Close near planes cause poor depth precision for distant objects.
 %\end{itemize}
 
-\section{Method}\label{sec:method}
+\section{Dynamic Scene Graph Method}\label{sec:method}
 \begin{figure}
 \includegraphics[width=\linewidth]{figure/scenegraph.pdf}
 \caption{A potential scene graph consisting of two translation nodes for the solar system and the Earth system (1,3) and three rendering nodes for the Sun (2), Earth (4), and the Moon (5). Cameras (A, B) can be attached to different nodes, thus avoiding the introduction of large, error-prone translation values. (a) shows the nodes relative location, whereas (b) shows their organization in a graph. The arrows represent local upwards (red) and downwards (blue) transformations.}
 \label{fig:scenegraph}
 \end{figure}
 
-After identifying the sources of potential floating point precision inaccuracies in the computer graphics pipeline, we can now elaborate on our proposed framework.
-The \emph{Dynamic Scene Graph} (DSG) utilizes these insights such that it becomes possible to achieve a high-fidelity rendering throughout the scene graph independent of the location of the coordinate system origin.
-This is achieved by utilizing a \emph{dynamic camera attachment} and a \emph{relative scene traversal} performed with respect to a special node; the attachment node (AN).
-First, we describe the relative scene traversal assuming a static camera, and then in the following section describe the attachment changes of moving cameras.
+After identifying the sources of potential floating point precision inaccuracies in the computer graphics pipeline, we can now elaborate on our proposed method.
+The \emph{Dynamic Scene Graph} (DSG) utilizes these insights such that it becomes possible to achieve a high-fidelity rendering at any point in the scene graph independent of the location of the global coordinate system origin.
+This is achieved by utilizing a \emph{dynamic camera attachment} and a \emph{relative scene traversal} performed with respect to the camera's attachment node (AN).
+The AN is a regular node in the scene graph and does not have any special meaning aside from serving as the center for the camera that has it as its AN.
+The initial attachment node for each camera is determined by specifying the node and a position in its local coordinate system.
+Each camera in the scene is attached to its own AN, which is updated accordingly when the camera moves.
 
-The DSG is based on a traditional scene graph structure, but instead of a regular traversal order that starts at the root node of the graph downward, we propose a traversal order that starts at the AN and can traverse both upwards and downwards.
-Each node in the scene graph can contain a \emph{transformation}, consisting of a \emph{translation}, \emph{rotation}, and \emph{scaling}, which are all described relative to a node's parent.
-In addition, nodes may contain a visual object representation, for example a planet or a spacecraft, specified in the node's local coordinate system.
+The DSG is based on a traditional scene graph structure, but instead of a regular depth-first traversal order that starts at the root node of the graph, we propose a traversal order that starts at the AN and can traverse both upwards and downwards.
+Each node in the scene graph can contain a \emph{transformation}, consisting of a \emph{translation}, \emph{rotation}, and \emph{scaling} that are all described relative to a node's parent and which must be invertible, which is possible for all transformation matrices.
+In addition, nodes may contain a visual object representation, for example a planet or a spacecraft, specified in the node's own local coordinate system.
 If a scene graph node contains a visible object, we refer to it as a \emph{rendering node}, otherwise it is a \emph{transformation node}.
 Unlike traditional scene graphs, each scene graph node has a radial \emph{extent}, which determines the node's sphere of influence. Each scene graph node's extent has to cover at least all the children's spheres of influence.
 % Specify limitation of the graph? Or later?
 %The location and sizes of the scene graph nodes have to be specified such that 
 
-Figure~\ref{fig:scenegraph} shows a possible scene graph with 5 nodes with their extents; (1,3) are transformation nodes centered on the solar system and the Earth barycenter respectively, (2, 4, 5) are rendering nodes containing the surface of the Sun, the Earth, and the Moon. Two cameras (A, B) are attached to the scene at different attachment nodes.
+Figure~\ref{fig:scenegraph} shows a possible scene graph with 5 nodes and their extents; (\texttt{1}, \texttt{3}) are transformation nodes centered on the solar system and the Earth barycenter respectively, (\texttt{2}, \texttt{4}, \texttt{5}) are rendering nodes containing the Sun, the Earth, and the Moon. Two cameras (A, B) are attached to the scene at different attachment nodes.
+
+First, we describe the relative scene traversal assuming a static camera, then describe the attachment changes of moving cameras.
 
 \subsection{Dynamic Scene Graph Traversal} \label{sec:method:dsgt}
-As described in the previous section, the camera is attached to a specific scene graph node \texttt{N}.
-Rendering, or otherwise accessing, the contents of the scene graph requires a traversal, which in a traditional scene graph is started at the root node and traverses through the child nodes.
-In our proposed framework, this traversal starts at the attached node \texttt{N} instead, with the ability of moving up and down in the scene graph and inverting the involved relative transformations.
+As described in the previous section, the camera is attached to a specific node \texttt{N} in the scene graph.
+Rendering, or otherwise accessing, the contents of the scene graph requires a traversal, which in a traditional scene graph starts at the root node and traverses through the child nodes.
+In our method, this traversal starts at the attached node \texttt{N} instead, with the ability of moving up and down in the scene graph and inverting the relative transformations if necessary.
 
 The traversal of the scene graph works as follows: For each scene graph node \texttt{M}, the shortest path between \texttt{M} and the currently attached node \texttt{N} is computed in the graph.
 Figure~\ref{fig:scenegraph}~(b) shows two examples of this with the camera being attached to node \texttt{3} and node \texttt{5} respectively.
@@ -564,10 +568,10 @@ By always rendering objects in their physical location, as opposed to the reproj
 
 \section{Results} \label{sec:result}
 We applied our framwork to a variety of use cases, most of which have been shown to audiences at public events.
-In this section, we shortly describe these use-cases and how our proposed frameworks was used in four categories.
+In this section, we shortly describe these use-cases and how our proposed method was used in four categories.
 
 \noindent \textbf{Space craft. }
-As one of the major motivations for developing this framework, spacecraft are a inherently small objects that need to be visualized precisely with respect to a an object they are inspecting.
+As one of the major motivations for developing this method, spacecraft are a inherently small objects that need to be visualized precisely with respect to a an object they are inspecting.
 One example is shown in Figure~\ref{fig:teaser} where New Horizons space craft is shown at 80\,Mm distance to Pluto and around $6 \cdot 10^{12}$\,m from the Sun.
 As described in Section~\ref{sec:theory:pl}, floating point numbers only have a precision of about 300\,km at the distance of Pluto, which would make a traditional approach infeasible.
 A second space craft is ESA's Rosetta shown in Figure~\ref{fig:res:stereo} as a stereoscopic rendering.
@@ -622,15 +626,15 @@ With this scene, the root node of the scene graph is the center of the Milky Way
 
 %-------------------------------------------------------------------------
 \section{Conclusions}
-In this work, we presented a framework that supports high-precision transformations in a scene graph by dynamically attaching the camera to the closest node and using this node as an origin for the scene traversal.
+In this work, we presented a method that supports high-precision transformations in a scene graph by dynamically attaching the camera to the closest node and using this node as an origin for the scene traversal.
 The dynamic scene graph enables a higher level of individual precision than which is otherwise possible.
 By supporting efficient dynamic reattachment of the camera to nodes, it becomes possible to navigate a scene encompassing scales and distances much larger than floating point precision would normally permit.
 The same reattachment technique can be applied to other scene graph nodes to provide the ability for scene graph nodes to retain high precision at multiple locations, for example, a space craft that requires high precision at multiple planets as it moves through space.
 The scene graph traversal uses the shortest path to every other scene graph node and thus circumvents potentially large translation values that would otherwise lead to precision degradation during the rendering.
 
-We implemented the framework in the open-source software platform OpenSpace which has the goal of being able to visualize and contextualize a wide range of astrophysical data.
-The framework was successfully tested on the visualization of multiple space craft missions~\cite{Bock_2015}, on virtual globes, and volumetric rendering.
-The framework is flexible enough, however, to be implemented and used in any generic scene graph implementation.
+We implemented the method in the open-source software platform OpenSpace which has the goal of being able to visualize and contextualize a wide range of astrophysical data.
+The method was successfully tested on the visualization of multiple space craft missions~\cite{Bock_2015}, on virtual globes, and volumetric rendering.
+The method is flexible enough, however, to be implemented and used in any generic scene graph implementation.
 
 \subsection{Future Work}
 For future work, we would like to include higher-level wayfinding techniques such as the ones explored in Li~\etal~\cite{li2006scalable} and generalize these to both macro and microcosmos scenarios. Furthermore, a more rigorous automatic determination of scene node extents, based on analysis of an object's movement, would be beneficial for displaying objects which are not moving on regular orbits.
