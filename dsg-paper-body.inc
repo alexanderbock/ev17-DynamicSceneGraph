@@ -698,17 +698,17 @@ With this scene, the root node of the scene graph is the center of the Milky Way
 %-------------------------------------------------------------------------
 \section{Conclusions}
 In this work, we presented a framework that supports high-precision transformations in a scene graph by dynamically attaching the camera to the closest node and using this node as an origin for the scene traversal.
-The dynamic scene graph enables a higher level of individual precision that otherwise possible, except utilizing poorly or unsupported number of mantissa bits.
-By supporting an efficient dynamic reattachment of the camera to attachment nodes, it becomes possible to navigate a scene encompassing scales and distances much bigger than floating point precision would normally allow.
-The same reattachment technique can be applied to other scene graph nodes to provide the ability for scene graph nodes to posess a high precision in multiple locations, for example a space craft that requires high precision at multiple planets.
-The scene graph traversal uses a shortest path every other scene graph node and thus circumvents potentially high translation values that would otherwise lead to precision degredation during the rendering.
+The dynamic scene graph enables a higher level of individual precision than which is otherwise possible.
+By supporting efficient dynamic reattachment of the camera to nodes, it becomes possible to navigate a scene encompassing scales and distances much larger than floating point precision would normally permit.
+The same reattachment technique can be applied to other scene graph nodes to provide the ability for scene graph nodes to retain high precision at multiple locations, for example, a space craft that requires high precision at multiple planets as it moves through space.
+The scene graph traversal uses the shortest path to every other scene graph node and thus circumvents potentially large translation values that would otherwise lead to precision degradation during the rendering.
 
 We implemented the framework in the open-source software platform OpenSpace which has the goal of being able to visualize and contextualize a wide range of astrophysical data.
 The framework was successfully tested on the visualization of multiple space craft missions~\cite{Bock_2015}, on virtual globes, and volumetric rendering.
-However, the framework is flexible enough to be implemented and used in any generic scene graph implementation.
+The framework is flexible enough, however, to be implemented and used in any generic scene graph implementation.
 
 \subsection{Future Work}
-For future work, we would like to include higher level wayfinding techniques such as the ones explored in Li~\etal~\cite{li2006scalable} and generalize these to both macro and microcosmos scenarios. Furthermore, a more regiorious automatic determination of scene node extents based on analysis of object's movement would be beneficial for displaying objects which are not moving on regular orbits.
+For future work, we would like to include higher-level wayfinding techniques such as the ones explored in Li~\etal~\cite{li2006scalable} and generalize these to both macro and microcosmos scenarios. Furthermore, a more rigorous automatic determination of scene node extents, based on analysis of an object's movement, would be beneficial for displaying objects which are not moving on regular orbits.
 
 \section{Acknowledgments}
 We would like to acknowledge the Swedish e-Science Research Center (SeRC) for their support of this work. Parts of this work were supported by NASA under award No NNX16AB93A. Additional thanks to Karl Bladin and Erik Broberg for their work on the planetary renderer and ESRI for providing the Earth data.
