@@ -57,10 +57,10 @@ The upper limit is given by the size of the observable universe with a comoving 
 The lower limit is the Planck length, at which the structure of space-time is dominated by quantum effects, of $10^{-35}$ meters.
 Seamless positioning and navigation across this tremendous range of scales, roughly 60 orders of magnitude, generates many challenges to visualization systems.
 Besides the issue of creating visual metaphors for objects and their interrelated positions, based on different abstraction levels and contracted distance representations, one challenge not immediately obvious is the limited precision of floating point numbers.
-Following a na\"ive approach using a conventional computer graphics pipeline with a global coordinate origin at Earth's center, object locations cannot be described with the necessary precision, such as when viewing spacecraft at the edge of our solar system, or watching micrometer-scaled scans on the surface of Mars.
+Following a na\"ive approach, using a conventional computer graphics pipeline with a global coordinate origin at Earth's center, an object's location cannot be described with the necessary precision when viewing a spacecraft at the edge of our solar system, or viewing micrometer-scaled scans on the surface of Mars.
 The location of objects thus need to be expressed in huge value ranges with great precision.
 Current computer hardware is, however, limited to hardware accelerated computations of single and double precision floating point numbers, which are insufficient to represent microscopic objects and cosmological distances simultaneously.
-This lack of precision causes well-known visual rendering artifacts, such as displaced vertices or z-fighting, and generate intricate problems when displaying volumetric content.
+This lack of precision causes well-known visual rendering artifacts, such as displaced vertices or z-fighting, and generates intricate problems when displaying volumetric content.
 Furthermore, overflow and underflow of the available value ranges results in undesirable clipping of near and far geometry.
 
 %Through various means of scientific discovery, humanity now has collected detailed information and measurements of structures in the surrounding cosmos that range from the diminutive to the unimaginably large. Everything we know and everything we can possibly know is constrained in size and distance by two boundaries. The upper boundary is given by the size of the observable universe with a comoving diameter of about $10^{27}$ meters. The lower boundary is the Planck length, at which the structure of space-time is dominated by quantum effects and the concept of locality loses physical meaning, with an approximate size of $10^{-35}$ meters. These two boundaries pose absolute limits to the resolution that a software system dealing data of any size has to support.
@@ -75,21 +75,21 @@ Furthermore, overflow and underflow of the available value ranges results in und
 In this work, we propose a general framework, a dynamic scene graph, which enables fast and accurate scaling, positioning, and navigation without significant loss of precision.
 The concept is applicable to a variety of application domains with large scale differences and not limited to astronomical data.
 The framework is based on an analysis of the sources of precision errors and range overflow problems in a conventional computer graphics pipeline.
-Using interval arithmetic to track floating point rounding errors, we are able to identify which set of operations that may introduce precision problems.
+Using interval arithmetic to track floating point rounding errors, we are able to identify sets of operations that may introduce precision problems.
 We combine this information with the observation that high level of detail is only required for nearby objects.
-The underlying technique relies on a dynamic updates and traversals of a scene graph whereby cameras automatically attach and detach to the closest object of interest.
-This object of interest is then used as a new coordinate origin and, thus, automatically ensures the highest possible numerical precision for salient objects.
-This enables an easy integration into existing scene graph implementations.
+The underlying technique relies on dynamic updates and traversals of a scene graph where cameras automatically attach and detach to the closest object of interest.
+The new object of interest is then used as the new coordinate origin and thus automatically ensures the highest possible numerical precision for salient objects.
+This approach enables an easy integration into existing scene graph implementations.
 
-The dynamic scene graph has been implemented in the open source softawre project \emph{OpenSpace}~\cite{github16openspace}.
-OpenSpace has the goal of interactively visualizing and contextualizing a range of astrophysical data, including the most current updates and even concurrent visualization of captured and simulated data.
-The software framework is primarily designed for immersive environments, such as dome theaters of planetariums, and is targeting public engagement in science.
-Examples of data that can be simultaneously visualized covers a wide range from sub-atomic particle simulations, via micrometer-scale discoveries made by rovers the Martian surface, to volumetric simulations of entire galaxies.
+The dynamic scene graph has been implemented in the open source software project \emph{OpenSpace}~\cite{github16openspace}.
+OpenSpace has the goal of interactively visualizing and contextualizing a range of astrophysical data, including the most recent updates to databases, and even concurrent visualization of captured and simulated data.
+The software framework is primarily designed for immersive environments, such as dome theaters at planetariums, and it is targeting public engagement in science.
+Examples of data that can be concurrently visualized cover a wide range from sub-atomic particle simulations, via micrometer-scale discoveries made by rovers on the Martian surface, to volumetric simulations of entire galaxies.
 
 Many state-of-the-art theaters and planetariums support stereoscopic viewing and recently the interest in immersive visualization in VR environments has increased.
-Thus softwares needs to support stereoscopic rendering and the ability to render on multi-pipeline systems and complex display configurations.
+Thus, software needs to support stereoscopic rendering and the ability to render on multi-pipe systems and complex display configurations.
 This poses yet another challenge when dealing with multiple scales as the eye separation needs to be adjusted to the current scale of interest.
-Our dynamic scene graph approach offers a seamless solution to this problem. 
+Our dynamic scene graph approach offers as well a seamless solution to this problem.
 
 It should be noted that our dynamic scene graph is applicable to any visualization tool that uses scene graphs to represent objects, and is compatible with techniques for volumetric rendering as well as order-independent transparency techniques.
 In summary, our contributions include:
