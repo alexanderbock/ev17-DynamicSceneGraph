@@ -172,7 +172,7 @@ An alternative data type for representing numbers is the IEEE754 64-bit floating
 The exponent range $[-126, 127]$ in 32-bit IEEE754 floats provides a possible scale range of approximately 76 orders of magnitude (OM).
 Computations that yield exponents outside that range will cause exponent underflow or overflow and result in loss of data.
 While this range is larger than the 60 OM of scales present in the known cosmos, problems may arrise in situations such as when distances need to be squared which may generate numbers in a range of 120 OM.
-This problem can be mitigated using a logarithmic representation as done in Power Scaled Coordinates or by using IEEE754 doubles, which have the exponent range $[-1022, 1023]$ resulting in representablity of approximately 616 OM.
+This problem can be mitigated using a logarithmic representation as done in Power Scaled Coordinates or by using IEEE754 doubles, which have the exponent range $[-1022, 1023]$ resulting in representablity of approximately 616 OM. \emilcomment{Maybe add something about length calculation by division of largest component, to show that double and psc is not necessary.}
 
 %The scale difference between the Planck length and the diameter of the observable universe is approximately $62$ OM. While 32-bit floats are able to represent this scale difference, a conventional approach to computing lengths and normalizing vectors would break down.
 
