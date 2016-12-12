@@ -79,14 +79,15 @@ Using interval arithmetic to track floating point rounding errors, we are able t
 We combine this information with the observation that high level of detail is only required for nearby objects.
 The underlying technique relies on a dynamic updates and traversals of a scene graph whereby cameras automatically attach and detach to the closest object of interest.
 This object of interest is then used as a new coordinate origin and, thus, automatically ensures the highest possible numerical precision for salient objects.
+This enables an easy integration into existing scene graph implementations.
 
-The dynamic scene graph has been implemented in the \emph{OpenSpace} project which is available online~\cite{github16openspace}.
-OpenSpace is an open source software project with the goal of interactively visualizing and contextualizing a range of astrophysical data, including the most current updates and even concurrent visualization of captured and simulated data.
+The dynamic scene graph has been implemented in the open source softawre project \emph{OpenSpace}~\cite{github16openspace}.
+OpenSpace has the goal of interactively visualizing and contextualizing a range of astrophysical data, including the most current updates and even concurrent visualization of captured and simulated data.
 The software framework is primarily designed for immersive environments, such as dome theaters of planetariums, and is targeting public engagement in science.
 Examples of data that can be simultaneously visualized covers a wide range from sub-atomic particle simulations, via micrometer-scale discoveries made by rovers the Martian surface, to volumetric simulations of entire galaxies.
 
-Many state-of-the-art dome theaters and planetariums support stereoscopic viewing and recently the interest in immersive visualization in VR environments has increased.
-Thus the software needs to support high-fidelity stereoscopic rendering and the ability to render on multi-pipeline systems and complex display configurations.
+Many state-of-the-art theaters and planetariums support stereoscopic viewing and recently the interest in immersive visualization in VR environments has increased.
+Thus softwares needs to support stereoscopic rendering and the ability to render on multi-pipeline systems and complex display configurations.
 This poses yet another challenge when dealing with multiple scales as the eye separation needs to be adjusted to the current scale of interest.
 Our dynamic scene graph approach offers a seamless solution to this problem. 
 
@@ -115,7 +116,7 @@ Combining this with the concept of power cubes, described in earlier works~ \cit
 The concept of \emph{Power Scaled Coordinates} or \emph{Power Homogeneous Coordinates}, introduced by Hanson~\etal , is a technique introduced to address the travel challenge when creating animations with large scale differences~\cite{hanson2000very}.
 The method uses four-dimensional floating point vectors where the first three components determine the direction of the vector, and the fourth encodes a scaling coefficient as a power of ten.
 The authors successfully utilize to create a powers-of-ten animation flythrough of the universe in which increasingly larger objects are shown with increasing distance to the Earth.
-This elegant solution is viable for scenes where the required precision decreases with distance from the coordinate origin, as it does not solve the problem of catastrophic cancellation and thus prohibits high-precision regions in large distances from the origin.
+This elegant solution is viable for scenes where the required precision decreases with distance from the origin, as it does not solve the problem of catastrophic cancellation and thus prohibits high-precision regions in large distances from the origin.
 %The proposed system can operate with floating point numbers close to unit scale, which solves the issue of exponent overflow that occurs when performing operations on large and close-to-zero vectors.
 %However, the challenge of representing multiple disjoint regions in which high precision is required a great distance from the coordinate origin is not addressed in this work.
 
@@ -123,14 +124,12 @@ Fu~\etal~\cite{fu2007transparently} introduce a depth buffer remapping to Power 
 The depth buffer range is divided into three regions where small and huge depth values are remapped using logarithmic scales and mid-range values are mapped linearly.
 Their method 
 While this method may be beneficial for some specific type of scene content, the method does not provide a generic way to select appropriate threshold values, and the choice of three separate regions with different mapping does not necessarily provide better results than one single logarithmic mapping.
-\anderscomment{I thought there were two Fu papers, the latter one dealing with what he calls attachments. Why did you not reference this one?}
-\alexcomment{I can't find the attachments paper; I know that he was explaining about it when we showed OpenSpace to him, but I don't think they have published it. I went through the Hansen/Fu paper list and couldn't find attachments}
 
 The \emph{ScaleGraph}, introduced by Klashed~\etal \cite{KHECY10} as a part of the Uniview software, is the most similar to our proposed framework.
 It employs a scene graph structure with sub-scenes to which the camera can attach.
-The content of the current sub-scene is rendered in its local coordinate system, maintaining high precision and allowing multiple regions in the universe to be represented with high relative precision.
+The content of the current sub-scene is rendered in its local coordinate system, maintaining high precision and allowing multiple regions to be represented with high relative precision.
 When rendering content outside the current sub-scene, objects are translated onto the bounding sphere of the scene and scaled to compensate for perspective effects.
-This translation, however, leads to inconsistencies in stereoscopic rendering when switching between scenes as objects jump from the bounding sphere of a scene to a finite location.
+This translation, however, leads to inconsistencies in stereoscopic rendering when switching scenes as objects jump from the bounding sphere of a scene to a finite location.
 %Vectors between sub-scenes are computed by traversing the scene graph through the closest common ancestor in the tree, to avoid introducing precision errors caused by handling unnecessarily large numbers.
 %By moving objects onto the bounding sphere of the current scene, object depths are mapped to a manageable range.
 Furthermore, the method does not provide a general solution for depth sorting objects that are outside the current sub-scene.
@@ -143,8 +142,7 @@ Upchurch and Desbrun~\cite{upchurch2012tightening} study the effects of floating
 The co-evolution of graphics hardware, software, and content, largely pushed forward by
 the gaming industry, has led to modern graphics processing units that are optimized for
 operating efficiently on floating point numbers, vectors, and matrices.
-In a standard computer graphics pipeline, $4 \times 4$ matrices are used to represent coordinate
-transformations operating on 4-dimensional homogeneous coordinate vectors with floating point components. In order to understand the precision and range limitations of the graphics pipeline used in visualization, we need to base our reasoning on properties on floating point numbers and the operations that we perform on them.
+In order to understand the precision and range limitations of the standard computer graphics pipeline used in visualization, we need to base our reasoning on properties on floating point numbers and the operations that we perform on them.
 
 \begin{figure}
 \centering
@@ -264,7 +262,7 @@ Given a matrix $X$ with components $X_{ij}$ and a matrix $[E]$ with interval com
 
 With these quantifications of floating point errors introduced by scalar operations and vector multiplications, we can identify the components in the graphics pipeline that are prone to introduce visible precision problems.
 
-\subsection{Rendering artifacts}
+\subsection{Precision-related root causes of rendering artifacts}
 %Having observed how error intervals originate and propagate through various floating point operations, we can studying the operations performed in the graphics pipeline to identify sources of precision problems of vertex as well as fragment operations.
 
 
@@ -382,29 +380,30 @@ This section has provided several insights:
 
 Having identified the sources of potential floating point precision inaccuracies in the computer graphics pipeline, we will now elaborate on our proposed framework.
 The \emph{Dynamic Scene Graph} utilizes these insights such that it becomes possible to achieve a high-fidelity rendering regardless of the location of the coordinate system origin.
-This is achieved by utilizing a \emph{dynamic camera attachment} and a \emph{relative scene traversal} performed with respect to the attached object.
+This is achieved by utilizing a \emph{dynamic camera attachment} and a \emph{relative scene traversal} performed with respect a special node; the attachment node.
 
-The framework is based on a traditional scene graph structure in which the traversal order is not fixed, but dependent on the location of the camera in the scene instead.
-Each node in the scene graph can contain a \emph{transformation}, consisting of a \emph{translation}, \emph{rotation}, and \emph{scaling}, which are described relative to the node's parent.
-In addition, nodes can contain a visual object, for example a planet or a spacecraft, that is rendered relative to the origin of the scene graph node.
+The framework is based on a traditional scene graph structure, but where the traversal order is dependent on the location of the camera in the scene. 
+Each node in the scene graph can contain a \emph{transformation}, consisting of a \emph{translation}, \emph{rotation}, and \emph{scaling}, which are all described relative to a node's parent.
+In addition, nodes may contain a visual object, for example a planet or a spacecraft, specified in a local coordinate system.
 If a scene graph node contains a visible object, we refer to it as a \emph{rendering node}, otherwise it is a \emph{transformation node}.
-Each scene graph node has a radial \emph{extent}, which determines the node's sphere of influence.
+Unlike traditional scene graphs, each scene graph node has a radial \emph{extent}, which determines the node's sphere of influence.
 % Specify limitation of the graph? Or later?
 %The location and sizes of the scene graph nodes have to be specified such that 
 
 Figure~\ref{fig:scenegraph} shows a subset of a possible scene graph with 5 nodes; (1,3) transformation nodes centered on the solar system and the Earth barycenter respectively, (2,4,5) rendering nodes containing the surface of the Sun, the Earth, and the Moon.
 
 \subsection{Dynamic camera attachment} \label{sec:method:dca}
-In our framework, a camera is always attached to a scene graph node.
-The \emph{attachment node} (AN) is the lowest node in the tree whose sphere of influence fully encompasses the camera position.
-In Figure~\ref{fig:scenegraph} camera \texttt{A} is located in nodes \texttt{1} and \texttt{3}, and is attached to node \texttt{3}. Likewise, camera \texttt{B} is inside nodes \texttt{1}, \texttt{2} and \texttt{5} and is attached to node \texttt{5}.
+In our framework, a camera is always attached to a single scene graph node.
+The \emph{attachment node} (AN) is the lowest node in the scene graph whose sphere of influence fully encompasses the camera position.
+In Figure~\ref{fig:scenegraph} camera \texttt{A} is located in nodes \texttt{1} and \texttt{3}, and is thus attached to node \texttt{3}. Likewise, camera \texttt{B} is inside nodes \texttt{1}, \texttt{2} and \texttt{5} and is thus attached to node \texttt{5}.
 
-We have to consider two cases for the update of a camera's AN.
-A camera can either attach to the child of the current AN, thus moving down the scene graph, or it attaches to the parent of the AN, thus moving up the scene graph.
-In order to determine the reattachment all involved distances are specified \emph{relative to the AN}, as opposed to relative to the global coordinate system origin. 
+We have to consider two cases for updating a camera's AN.
+If a camera enters the sphere of influence of a current AN's child, the child becomes the new AN the camera thus moves down the scene graph.
+If the camera leaves the sphere of influence of the current AN, the AN's parent becomes the new AN and the camera thus moves up the scene graph.
+At each step, the distances of the camera to the AN center and the distances to all children are computed and specified \emph{relative to the AN} as opposed to specifying the values relative to the global coordinate system origin.
 This circumvents the risk of catastrophic cancellation by ensuring that unnecessarily large vectors are not involved in the computation.
-A camera attaches to the AN's parent node if the distance from the camera to the center of the AN is larger than the AN's extent. 
-Conversely, whenever a camera location enters the sphere of influence of one of the AN's child nodes, the child node becomes the camera's new AN.
+%A camera attaches to the AN's parent node if the distance from the camera to the center of the AN is larger than the AN's extent. 
+%Conversely, whenever a camera location enters the sphere of influence of one of the AN's child nodes, the child node becomes the camera's new AN.
 
 \begin{figure}
 \centering
@@ -413,12 +412,12 @@ Conversely, whenever a camera location enters the sphere of influence of one of 
 \label{fig:coordsystems}
 \end{figure}
 
-In both transition cases, the location of the camera most changes reference frames.
-Figure~\ref{fig:coordsystems} shows a camera's old (\texttt{A}) and new (\texttt{B}) location before and after a attachment node change. 
+In both transition cases, the location of the camera must change reference frames.
+Figure~\ref{fig:coordsystems} shows a camera's old (\texttt{A}) and new (\texttt{B}) location before and after an attachment node change. 
 \texttt{A} is expressed relative to \texttt{N} by the vector $v$, whereas \texttt{B} is expressed relative to \texttt{M} as the vector $\mathbf{w}$.
 The old and new locations are related by $\mathbf{w} = \mathbf{v} + \mathbf{n}$.
 
-To allow for this remapping to be computed without precision problems, extents of the scene graph nodes are chosen such that the ratio between child node extent and parent node extent is significantly larger than the machine epsilon. In order to circumvent rounding errors related to translation as described in \ref{sec:theory:translation}, extents are chosen such that the camera attaches to a child render node before the details of the render node becomes visible.
+To allow for this remapping to be computed without precision problems, extents of the scene graph nodes must be chosen such that the ratio between child and parent nodes' extent is significantly larger than the machine epsilon. In order to circumvent rounding errors related to translation as described in \ref{sec:theory:translation}, extents are chosen such that the camera attaches to a child render node before the details of the render node becomes visible.
 
 Similarly to the translation, the rotation of the camera has to be inverted by applying the inverse of the rotation of \texttt{N} towards \texttt{M}.
 As stated in Section~\ref{sec:theory:rotation} no significant precision error with the rotation will occur.
@@ -436,25 +435,35 @@ As stated in Section~\ref{sec:theory:rotation} no significant precision error wi
 \subfigure[Surface of Titan]{\fbox{\includegraphics[width=\abWidth]{figure/image-sequence-5-2.png}}}
 \subfigure[Scene Graph Representation]{\includegraphics[width=\abWidth]{figure/earth-titan-graph.pdf}}
 
-\caption{A sequence of images of a flight started on Earth's surface (a), showing Earth from the view of geostationary satellites (b), entering the Saturnian system (c), entering Titan's sphere of influence (d), and approaching Titan; a journey of 1.65 billion km. Figure (f) shows the accompanying scene graph structure and and which locations the individual images were taken.}
+\caption{A journey of 1.65 billion km as sequence of images of a flight started on Earth's surface (a), showing Earth from the view of geostationary satellites (b), entering the Saturnian system (c), entering Titan's sphere of influence (d), and approaching Titan (e). Figure (f) shows the accompanying scene graph structure and and which locations the individual images were taken.}
 \label{fig:imagesequence}
 \end{figure*}
 
-Figure~\ref{fig:imagesequence} shows an example these transition in a flight from the Earth to Saturn's moon Europa.
+Figure~\ref{fig:imagesequence} shows an example these transition in a flight from the surface of Earth to Saturn's moon Titan. The camera changes its AN four times on this transition.
 
 \subsection{Dynamic object attachment} \label{sec:method:doa}
-In addition to the dynamic camera attachment, where the camera can reattached to children or parent nodes based on its movement, the same technique can also be required for scene graph nodes themselves.
+In addition to the dynamic camera attachment, where the camera can be reattached to children or parent nodes, the same technique is also required for scene graph nodes themselves.
 When dealing with dynamic astronomical objects it is possible for distinct sibling objects to approach each other.
-An exameple of when dynamic object attachment is required to achieve adequate precision is when visualizing the New Horizons mission~\cite{stern2009new}, whereas a spacecraft launched from Earth and approached both Jupiter and Pluto.
-If the scene graph node containing New Horizons would statically be a direct child of the solar system, floating point precision would not suffice for accurately representing distances from the probe and Earth, Jupiter, and Pluto, respectively.
+An example of this is visualizing the New Horizons mission~\cite{stern2009new}, where the spacecraft launched from Earth and approached both Jupiter and Pluto.
+If the scene graph node containing New Horizons would statically be a direct child of the solar system, floating point precision would not suffice for accurately representing distances from the probe at Earth, Jupiter, and Pluto, respectively.
 In order to avoid this, we enable scene graph nodes to dynamically attach to different nodes under specialized circumstances, that is, being highly mobile objects such as spacecraft, asteroids, or comets.
 In Figure~\ref{fig:teaser}, the New Horizons spacecraft scene graph node has been dynamically attached to the Pluto barycenter node, in order to allow simultanueous high fidelity rendering of the probe as well as the planetary system.
 
 \subsection{Dynamic Scene Graph Traversal} \label{sec:method:dsgt}
 \alexcomment{This needs some more work; the explanations are not very good}
-At all times, the camera is attached to a specific scene graph node \texttt{N} as described in the previous sections.
-For the traversal, in comparison to other methods, our proposed framework does not construct the necessary matrices by a depth-first traversal originating from the root node.
-Instead, in order to maintain high precision for all objects in the scene, we use \texttt{N} as the origin for the traversal.
+As described in the previous section, the camera is attached to a specific scene graph node \texttt{N}.
+Rendering, or otherwise accessing, the contents of the scene graph requires a traversal, which in a traditional scene graph is started at the root node.
+In our proposed framework, this traversal starts at the attached node \texttt{N} instead with the ability of moving up and down in the scene graph.
+First, this means that when different cameras are present in the scene graph, each camera might have its own traversal scheme.
+More importantly, this means that for two nodes \texttt{N} and \texttt{M} only the subtree with the closest common parent at the root needs to be traversed.
+This is at the heart of our proposed method as it leads to a high-precision rendering independent of the location of the nodes within the extended scene graph.
+%More importantly, this means that objects which are close to each other do not require the  traversal
+%
+% Different traversals for different cameras
+%
+%When rendering, or otherwise accessing, the contents of the scene graph it needs to 
+%For the traversal, in comparison to other methods, our proposed framework does not construct the necessary matrices by a depth-first traversal originating from the root node.
+%Instead, in order to maintain high precision for all objects in the scene, we use \texttt{N} as the origin for the traversal.
 %Conceptually, this is equivalent to rearranging the entire scene graph such that \texttt{N} becomes the new root node.
 %This rearranging
 Conceptually, this places the origin of the coordinate system in the center of the node \texttt{N} and thus enables the highest precision for \texttt{N} with precision decreasing with growing distance from the center of \texttt{N}.
@@ -638,28 +647,30 @@ Figure~\ref{fig:teaser} shows the New Horizons space craft at 80000\,km distance
 \begin{figure}
 \centering
 \fbox{\includegraphics[width=\linewidth]{figure/mars.png}}
-\caption{A rendering of the surface features in West Candor Chasma on Mars as captured from the HiRISE camera, showing details of structures with up to 25\,cm per pixel in resolution.}
+\caption{Details of structures with up to 25\,cm per pixel resolution in a rendering of the surface features in West Candor Chasma on Mars as captured from the HiRISE camera.
+%, showing details of structures with up to 25\,cm per pixel in resolution.}
+}
 \label{fig:res:mars}
 \end{figure}
 
 \begin{figure}
 \centering
 \fbox{\includegraphics[width=\linewidth]{figure/pluto.png}}
-\caption{A rendering of the surface of Pluto with a height field reconstructed from images from the New Horizons spacecraft showing the Zheng He Montes and al-Idrisi Montes in front of Tombaugh Regio.}
+\caption{A rendering of Pluto's surface with a height field reconstructed from New Horizons' images showing the Zheng He Montes and al-Idrisi Montes in front of Tombaugh Regio.}
 \label{fig:res:pluto}
 \end{figure}
 
 \begin{figure}
 \centering
 \fbox{\includegraphics[width=\linewidth]{figure/stereo.png}}
-\caption{Amber/blue anaglyph stereoscopic rendering of ESA's Rosetta/Philae separation in preparation for the landing on the comet 67P/Churyumov-Gerasimenko on November 12th, 2014.}
+\caption{Our approach supports stereoscopic rendering (here, amber/blue anaglyph) exemplified with the Rosetta/Philae separation for the landing on the comet 67P/Churyumov-Gerasimenko.}
 \label{fig:res:stereo}
 \end{figure}
 
 \begin{figure}
 \centering
 \fbox{\includegraphics[width=\linewidth]{figure/galaxy.png}}
-\caption{A volumetric rendering of a three-channel time-varying simulation of the Milky Way with a bounding box size of about $10^{20}$\,m.}
+\caption{A volumetric rendering of a three-channel simulation of the Milky Way with a bounding box size in the order of $10^{20}$\,m.}
 \label{fig:res:galaxy}
 \end{figure}
 
