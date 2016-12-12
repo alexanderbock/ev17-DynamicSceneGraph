@@ -318,7 +318,7 @@ The DSG is based on a traditional scene graph structure, but instead of a regula
 Each node in the scene graph can contain a \emph{transformation}, consisting of a \emph{translation}, \emph{rotation}, and \emph{scaling}, which are all described relative to a node's parent.
 In addition, nodes may contain a visual object representation, for example a planet or a spacecraft, specified in the node's local coordinate system.
 If a scene graph node contains a visible object, we refer to it as a \emph{rendering node}, otherwise it is a \emph{transformation node}.
-Unlike traditional scene graphs, each scene graph node has a radial \emph{extent}, which determines the node's sphere of influence. each scene graph node's extent has to cover at least all the children's spheres of influence.
+Unlike traditional scene graphs, each scene graph node has a radial \emph{extent}, which determines the node's sphere of influence. Each scene graph node's extent has to cover at least all the children's spheres of influence.
 % Specify limitation of the graph? Or later?
 %The location and sizes of the scene graph nodes have to be specified such that 
 
@@ -327,7 +327,7 @@ Figure~\ref{fig:scenegraph} shows a possible scene graph with 5 nodes with their
 \subsection{Dynamic Scene Graph Traversal} \label{sec:method:dsgt}
 As described in the previous section, the camera is attached to a specific scene graph node \texttt{N}.
 Rendering, or otherwise accessing, the contents of the scene graph requires a traversal, which in a traditional scene graph is started at the root node and traverses through the child nodes.
-In our proposed framework, this traversal starts at the attached node \texttt{N} instead with the ability of moving up and down in the scene graph with the ability of inverting the involved relative transformations..
+In our proposed framework, this traversal starts at the attached node \texttt{N} instead, with the ability of moving up and down in the scene graph and inverting the involved relative transformations.
 
 The traversal of the scene graph works as follows: For each scene graph node \texttt{M}, the shortest path between \texttt{M} and the currently attached node \texttt{N} is computed in the graph.
 Figure~\ref{fig:scenegraph}~(b) shows two examples of this with the camera being attached to node \texttt{3} and node \texttt{5} respectively.
@@ -344,7 +344,7 @@ For camera \texttt{B}, the transformation for the Sun are $v_{2,1} \cdot v_{1,3}
 
 First, this means that when different cameras are present in the scene graph, each camera might have its own traversal path.
 More importantly, this means that for two nodes \texttt{N} and \texttt{M} only the subtree with the closest common parent at the root needs to be traversed in order to retrieve all information necessary to transform \texttt{M} into the local coordinate system of \texttt{N} and vice versa.
-Without the requirement of including the root node in every traversal, the location of the local subtree does not have an impact on the precision of the objects contained within thus evading the potential of catastrophic cancellation that are stated in Section~\ref{sec:theory:translation}.
+Without the requirement of including the root node in every traversal, the location of the local subtree does not have an impact on the precision of the objects contained within, thus evading the potential of catastrophic cancellation that are stated in Section~\ref{sec:theory:translation}.
 This is at the heart of our proposed method as it leads to a high-precision rendering independent of the location of the nodes within the extended scene graph.
 By utilizing the shortest path between \texttt{M} and \texttt{N} we avoid large the translations which would otherwise be necessary if the all transformations originate from the root node and which would lead to precision problems.
 
@@ -708,7 +708,7 @@ Using IEEE754 floats, at Pluto's distance from the Sun the distance between two 
 \subsection{Interval arithmetic}
 It is possible to use interval arithmetic as a mathematical tool to track potential sources of rounding error~\cite{Hickey2001}. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$. Using interval arithmetic, the interval can be rewritten as $v(1 + u[-1,1])$.
 
-For the remainder of the following sections, $\oplus$, $\ominus$, $\odot$, and $\oslash$ will be used to denote floating point addition, subtraction, multiplication, and division respectively. The IEEE754 standard requires that the result of each of these operations is identical to the result of an infinitely precise computation followed by a rounding to the closest representable float. The operators are commutative and yield the possible output intervals given two real number intervals $[x] = [x_1, x_2]$ and $[y] = [y_1, y_2]$ as described in Equation \ref{eq:floatoperations}.
+For the remainder of the following sections, $\oplus$, $\ominus$, $\odot$, and $\oslash$ will be used to denote floating point addition, subtraction, multiplication, and division respectively. The IEEE754 standard requires the result of each of these operations is identical to the result of an infinitely precise computation followed by a rounding to the closest representable float. The operators are commutative and yield the possible output intervals given two real number intervals $[x] = [x_1, x_2]$ and $[y] = [y_1, y_2]$ as described in Equation \ref{eq:floatoperations}.
 
 \begin{equation} \label{eq:floatoperations}
 \begin{split}
@@ -729,7 +729,7 @@ For the remainder of the following sections, $\oplus$, $\ominus$, $\odot$, and $
 
 \subsection{Propagation of error intervals}
 When a result from one floating point operation is used in further computations, rounding errors will propagate and compound through the whole series of operations. This, for example, may lead to scenarios where expressions on the form $(a + b) - b$ may evaluate to $0$ for a sufficiently small $a$ and large $b$. This phenomena is known as 
-\emph{catastrophic cancellation}~\cite{Cuyt2001}. In any rendering pipeline where, for example, matrix multiplications or vector additions result in this type of operations there is a risk for floating point precision problems.
+\emph{catastrophic cancellation}~\cite{Cuyt2001}. In any rendering pipeline where, for example, matrix multiplications or vector additions result in these types of operations, there is a risk for floating point precision problems.
 
 Let $\mathds{E}$ be the set of intervals that can be written in the form $cu[-1, 1]$, where c is a non-negative constant that is not a function of any floating point value. For any intervals $[e_1], [e_2] \in \mathds{E}$, there are intervals $[e_3], [e_4] \in \mathds{E}$, such that
 $[e_1]+[e_2] \subseteq [e_3]$ and $[e_1e_2] \subseteq [e_4]$. 
