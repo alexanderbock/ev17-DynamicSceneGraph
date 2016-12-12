@@ -20,7 +20,7 @@
 %         $^2$~New York University \qquad
 %         $^3$~American Museum of Natural History
          $^1$~Linköping University\\%
-         $^2$~New York University\vspace*{-0.1em}\\%
+         $^2$~New York University\vspace*{-0.2em}\\%
           \small{$^3$~American Museum of Natural History}
        }
 
@@ -48,7 +48,7 @@
 
 \begin{abstract}
 
-In this work, we address the challenge of seamlessly visualizing astronomical data exhibiting huge scale differences in distance, size and resolution. One of the hurdles to overcome is accurate, fast and dynamic positioning and navigation to enable scaling over orders of magnitude, far beyond the precision of the floating point arithmetic on GPUs. To this end we propose a method that utilizes a dynamically assigned frame of reference to provide the highest possible numerical precision for all salient objects in a scene graph. This makes it possible to smoothly navigate and interactively render, for example, surface structures on Mars and the Milky Way simultaneously. Our work is based on an analysis of tracking and quantification of the propagation of precision errors through the computer graphics pipeline using interval arithmetic. Furthermore, we identify sources of precision degradation, leading to incorrect object positions in screen-space and z-fighting. Our proposed method operates without near and far planes while maintaining high depth precision through the use of floating point depth buffers. By providing interoperability with order-independent transparency algorithms, direct volume rendering, and stereoscopy, our approach is well suited for scientific visualization. We provide the mathematical background, a thorough description of the method, and a reference implementation.
+In this work, we address the challenge of seamlessly visualizing astronomical data exhibiting huge scale differences in distance, size, and resolution. One of the hurdles to overcome is accurate, fast, and dynamic positioning and navigation to enable scaling over orders of magnitude, far beyond the precision of floating point arithmetic. To this end we propose a method that utilizes a dynamically assigned frame of reference to provide the highest possible numerical precision for all salient objects in a scene graph. This makes it possible to smoothly navigate and interactively render, for example, surface structures on Mars and the Milky Way simultaneously. Our work is based on an analysis of tracking and quantification of the propagation of precision errors through the computer graphics pipeline using interval arithmetic. Furthermore, we identify sources of precision degradation, leading to incorrect object positions in screen-space and z-fighting. Our proposed method operates without near and far planes while maintaining high depth precision through the use of floating point depth buffers. By providing interoperability with order-independent transparency algorithms, direct volume rendering, and stereoscopy, our approach is well suited for scientific visualization. We provide the mathematical background, a thorough description of the method, and a reference implementation.
 
 %Old Abstract: In this work, we address the challenges of limited numerical range and precision of floating point numbers when simultaneously visualizing astronomical objects with huge scale differences, both in size and distance. Due to the limited precision of floating point numbers, it is impossible to represent comparatively small objects far away from the coordinate system origin. We propose a framework that utilizes a dynamically assigned coordinate system origin to provide the highest possible numerical precision for all salient objects in a scene graph. This makes it possible to navigate and interactively render, for example, surface structures on Mars and the Milky Way simultaneously. We track and quantify the propagation of numerical precision errors through the computer graphics pipeline using interval arithmetic for cases of large differences in scale. Furthermore, we identify sources of precision degradation, leading to incorrect object positions in screen-space and z-fighting, mathematically. Our proposed method operates without near and far planes while maintaining high depth precision through the use of floating point depth buffers. By providing interoperability with order-independent transparency algorithms, direct volume rendering, and stereoscopy, our approach is well suited for scientific visualization. We provide the mathematical background, a thorough description of the method, and a reference implementation.}
 
@@ -85,6 +85,8 @@ Using interval arithmetic to track floating point rounding errors, we are able t
 We combine this information with the observation that high level of detail is only required for nearby objects.
 The underlying technique relies on dynamic updates and traversals of a scene graph where cameras automatically attach and detach to the closest object of interest.
 The new object of interest is then used as the new coordinate origin and thus automatically ensures the highest possible numerical precision for salient objects.
+Furthermore, the scene graph can be updated to allow scene graph nodes to be dynamically attached to different parts of the graph.
+This enables objects to be represented with high precision at multiple places, for example when a spacecraft is orbiting multiple planets during its lifetime.
 This approach enables an easy integration into existing scene graph implementations.
 
 The dynamic scene graph has been implemented in the open source software project \emph{OpenSpace}~\cite{github16openspace}.
@@ -105,6 +107,7 @@ In summary, our contributions include:
 \item A general method for rendering objects with a wide depth range and precision without the explicit need for near and far planes.
 \item A scheme for seamless adaption of the eye-separation used for stereoscopic rendering.
 \item An analysis of floating point precision errors using interval arithmatic.
+\item A method for dynamically updating the parent/child relationship for scene graph nodes.
 \end{itemize}
 
 The paper is structured as follows: After describing the related work in the following section, we provide a theoretical background for the sources of floating point inaccuracies in Section~\ref{sec:theoretical}, followed by a description of our proposed dynamic scene graph method in Section~\ref{sec:method} and its results in Section~\ref{sec:result}.
@@ -155,7 +158,7 @@ Improvments in hardware and software has led to optimized modern graphics proces
 In order to understand precision and range limitations of the computer graphics pipeline, it is necessary to consider floating point number properties and the available operations.
 
 The derivation of floating point precision errors can be found in Appendix A for the interested reader.
-There, the origin of decreasing precision of floating point error for increasing values is examined; the effect of which is visible in an illustration in Figure~\ref{fig:degradation-circles} and in a real world example in Figure~\ref{fig:res:plutocomp}.
+There, the origin of decreasing precision of floating point error for increasing values is examined through the use of four operators that utilize the interval arithmetic characteristic of floating point numbers; the effect of which is visible in an illustration in Figure~\ref{fig:degradation-circles} and in a real world example in Figure~\ref{fig:res:plutocomp}.
 
 \begin{figure}
 \centering
@@ -309,20 +312,16 @@ The problems of depth buffer precision are well known and have been subject to t
 \label{fig:scenegraph}
 \end{figure}
 
-The need for accurate, effective and seamless positioning and navigation, together with the analysis of precision inaccuracies described above, form the basis for our proposed 
-\emph{Dynamic Scene Graph} (DSG), which enables high-fidelity rendering at any point in the scene graph independent of the location of the global coordinate system origin.
-This is achieved by utilizing a \emph{dynamic camera attachment} and a \emph{relative scene traversal} performed with respect to the camera's attachment node (AN).
-The AN is a regular node in the scene graph and does not have any special meaning aside from serving as the center for the camera that has it as its AN.
+The need for accurate, effective and seamless positioning and navigation, together with the analysis of precision inaccuracies described above, form the basis for our proposed \emph{Dynamic Scene Graph} (DSG) that enables high-fidelity rendering at any point in the scene graph independent of the location of the global coordinate system origin.
+This is achieved by utilizing a \emph{dynamic camera attachment} and a \emph{relative scene traversal} performed with respect to a camera's attachment node (AN).
+The AN is a regular scene graph node with no other special characteristics and is updated accordingly when the camera moves.
 The initial attachment node for each camera is determined by specifying the node and a position in its local coordinate system.
-Each camera in the scene is attached to its own AN, which is updated accordingly when the camera moves.
 
 The DSG is based on a traditional scene graph structure, but instead of a regular depth-first traversal order that starts at the root node of the graph, we propose a traversal order that starts at the AN and can traverse both upwards and downwards.
-Each node in the scene graph can contain a \emph{transformation}, consisting of a \emph{translation}, \emph{rotation}, and \emph{scaling} that are all described relative to a node's parent and which must be invertible, which is possible for all transformation matrices.
+Each node in the scene graph can contain a \emph{transformation}, consisting of a \emph{translation}, \emph{rotation}, and \emph{scaling} that are all described relative to a node's parent and must be invertible, which is possible for all transformation matrices.
 In addition, nodes may contain a visual object representation, for example a planet or a spacecraft, specified in the node's own local coordinate system.
 If a scene graph node contains a visible object, we refer to it as a \emph{rendering node}, otherwise it is a \emph{transformation node}.
-Unlike traditional scene graphs, each scene graph node has a radial \emph{extent}, which determines the node's sphere of influence. Each scene graph node's extent has to cover at least all the children's spheres of influence.
-% Specify limitation of the graph? Or later?
-%The location and sizes of the scene graph nodes have to be specified such that 
+Unlike traditional scene graphs, each scene graph node has a radial \emph{extent}, which determines the node's sphere of influence. Each scene graph node's extent has to be bigger than all its children's spheres of influence.
 
 Figure~\ref{fig:scenegraph} shows a possible scene graph with 5 nodes and their extents; (\texttt{1}, \texttt{3}) are transformation nodes centered on the solar system and the Earth barycenter respectively, (\texttt{2}, \texttt{4}, \texttt{5}) are rendering nodes containing the Sun, the Earth, and the Moon. Two cameras (A, B) are attached to the scene at different attachment nodes.
 
@@ -338,40 +337,28 @@ Figure~\ref{fig:scenegraph}~(b) shows two examples of this with the camera being
 For each step along this path, the transformation matrices are concatenated.
 If the transition is performed downwards towards the leaf nodes (blue arrows in Figure~\ref{fig:scenegraph}~(b)), the transformation matrices are concatenated analogous to traditional scene graphs.
 If the transition is performed up towards the root node of the graph (red arrows in Figure~\ref{fig:scenegraph}~(b)), the transformation is inverted before concatenated.
-The final transformation matrix is then applied to the scene graph node \texttt{M}.
-
-As an example, we use $v_{i,j}$ as a notation to denote the transformation from node \texttt{i} to \texttt{j} and $v{j_i} = -v_{i,j}$ as the inverse of this transformation in the scene graph depicted in Figure~\ref{fig:scenegraph}~(b).
-$v_{i,i}$ specifies the local translation that the scene graph node \texttt{i} uses.
+%The final transformation matrix is then applied to the scene graph node \texttt{M}.
+%
+As an example we use the scene graph depicted in Figure~\ref{fig:scenegraph}~(b).
+$v_{i,j}$ is the transformation from node \texttt{i} to \texttt{j} and $v{j_i} = -v_{i,j}$ as the inverse.
+$v_{i,i}$ specifies the local transformation used by the node \texttt{i}.
 For camera \texttt{A}, the rendering of the Sun (node \texttt{2}) is performed using the transformations $v_{2,1} \cdot v_{1,3} \cdot v_{3,3}$.
-The rendering of the Earth (node \texttt{4}) however, is performed only with the translation $v_{4,3} \cdot v_{3,3}$, ignoring all other scene graph nodes and thus not being affected by their values.
-For camera \texttt{B}, the transformation for the Sun are $v_{2,1} \cdot v_{1,3} \cdot v_{3,5} \cdot v_{5,5}$ and for the Earth $v_{4,3} \cdot v_{3,5} \cdot v_{5,5}$.
+The rendering of the Earth (node \texttt{4}) however, is performed only with the translation $v_{4,3} \cdot v_{3,3}$, ignoring all other scene graph nodes and thus not affected by their values.
+For camera \texttt{B}, the transformation for the Sun is $v_{2,1} \cdot v_{1,3} \cdot v_{3,5} \cdot v_{5,5}$ and for the Earth $v_{4,3} \cdot v_{3,5} \cdot v_{5,5}$.
 
 First, this means that when different cameras are present in the scene graph, each camera might have its own traversal path.
-More importantly, this means that for two nodes \texttt{N} and \texttt{M} only the subtree with the closest common parent at the root needs to be traversed in order to retrieve all information necessary to transform \texttt{M} into the local coordinate system of \texttt{N} and vice versa.
-Without the requirement of including the root node in every traversal, the location of the local subtree does not have an impact on the precision of the objects contained within, thus evading the potential of catastrophic cancellation as discussed in Section~\ref{sec:theory:translation}.
-This is fact lies at the core of our proposed method as it leads to a high-precision rendering independent of the location of the nodes within the extended scene graph.
+More importantly, for two nodes \texttt{N} and \texttt{M} only the subtree with the closest common parent at the root needs to be traversed in order to retrieve all information necessary to transform \texttt{M} into the local coordinate system of \texttt{N} and vice versa.
+Without including the root node in every traversal, the location of the local subtree does not have an impact on the precision of the objects contained within, thus evading the potential of catastrophic cancellation as discussed in Section~\ref{sec:theory:translation}.
+This fact lies at the core of our proposed method as it leads to a high-precision rendering independent of the location of the nodes within the extended scene graph.
 By utilizing the shortest path between \texttt{M} and \texttt{N} we avoid large the translations which would otherwise be necessary if the all transformations originate from the root node and which would lead to precision problems.
 
-This technique enables the highest precision for \texttt{N} where precision decreases with growing distance from the center of \texttt{N}.
-This is based on the observation that high-frequency changes are only visible in objects that are close to the camera.
+This technique enables the highest precision for the node \texttt{N} with precision decreasing for growing distances from the center of \texttt{N}.
 As described in Section~\ref{sec:theoretical}, the representable precision decreases with increasing numbers, such that small details in large objects with great distances would become prone to precision error.
-However, projected changes that are smaller than a fraction of a pixel will not be visible and, thus, do not need to be represented in the first place.
-Conceptually, this pivots the scene graph in such a way that the node \texttt{N} is placed at the root, all necessary transformation inversions are performed , and a traditional traversal algorithm is used.
+%This is admissible due to observations that high-frequency changes are only visible in objects close to the camera.
+However, projected changes that are smaller than a fraction of a pixel will not be visible.
+Therefore, our method only loses precision in the areas where high precision is not required.
 
-\subsection{Dynamic camera attachment} \label{sec:method:dca}
-In our scene graph, a camera is always attached to a single node, the AN, and the camera's position and orientation is expressed in AN's coordinate system.
-At all times, the AN is the deepest node in the scene graph whose sphere of influence fully encompasses the camera position.
-In Figure~\ref{fig:scenegraph} camera \texttt{A} is located in nodes \texttt{1} and \texttt{3}, and is thus attached to node \texttt{3}. Likewise, camera \texttt{B} is inside nodes \texttt{1}, \texttt{2} and \texttt{5} and is thus attached to node \texttt{5}.
-
-Figure~\ref{fig:imagesequence} shows an example of the dynamic camera attachment in a flight from the surface of Earth to Saturn's moon Titan. The camera changes its AN four times on this transition.
-
-There are two cases for updating a camera's AN in response to a user's interaction.
-If a camera enters the sphere of influence of a current AN's child, the child becomes the new AN the camera thus moves down the scene graph.
-If the camera leaves the sphere of influence of the current AN, the AN's parent becomes the new AN and the camera thus moves up the scene graph.
-At each step, the distances of the camera to the AN center and the distances to all children are computed and specified \emph{relative to the AN} as opposed to specifying the values relative to the global coordinate system origin.
-This circumvents the risk of catastrophic cancellation by ensuring that unnecessarily large vectors are not involved in the computation.
-%A camera attaches to the AN's parent node if the distance from the camera to the center of the AN is larger than the AN's extent. 
-%Conversely, whenever a camera location enters the sphere of influence of one of the AN's child nodes, the child node becomes the camera's new AN.
+Conceptually, our method pivots the scene graph such that the node \texttt{N} is placed at the root, all necessary transformation inversions are performed, and a traditional traversal algorithm is used.
 
 \begin{figure}
 \centering
@@ -380,11 +367,27 @@ This circumvents the risk of catastrophic cancellation by ensuring that unnecess
 \label{fig:coordsystems}
 \end{figure}
 
+
+\subsection{Dynamic camera attachment} \label{sec:method:dca}
+In our scene graph, a camera is always attached to a single node, the AN, and the camera's position and orientation is expressed in AN's local coordinate system.
+At all times, the AN is the deepest node in the scene graph whose sphere of influence fully encompasses the camera position.
+In Figure~\ref{fig:scenegraph} camera \texttt{A} is located in nodes \texttt{1} and \texttt{3}, and is thus attached to node \texttt{3}. Likewise, camera \texttt{B} is inside nodes \texttt{1}, \texttt{2} and \texttt{5} and is thus attached to node \texttt{5}.
+
+Figure~\ref{fig:imagesequence} shows an example of the dynamic camera attachment in a flight from the surface of Earth to Saturn's moon Titan. The camera changes its AN four times on this transition.
+
+There are two cases for updating a camera's AN in response to a user's interaction.
+If a camera enters the sphere of influence of a current AN's child, that child is the new AN --- the camera moves down the scene graph.
+If the camera leaves the sphere of influence of the current AN, the AN's parent is the new AN --- the camera moves up the scene graph.
+At each step, the distances of the camera to the AN center and the distances to all children are computed and specified \emph{relative to the AN} as opposed to specifying the values relative to the global coordinate system origin defined by the root node.
+This circumvents the risk of catastrophic cancellation by ensuring that unnecessarily large vectors are not included.
+%A camera attaches to the AN's parent node if the distance from the camera to the center of the AN is larger than the AN's extent. 
+%Conversely, whenever a camera location enters the sphere of influence of one of the AN's child nodes, the child node becomes the camera's new AN.
+
 In both transition cases, the location of the camera must change reference frames.
 Figure~\ref{fig:coordsystems} shows a camera's old (\texttt{A}) and new (\texttt{B}) location before and after an AN change. 
 \texttt{A} is expressed relative to \texttt{N} by the vector $v$, whereas \texttt{B} is expressed relative to \texttt{M} as the vector $\mathbf{w}$.
 The old and new locations are related by $\mathbf{w} = \mathbf{v} + \mathbf{n}$.
-To allow for this remapping to be computed without precision problems, extents of the scene graph nodes must be chosen such that the ratio between child and parent nodes' extent is significantly larger than the machine epsilon. In order to circumvent rounding errors related to translation as described in \ref{sec:theory:translation}, extents are chosen such that the camera attaches to a child render node before the details of the render node becomes visible.
+To allow for this remapping to be computed without precision problems, extents of the scene graph nodes must be chosen such that the ratio between the child's and parent's extent is significantly larger than the machine epsilon. In order to circumvent rounding errors related to translation as described in Section~\ref{sec:theory:translation}, extents are chosen such that the camera attaches to a child render node before the details of the rendering become visible.
 
 Similarly to the translation, the rotation of the camera has to be inverted by applying the inverse of the rotation of \texttt{N} towards \texttt{M}.
 As stated in Section~\ref{sec:theory:rotation} no significant precision error with the rotation will occur.
@@ -587,6 +590,14 @@ Figure~\ref{fig:res:pluto} shows an accurate rendering of the latest composite i
 Figure~\ref{fig:res:mars} shows detailed structures on the surface of Mars as returned from the Mars Reconnaissance Orbiter's HiRISE camera~\cite{mcewen2007mars}.
 It shows details with a resolution of 25\,cm per pixel.
 
+\begin{figure}[b]
+\centering
+\fbox{\includegraphics[width=\linewidth]{figure/pluto.png}}
+\caption{A rendering of Pluto's surface with a height field reconstructed from New Horizons' images showing the Zheng He Montes and al-Idrisi Montes in front of Tombaugh Regio.}
+\label{fig:res:pluto}
+\end{figure}
+
+
 \noindent \textbf{Volumetric data. }
 As described in Section~\ref{sec:method:ds}, our system allows for the seamless integration of volumetric data.
 Figure~\ref{fig:res:galaxy} shows a frame of a three-channel time-varying volumetric rendering of the Milky Way~\cite{XXX}\alexcomment{Waiting for a citation from Vivian}.
@@ -594,14 +605,7 @@ With this scene, the root node of the scene graph is the center of the Milky Way
 
 \begin{figure}
 \centering
-\fbox{\includegraphics[width=\linewidth]{figure/pluto.png}}
-\caption{A rendering of Pluto's surface with a height field reconstructed from New Horizons' images showing the Zheng He Montes and al-Idrisi Montes in front of Tombaugh Regio.}
-\label{fig:res:pluto}
-\end{figure}
-
-\begin{figure}
-\centering
-\fbox{\includegraphics[width=\linewidth]{figure/mars.png}}
+\fbox{\includegraphics[width=\linewidth]{figure/mars-new.png}}
 \caption{Details of structures with up to 25\,cm per pixel resolution in a rendering of the surface features in West Candor Chasma on Mars as captured from the HiRISE camera.
 %, showing details of structures with up to 25\,cm per pixel in resolution.}
 }
@@ -654,6 +658,7 @@ We would like to acknowledge the Swedish e-Science Research Center (SeRC) for th
 
 %-------------------------------------------------------------------------
 
+\newpage
 \section*{Appendix A}
 \subsection*{Floating point numbers}
 The IEEE754 standard for floating point numbers~\cite{zuras2008ieee} enables the representation of a large number range by encoding values as a sign, a mantissa, and an exponent.
@@ -710,9 +715,12 @@ Figure~\ref{fig:degradation-circles} shows a simulation with 5 mantissa bits.
 Using IEEE754 floats, at Pluto's distance from the Sun the distance between two adjacent floating point numbers is approximately $5.102 \cdot 10^9 \cdot 2^{-24}$\, km $= 304.1$\,km, which is about an eighth of Pluto's diameter and leads to visble artifacts (see Figure~\ref{fig:res:plutocomp}). %By using double precision, the corresponding distance between floating point numbers on Pluto becomes $5.102 \cdot 10^9 \cdot 2^{-53} \, \text{km} = \SI{56.64}{\micro\metre}$. Even at this relatively high resolution it is impossible to represent and contextualize tiny structures such as molecules. \emilcomment{Do we need to motivate this better? Who would ever want to look at molecules at Pluto?}
 
 \subsection*{Interval arithmetic}
-It is possible to use interval arithmetic as a mathematical tool to track potential sources of rounding error~\cite{Hickey2001}. Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$. Using interval arithmetic, the interval can be rewritten as $v(1 + u[-1,1])$.
+It is possible to use interval arithmetic to track potential sources of rounding error~\cite{Hickey2001}.
+Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$.
+Using interval arithmetic, this can be rewritten as $v(1 + u[-1,1])$.
 
-For the remainder of the following sections, $\oplus$, $\ominus$, $\odot$, and $\oslash$ will be used to denote floating point addition, subtraction, multiplication, and division respectively. The IEEE754 standard requires the result of each of these operations is identical to the result of an infinitely precise computation followed by a rounding to the closest representable float. The operators are commutative and yield the possible output intervals given two real number intervals $[x] = [x_1, x_2]$ and $[y] = [y_1, y_2]$ as described in Equation \ref{eq:floatoperations}.
+We use $\oplus$, $\ominus$, $\odot$, and $\oslash$ to denote floating point addition, subtraction, multiplication, and division respectively.
+The operators are commutative and yield the possible output intervals given two real number intervals $[x] = [x_1, x_2]$ and $[y] = [y_1, y_2]$ as,
 
 \begin{equation} \label{eq:floatoperations}
 \begin{split}
@@ -723,22 +731,23 @@ For the remainder of the following sections, $\oplus$, $\ominus$, $\odot$, and $
 \end{split}
 \end{equation}
  
-\noindent For operations involving the degenerate intervals $[0, 0] = \{0\}$ and $[1, 1] = \{1\}$, we observe some special cases where it is possible to make stronger claims about the output intervals:
+For operations involving the degenerate intervals $[0, 0] = \{0\}$ and $[1, 1] = \{1\}$ it holds that,
 \begin{equation} \label{eq:floatspecialcases}
-\begin{split}
-[x] \odot \{1\} & = [x] \\
-[x] \oplus \{0\} & = [x]
-\end{split}
+%\begin{split}
+[x] \odot \{1\} = [x] \quad \text{and}\quad [x] \oplus \{0\} = [x]
+%\end{split}
 \end{equation}
 
 \subsection*{Propagation of error intervals}
-When a result from one floating point operation is used in further computations, rounding errors will propagate and compound through the whole series of operations. This, for example, may lead to scenarios where expressions on the form $(a + b) - b$ may evaluate to $0$ for a sufficiently small $a$ and large $b$. This phenomena is known as 
-\emph{catastrophic cancellation}~\cite{Cuyt2001}. In any rendering pipeline where, for example, matrix multiplications or vector additions result in these types of operations, there is a risk for floating point precision problems.
+Rounding errors will propagate and compound when a result from one floating point operation is used in further computations.
+For this reason, expressions on the form $(a + b) - b$ may evaluate to $0$ for a sufficiently small $a$ and large $b$.
+This phenomena is known as \emph{catastrophic cancellation}~\cite{Cuyt2001}.
+There is risk for floating point precision problems in any pipeline utilizing matrix multiplications or vector additions.
 
-Let $\mathds{E}$ be the set of intervals that can be written in the form $cu[-1, 1]$, where c is a non-negative constant that is not a function of any floating point value. For any intervals $[e_1], [e_2] \in \mathds{E}$, there are intervals $[e_3], [e_4] \in \mathds{E}$, such that
-$[e_1]+[e_2] \subseteq [e_3]$ and $[e_1e_2] \subseteq [e_4]$. 
-
-We let $[e_i] = c_iu[-1, 1] \in \mathds{E}$ and consider two intervals $a(1 + [e_1])$ and $b(1 + [e_2])$. First, we study the effects of floating point multiplication acting on these intervals.
+Let $\mathds{E}$ be the set of intervals that can be written as $cu[-1, 1]$, where $c$ is a non-negative constant.
+For any intervals $[e_1], [e_2] \in \mathds{E}$, there are intervals $[e_3], [e_4] \in \mathds{E}$, such that $[e_1]+[e_2] \subseteq [e_3]$ and $[e_1e_2] \subseteq [e_4]$. 
+We let $[e_i] = c_iu[-1, 1] \in \mathds{E}$ and consider two intervals $a(1 + [e_1])$ and $b(1 + [e_2])$.
+First, we study the effects of floating point multiplication acting on these intervals.
 
 \begin{equation} \label{eq:errortermmult} 
 \begin{split}
@@ -748,7 +757,9 @@ a(1 + [e_1]) \odot b(1 + [e_2]) \\
 \end{split}
 \end{equation}
 
-The output interval in Equation \ref{eq:errortermmult} has the size $|abc_3u|$, meaning that the maximum absolute rounding error of floating point multiplication is proportional to the absolute value of the product $ab$. However, the relative rounding error $c_3u$ is independent of these factors. We proceed with studying the properties of floating point addition.
+The output interval in Equation \ref{eq:errortermmult} has the size $|abc_3u|$, meaning that the maximum absolute rounding error of floating point multiplication is proportional to the absolute value of the product $ab$.
+However, the relative rounding error $c_3u$ is independent of these factors.
+We proceed with the properties of floating point addition.
 
 \begin{equation} \label{eq:errortermadd} 
 \begin{split}
@@ -758,7 +769,9 @@ a(1 + [e_1]) \oplus b( 1 + [e_2]) \\
 \end{split}
 \end{equation}
 
-\noindent Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_4u| + |bc_5u|$. The relative error of the floating point sum depends on the absolute value of the individual terms. By applying the equation iteratively, we see that for floating point sums $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, with $[x_i] = x_i(1 + [e_i])$ Equation~\ref{eq:errortermsum} holds regardless of the order of operations.
+\noindent Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_4u| + |bc_5u|$.
+The relative error of the floating point sum depends on the individual terms' absolute value.
+By applying the equation iteratively, we see that $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, with $[x_i] = x_i(1 + [e_i])$ Equation~\ref{eq:errortermsum} holds regardless of the order of operations.
 
 \begin{equation} \label{eq:errortermsum} 
 \osum_i [x_i] \subseteq \sum_i [x_i](1 + [e'_i])
@@ -766,7 +779,9 @@ a(1 + [e_1]) \oplus b( 1 + [e_2]) \\
 
 Floating point sums will accumulate errors from all contributing terms, creating a risk for catastrophic cancellation if both large positive and negative terms are involved in a computation with relatively small expected result. 
 
-Given a matrix $X$ with components $X_{ij}$ and a matrix $[E]$ with interval components $[E_{ij}]$, let $[X^E]$ denote a matrix with the interval components $X_{ij}(1 + [E_{ij}])$. We use the operator $\otimes$ to denote matrix multiplication, in which output components are computed as sums of products. By combining Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get Equation~\ref{eq:matrixmult} where all interval matrix components $[E_{ij}], [F_{ij}] \in \mathds{E}$ and $e_{ijk} \in \mathds{E}$. The number of terms $m$ equals the number of columns in $A$ as well as the number of rows in $B$.
+Given a matrix $X$ with components $X_{ij}$ and a matrix $[E]$ with interval components $[E_{ij}]$, let $[X^E]$ denote a matrix with the interval components $X_{ij}(1 + [E_{ij}])$.
+We use the operator $\otimes$ to denote matrix multiplication, in which output components are computed as sums of products.
+By combining Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get, 
 
 \begin{equation} \label{eq:matrixmult} 
 \begin{split}
@@ -775,10 +790,7 @@ Given a matrix $X$ with components $X_{ij}$ and a matrix $[E]$ with interval com
 \end{split}
 \end{equation}
 
-\noindent We observe that the maximum floating point error associated with a component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$. Using the special cases from Equation \ref{eq:floatspecialcases}, we note that $e_{ijk} = 0$ if $A_{ik} = 0$ or $A_{ik} = 0$. Depending on the structure of the matrices $A$ and $B$, the output component may be subject to catastrophic cancellation. 
-
-With these quantifications of floating point errors introduced by scalar operations and vector multiplications, we can identify the components in the graphics pipeline that are prone to introduce visible precision problems.
-
-
+\noindent with all interval matrix components $[E_{ij}], [F_{ij}] \in \mathds{E}$ and $e_{ijk} \in \mathds{E}$.
+We observe that the maximum floating point error of a component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$. Using the special cases from Equation \ref{eq:floatspecialcases}, we note that $e_{ijk} = 0$ if $A_{ik} = 0$ or $A_{ik} = 0$. Depending on the structure of the matrices $A$ and $B$, the output component may be subject to catastrophic cancellation. 
 
 \end{document}
