@@ -136,8 +136,6 @@ Furthermore, the method does not provide a general solution for depth sorting ob
 %Furthermore, the work does not address stereoscopic rendering of objects across sub-scenes.
 The traversal of sub-scenes in this work formed the bases for our algorithm of the dynamic traversal of a scene graph.
 
-Upchurch and Desbrun~\cite{upchurch2012tightening} study the effects of floating point arithmetic involved in perspective projection. \emilcomment{todo.}
-
 \section{Theoretical motivation}\label{sec:theoretical}
 The co-evolution of graphics hardware, software, and content, largely pushed forward by
 the gaming industry, has led to modern graphics processing units that are optimized for
@@ -358,16 +356,17 @@ The z-component in clip space $c_z = (P\mathbf{v})_z$ is given by Equation \ref{
 
 \noindent The result is an affine mapping of depths such that vertices in the near plane yield $\mathbf{c}_z = 0$ and vertices in the far plane give $\mathbf{c}_z = \mathbf{c}_w$.
 Subsequently, the perspective division maps $[\mathbf{n}_z]$ into the range $[0, 1]$.
-If an integer depth buffer is used, this non-linear mapping results in a higher depth resolution for close objects than for distant ones. Setting $n$ to a small number may cause distant vertices to collapse to the same $\mathbf{n}_z$ and cause z-fighting.
+If an integer depth buffer is used, this non-linear mapping results in a higher depth resolution for close objects than for distant ones. Setting $n$ to a small number may cause distant vertices to collapse to the same $\mathbf{n}_z$ and cause z-fighting. 
+
+The problems of depth buffer precision are well known and have been subject to thorough analysis \cite{cozzi20113d}. Furthermore, Upchurch and Desbrun~\cite{upchurch2012tightening} show how good depth resolution can be maintained even with a far plane placed in $\infty$. However, precision problems for distant objects remain an issue for small $n$.
 
 \subsection{Sources of precision errors}
 This section has provided several insights:
 \begin{itemize}
 \item Large translation matrices acting on small vectors or translations may lead to significant loss of precision.
-\item Rotation matrices may cause loss of relative precision of small matrix components when applied to matrices with both small and huge numbers. 
-\item There is no significant loss of relative precision associated with applying scaling matrices.
-\item Projection matrices and depth mapping TODO.
+\item Rotation and scaling matrices do not induce significant precision loss when applied to vectors or other matrices 
 \item Perspective division scales down the floating point error intervals in vertex coordinates for distant objects.
+\item Perspective projection followed by perspective division 
 \end{itemize}
 
 
@@ -621,9 +620,11 @@ The rendering of the Sun (node \texttt{2}) as viewed from camera A would include
 %How to calculate the final Model View Matrix...
 %
 \subsection{Depth Sorting}
-\cite{cozzi20113d}
+In our approach, we use a modified perspective matrix with $\lambda_1 = \lambda_2 = 0$, yielding $\mathbf{z}_c = 0$ for all vertices and disabling the near and far planes. Geometry behind the camera is discarded due to the criterion of $-\mathbf{c}_w < \mathbf{c}_w$ imposed by the OpenGL pipeline. For depth comparisons, we use 32-bit floating point numbers representing the distance to the fragment being rendered.
 
-\subsection{Volume rendering and Order Independent Transparency}
+To avoid exponent overflow and underflow for distant and close fragments, we first divide the view coordinate vector $v$ by its component with largest magnitude $\mathbf{v}_{\text{max}}$, perform the computation using the pythagoran theorem, and multiply by $\mathbf{v}_{\text{max}}$.
+
+Depth sorting is performed using conventional z-buffering with a 32-bit floating point buffer. For scenes with volumetric content or transparent geometry, we use the A-buffer technique\cite{lindholm2015hybrid} for order independent transparency. When using ray casting for volumetric rendering, the distance taken along the ray can be compared with the distance of rendered geometry in order to perform early ray termination.
 
 \section{Results} \label{sec:result}
 We have applied our framework to a variety of use cases, some of which have been shown to an audience at public events.
