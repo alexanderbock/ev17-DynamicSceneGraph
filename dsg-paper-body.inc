@@ -702,8 +702,8 @@ While this range is larger than the 60 OM required for the known cosmos, problem
 %The scale difference between the Planck length and the diameter of the observable universe is approximately $62$ OM. While 32-bit floats are able to represent this scale difference, a conventional approach to computing lengths and normalizing vectors would break down.
 
 %\subsubsection{Precision limitations} \label{sec:theory:pl}
-Due to the limited number of mantissa bits, values need to be rounded in order to be represented as floating point numbers.
-An upper bound of the spacing between a floating point number $v$ and adjacent numbers can be expressed as $\epsilon|v|$, where $\epsilon$ is a constant given by $2^{-(n + 1)}$ with $n$ as the number of mantissa bits~\cite{higham2002accuracy}.
+Due to the limited number of mantissa bits, values need to be rounded to be representable as floating point numbers.
+An upper bound of the spacing between a floating point number $v$ and adjacent numbers is $\epsilon|v|$, where $\epsilon = 2^{-(n + 1)}$ with $n$ as the number of mantissa bits~\cite{higham2002accuracy}.
 %Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, with the rounding error coefficient $u = \frac{\epsilon}{2}$.
 For IEEE754 float, $\epsilon$ is $2^{-24}\,\approx
 \, 5.96 \cdot 10^{-8}$, meaning that values are precise to about 7 significant figures in decimal notation.
@@ -724,7 +724,7 @@ Due to the upper bound of the rounding error, a value $v$ may be rounded to a nu
 Using interval arithmetic, this can be rewritten as $v(1 + u[-1,1])$.
 
 We use $\oplus$, $\ominus$, $\odot$, and $\oslash$ to denote floating point addition, subtraction, multiplication, and division respectively.
-The operators are commutative and yield the possible output intervals given two real number intervals $[x] = [x_1, x_2]$ and $[y] = [y_1, y_2]$ as,
+The operators are commutative and yield the possible output intervals given two real number intervals $[x] = [x_1, x_2]$ and $[y] = [y_1, y_2]$ as,\vspace*{-1.5em}
 
 \begin{equation} \label{eq:floatoperations}
 \begin{split}
@@ -745,25 +745,25 @@ For operations involving the degenerate intervals $[0, 0] = \{0\}$ and $[1, 1] =
 \subsection*{Propagation of error intervals}
 Rounding errors will propagate and compound when a result from one floating point operation is used in further computations.
 For this reason, expressions on the form $(a + b) - b$ may evaluate to $0$ for a sufficiently small $a$ and large $b$.
-This phenomena is known as \emph{catastrophic cancellation}~\cite{Cuyt2001}.
+This phenomena is known as \emph{catastrophic cancellation} (CC)~\cite{Cuyt2001}.
 There is risk for floating point precision problems in any pipeline utilizing matrix multiplications or vector additions.
 
 Let $\mathds{E}$ be the set of intervals that can be written as $cu[-1, 1]$, where $c$ is a non-negative constant.
 For any intervals $[e_1], [e_2] \in \mathds{E}$, there are intervals $[e_3], [e_4] \in \mathds{E}$, such that $[e_1]+[e_2] \subseteq [e_3]$ and $[e_1e_2] \subseteq [e_4]$. 
 We let $[e_i] = c_iu[-1, 1] \in \mathds{E}$ and consider two intervals $a(1 + [e_1])$ and $b(1 + [e_2])$.
-First, we study the effects of floating point multiplication acting on these intervals.
+First, we study the effects of floating point multiplication acting on these intervals.\vspace*{-1.5em}
 
 \begin{equation} \label{eq:errortermmult} 
 \begin{split}
 a(1 + [e_1]) \odot b(1 + [e_2]) \\
-\subseteq ab(1 + [e_1])(1 + [e_2])(1 + u[-1, 1]) \\
+\subseteq ab(1 + [e_1])(1 + [e_2])(1 + u[-1, 1]) 
 \subseteq ab(1 + [e_3])
 \end{split}
 \end{equation}
 
 The output interval in Equation \ref{eq:errortermmult} has the size $|abc_3u|$, meaning that the maximum absolute rounding error of floating point multiplication is proportional to the absolute value of the product $ab$.
 However, the relative rounding error $c_3u$ is independent of these factors.
-We proceed with the properties of floating point addition.
+We proceed with the properties of floating point addition.\vspace*{-1.5em}
 
 \begin{equation} \label{eq:errortermadd} 
 \begin{split}
@@ -775,17 +775,17 @@ a(1 + [e_1]) \oplus b( 1 + [e_2]) \\
 
 \noindent Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_4u| + |bc_5u|$.
 The relative error of the floating point sum depends on the individual terms' absolute value.
-By applying the equation iteratively, we see that $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, with $[x_i] = x_i(1 + [e_i])$ Equation~\ref{eq:errortermsum} holds regardless of the order of operations.
+By applying the equation iteratively, we see that $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, with $[x_i] = x_i(1 + [e_i])$ Equation~\ref{eq:errortermsum} holds regardless of the order of operations.\vspace*{-1.5em}
 
 \begin{equation} \label{eq:errortermsum} 
 \osum_i [x_i] \subseteq \sum_i [x_i](1 + [e'_i])
 \end{equation}
 
-Floating point sums will accumulate errors from all contributing terms, creating a risk for catastrophic cancellation if both large positive and negative terms are involved in a computation with relatively small expected result. 
+Floating point sums will accumulate errors from all contributing terms with the risk for CC if both large positive and negative terms are involved in a computation with relatively small expected result. 
 
 Given a matrix $X$ with components $X_{ij}$ and a matrix $[E]$ with interval components $[E_{ij}]$, let $[X^E]$ denote a matrix with the interval components $X_{ij}(1 + [E_{ij}])$.
 We use the operator $\otimes$ to denote matrix multiplication, in which output components are computed as sums of products.
-By combining Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get, 
+By combining Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get,\vspace*{-1.5em} 
 
 \begin{equation} \label{eq:matrixmult} 
 \begin{split}
@@ -795,6 +795,6 @@ By combining Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get,
 \end{equation}
 
 \noindent with all interval matrix components $[E_{ij}], [F_{ij}] \in \mathds{E}$ and $e_{ijk} \in \mathds{E}$.
-We observe that the maximum floating point error of a component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$. Using the special cases from Equation \ref{eq:floatspecialcases}, we note that $e_{ijk} = 0$ if $A_{ik} = 0$ or $A_{ik} = 0$. Depending on the structure of the matrices $A$ and $B$, the output component may be subject to catastrophic cancellation. 
+We observe that the maximum floating point error of a component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$. Using the special cases from Equation \ref{eq:floatspecialcases}, we note that $e_{ijk} = 0$ if $A_{ik} = 0$ or $A_{ik} = 0$. Depending on the structure of the matrices $A$ and $B$, the output component may be subject to CC. 
 
 \end{document}
