@@ -174,7 +174,7 @@ This problem can be mitigated using a logarithmic representation as done in Powe
 
 %The scale difference between the Planck length and the diameter of the observable universe is approximately $62$ OM. While 32-bit floats are able to represent this scale difference, a conventional approach to computing lengths and normalizing vectors would break down.
 
-\subsubsection{Precision limitations}
+\subsubsection{Precision limitations} \label{sec:theory:pl}
 Due to the limited number of mantissa bits, values need to be rounded in order to be represented as floating point numbers. An upper bound of the absolute spacing between a floating point number $v$ and adjacent numbers can be expressed as $\epsilon|v|$\cite{higham2002accuracy}, where the \emph{machine epsilon} $\epsilon$ is a constant given by $2^{-(n + 1)}$ where $n$ is the number of mantissa bits. Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, with the rounding error coefficient $u = \frac{\epsilon}{2}$.
 For IEEE754 float, $\epsilon$ is $2^{-24}\,\approx
 \, 5.96 \cdot 10^{-8}$, meaning that values are precise to about 7 significant figures in decimal notation.
@@ -616,31 +616,48 @@ In Figure~\ref{fig:teaser}, the New Horizons spacecraft scene graph node has bee
 %
 %How to calculate the final Model View Matrix...
 %
-\subsection{Depth Sorting}
+\subsection{Depth Sorting} \label{sec:method:ds}
 In our approach, we use a modified perspective matrix with $\lambda_1 = \lambda_2 = 0$, yielding $\mathbf{z}_c = 0$ for all vertices and disabling the near and far planes. Geometry behind the camera is discarded due to the criterion of $-\mathbf{c}_w < \mathbf{c}_w$ imposed by the OpenGL pipeline. For depth comparisons, we use 32-bit floating point numbers representing the distance to the fragment being rendered.
 
 To avoid exponent overflow and underflow for distant and close fragments, we first divide the view coordinate vector $v$ by its component with largest magnitude $\mathbf{v}_{\text{max}}$, perform the computation using the pythagoran theorem, and multiply by $\mathbf{v}_{\text{max}}$.
 
 Depth sorting is performed using conventional z-buffering with a 32-bit floating point buffer. For scenes with volumetric content or transparent geometry, we use the A-buffer technique\cite{lindholm2015hybrid} for order independent transparency. When using ray casting for volumetric rendering, the distance taken along the ray can be compared with the distance of rendered geometry in order to perform early ray termination.
 
+%\subsection{Stereoscopic Rendering}
+
+
 \section{Results} \label{sec:result}
-We have applied our framework to a variety of use cases, some of which have been shown to an audience at public events.
-In this section, we shortly describe these use-cases along relevant numbers and compare them to conventional methods.
+We applied our framwork to a variety of use cases, most of which have been shown to audiences at public events.
+In this section, we shortly describe these use-cases and how our proposed frameworks was used in four categories.
 
-\noindent \textbf{Space craft } are one major use case in which small objects are rendered at great distances from the Sun.
-Figure~\ref{fig:teaser} shows the New Horizons space craft at 80000\,km distance to Pluto and $6 \cdot 10^{12}$\,m from the Sun.
+\noindent \textbf{Space craft. }
+As one of the major motivations for developing this framework, spacecraft are a inherently small objects that need to be visualized precisely with respect to a an object they are inspecting.
+One example is shown in Figure~\ref{fig:teaser} where New Horizons space craft is shown at 80\,Mm distance to Pluto and around $6 \cdot 10^{12}$\,m from the Sun.
+As described in Section~\ref{sec:theory:pl}, floating point numbers only have a precision of about 300\,km at the distance of Pluto, which would make a traditional approach infeasible.
+A second space craft is ESA's Rosetta shown in Figure~\ref{fig:res:stereo} as a stereoscopic rendering.
 
-\noindent \textbf{Navigation. } Figure~\ref{fig:imagesequence} shows individual frames of a seamless nagivation from the surface of Earth, where the mountains of the Alps are rendered with their correct height and textures, out to the surface of Titan orbiting Saturn, showing color images of the moon's surface. At no point during this $1.65$\, billion km journey artifacts are visible.
+\noindent \textbf{Navigation. }
+Figure~\ref{fig:imagesequence} shows individual frames of a seamless nagivation from the surface of Earth, where the mountains of the Alps are rendered with their correct height and surface textures, out to the surface of Titan orbiting Saturn, showing color images of the moon's surface.
+At no point during this $1.65$\, billion km user controlled journey artifacts are visible.
 
-\noindent \textbf{Virtual globes. } Figure~\ref{fig:res:mars} Figure~\ref{fig:res:pluto}
+\noindent \textbf{Virtual globes. }
+High resolution surface features are an additional challenge when representing an entire solar system in a single scene graph.
+Individual surface features are smaller than the available floating point precision.
+Figure~\ref{fig:res:pluto} shows an accurate rendering of the latest composite images and height maps on Pluto~\cite{stern2015pluto} with a resolution of between 2 and 5\,km/pixel.
+Figure~\ref{fig:res:mars} shows detailed structures on the surface of Mars as returned from the Mars Reconnaissance Orbiter's HiRISE camera~\cite{mcewen2007mars}.
+It shows details with a resolution of 25\,cm per pixel.
 
-\noindent \textbf{Volumetric data. } Figure~\ref{fig:res:galaxy}
+\noindent \textbf{Volumetric data. }
+As described in Section~\ref{sec:method:ds}, our system allows for the seamless integration of volumetric data.
+Figure~\ref{fig:res:galaxy} shows a frame of a three-channel time-varying volumetric rendering of the Milky Way~\cite{XXX}\alexcomment{Waiting for a citation from Vivian}.
+With this scene, the root node of the scene graph is the center of the Milky Way and the solar system and all its contents are at a distance of $2,5 \cdot 10^{20}$ from the center with the volume's bounding box of $\approx 10^{21} \times 10^{21} \times 1.5 \cdot 10^{19}$\,m.
 
-\noindent \textbf{Planets. } Figure~\ref{fig:res:plutocomp}. Computation of the 9 quantization levels taking into account the distance of Pluto from the coordinate system origin. Comparing that to the quantization levels we get with the dynamic scene graph
-
-\noindent \textbf{Stereoscopic rendering. } Figure~\ref{fig:res:stereo}
-
-
+\begin{figure}
+\centering
+\fbox{\includegraphics[width=\linewidth]{figure/pluto.png}}
+\caption{A rendering of Pluto's surface with a height field reconstructed from New Horizons' images showing the Zheng He Montes and al-Idrisi Montes in front of Tombaugh Regio.}
+\label{fig:res:pluto}
+\end{figure}
 
 \begin{figure}
 \centering
@@ -649,13 +666,6 @@ Figure~\ref{fig:teaser} shows the New Horizons space craft at 80000\,km distance
 %, showing details of structures with up to 25\,cm per pixel in resolution.}
 }
 \label{fig:res:mars}
-\end{figure}
-
-\begin{figure}
-\centering
-\fbox{\includegraphics[width=\linewidth]{figure/pluto.png}}
-\caption{A rendering of Pluto's surface with a height field reconstructed from New Horizons' images showing the Zheng He Montes and al-Idrisi Montes in front of Tombaugh Regio.}
-\label{fig:res:pluto}
 \end{figure}
 
 \begin{figure}
@@ -682,25 +692,21 @@ Figure~\ref{fig:teaser} shows the New Horizons space craft at 80000\,km distance
 
 %-------------------------------------------------------------------------
 \section{Conclusions}
-\alexcomment{This needs checking and some addtions}
 In this work, we presented a framework that supports high-precision transformations in a scene graph by dynamically attaching the camera to the closest node and using this node as an origin for the scene traversal.
-
+The dynamic scene graph enables a higher level of individual precision that otherwise possible, except utilizing poorly or unsupported number of mantissa bits.
 By supporting an efficient dynamic reattachment of the camera to attachment nodes, it becomes possible to navigate a scene encompassing scales and distances much bigger than floating point precision would normally allow.
 The same reattachment technique can be applied to other scene graph nodes to provide the ability for scene graph nodes to posess a high precision in multiple locations, for example a space craft that requires high precision at multiple planets.
 The scene graph traversal uses a shortest path every other scene graph node and thus circumvents potentially high translation values that would otherwise lead to precision degredation during the rendering.
 
 We implemented the framework in the open-source software platform OpenSpace which has the goal of being able to visualize and contextualize a wide range of astrophysical data.
 The framework was successfully tested on the visualization of multiple space craft missions~\cite{Bock_2015}, on virtual globes, and volumetric rendering.
+However, the framework is flexible enough to be implemented and used in any generic scene graph implementation.
 
 \subsection{Future Work}
-
-\begin{enumerate}
-\item Dragging along problem when a planet moves into a camera, not a camera into the planet
-\end{enumerate}
-
+For future work, we would like to include higher level wayfinding techniques such as the ones explored in Li~\etal~\cite{li2006scalable} and generalize these to both macro and microcosmos scenarios. Furthermore, a more regiorious automatic determination of scene node extents based on analysis of object's movement would be beneficial for displaying objects which are not moving on regular orbits.
 
 \section{Acknowledgments}
-We would like to acknowledge the Swedish e-Science Research Center (SeRC) for their support of this work. Parts of this work were supported by NASA under award No NNX16AB93A.
+We would like to acknowledge the Swedish e-Science Research Center (SeRC) for their support of this work. Parts of this work were supported by NASA under award No NNX16AB93A. Additional thanks to Karl Bladin and Erik Broberg for their work on the planetary renderer and ESRI for providing the Earth data.
 
 
 %-------------------------------------------------------------------------
