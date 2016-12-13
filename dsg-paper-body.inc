@@ -13,16 +13,16 @@
 
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
-\author[Axelsson \emph{et al.}]{Emil Axelsson$^{1}$, Jonathas Costa$^{2}$, Cl\'audio Silva$^{2}$, Carter Emmart$^{3}$, Alexander Bock$^{1}$, and Anders Ynnerman$^{1}$
-        \\
+%\author[Axelsson \emph{et al.}]{Emil Axelsson$^{1}$, Jonathas Costa$^{2}$, Cl\'audio Silva$^{2}$, Carter Emmart$^{3}$, Alexander Bock$^{1}$, and Anders Ynnerman$^{1}$
+ %       \\
 % For Computer Graphics Forum: Please use the abbreviation of your first name.
 %         $^1$~Linköping University \qquad
 %         $^2$~New York University \qquad
 %         $^3$~American Museum of Natural History
-         $^1$~Linköping University\\%
-         $^2$~New York University\vspace*{-0.2em}\\%
-          \small{$^3$~American Museum of Natural History}
-       }
+  %       $^1$~Linköping University\\%
+   %      $^2$~New York University\vspace*{-0.2em}\\%
+    %      \small{$^3$~American Museum of Natural History}
+  \author{Submission 291}
 
 % ------------------------------------------------------------------------
 
@@ -647,8 +647,8 @@ The method is flexible enough, however, to be implemented and used in any generi
 \subsection{Future Work}
 For future work, we would like to include higher-level wayfinding techniques such as the ones explored in Li~\etal~\cite{li2006scalable} and generalize these to both macro and microcosmos scenarios. Furthermore, a more rigorous automatic determination of scene node extents, based on analysis of an object's movement, would be beneficial for displaying objects which are not moving on regular orbits.
 
-\section{Acknowledgments}
-We would like to acknowledge the Swedish e-Science Research Center (SeRC) for their support of this work. Parts of this work were supported by NASA under award No NNX16AB93A. Additional thanks to Karl Bladin and Erik Broberg for their work on the planetary renderer and ESRI for providing the Earth data.
+%\section{Acknowledgments}
+%We would like to acknowledge the Swedish e-Science Research Center (SeRC) for their support of this work. Parts of this work were supported by NASA under award No NNX16AB93A. Additional thanks to Karl Bladin and Erik Broberg for their work on the planetary renderer and ESRI for providing the Earth data.
 
 
 %-------------------------------------------------------------------------
