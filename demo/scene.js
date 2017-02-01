@@ -61,8 +61,11 @@ export default class extends React.Component {
 
     let svgElements = [];
     sceneGraph.traverse((node) => {
-      svgElements.push(node.render(camera, sun, method));
+      const elem = node.render(camera, sun, method);
+      svgElements.push(elem);
     });
+
+
 
     //config.mantissaBits = (Math.round(this._frame / 50) % 6) + 1;
     //scenegraph.root.getNodeByName('translation').set(Math.sin(this._frame / 50) * 400, 0);
@@ -70,12 +73,13 @@ export default class extends React.Component {
 
     return (
     
-      <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-                width="33%" height="33%" viewBox="-300 -300 600 600" enableBackground="new 0 0 600 600"
-                xmlSpace="preserve">
-            {svgElements}
-      </svg>
-    
+      <div>
+        <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                  width="100%" height="100%" viewBox="-350 -350 700 700" enableBackground="new 0 0 700 700"
+                  xmlSpace="preserve">
+              {svgElements}
+        </svg>
+      </div>
     );
   }
 };

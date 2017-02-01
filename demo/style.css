@@ -1,44 +1,52 @@
 html {
-	background-color: #222;
+    background-color: #222;
 }
 
 .sun {
-	stroke: #fff;
-	fill: #fca903;
+    stroke: #fff;
+    fill: #fca903;
 }
 
 .earth {
-	stroke: #fff;
-	fill: #2870b8;
+    stroke: #fff;
+    fill: #2870b8;
 }
 
 .moon {
-	fill: #888;
-	stroke: #fff;
+    fill: #888;
+    stroke: #fff;
 }
 
 .camera {
-	fill: #fff;
+    fill: #fff;
 }
 
-svg {
-	float: left;
+.method-container {
+    width: 33%;
+    float: left;
+}
+
+.method-container p {
+    color: #fff;
+    font-size: 1.2em;
+    font-family: 'Open Sans';
+    padding: 1em;
 }
 
 .mantissaBits {
-	padding: 10px;
-	color: #fff;
-	font: 24px 'Myriad Pro';
+    padding: 10px;
+    color: #fff;
+    font: 1.2em 'Open Sans';
 }
 
 .options {
-	text-align: center;
-	margin-left: auto;
-	margin-right: auto;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .options * {
-	margin-left: auto;
-	margin-right: auto;
-	display: block;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
 }

@@ -291,6 +291,7 @@ class Circle extends Node {
   takeCamera() {
     let cameraTranslation = this.rootNode().getNodeByName('cameraTranslation');
     cameraTranslation.set(- this._size*1.2 - 20, 0);
+    //cameraTranslation.set(0, 0);
     this.addChild(cameraTranslation);
   }
 
