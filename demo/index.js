@@ -16,8 +16,8 @@ const content = ((
     <div className="method-container">
       <Scene method="merged"/>
       <p>
-        Method B: Merge model and view matrix to one matrix.
-        Transform object vertices to view space using model-view matrix.
+        Method B: Combine model and view transformations into one matrix.
+        Transform object vertices to view space using combined model-view matrix.
       </p>
     </div>
     <div className="method-container">
