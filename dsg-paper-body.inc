@@ -110,7 +110,7 @@ In summary, our contributions include:
 \item A method for dynamically updating the parent/child relationship for scene graph nodes.
 \end{itemize}
 
-The paper is structured as follows: After describing the related work in the following section, we provide a theoretical background for the sources of floating point inaccuracies in Section~\ref{sec:theoretical}, followed by a description of our proposed dynamic scene graph method in Section~\ref{sec:method} and its results in Section~\ref{sec:result}.
+The paper is structured as follows: After describing the related work in the following section, we provide a theoretical background for the sources of floating point inaccuracies in Section~\ref{sec:theory}, followed by a description of our proposed dynamic scene graph method in Section~\ref{sec:method} and its results in Section~\ref{sec:result}.
 
 \section{Related work}
 Computer graphics and interactive visualization are immensely valuable tools for communicating scientific findings and contextualizing information.
@@ -340,7 +340,7 @@ If the transition is performed up towards the root node of the graph (red arrows
 %The final transformation matrix is then applied to the scene graph node \texttt{M}.
 %
 As an example we use the scene graph depicted in Figure~\ref{fig:scenegraph}~(b).
-$v_{i,j}$ is the transformation from node \texttt{i} to \texttt{j} and $v{j_i} = -v_{i,j}$ as the inverse.
+$v_{i,j}$ is the transformation from node \texttt{i} to \texttt{j} and $v_{j,i} = -v_{i,j}$ is the inverse.
 $v_{i,i}$ specifies the local transformation used by the node \texttt{i}.
 For camera \texttt{A}, the rendering of the Sun (node \texttt{2}) is performed using the transformations $v_{2,1} \cdot v_{1,3} \cdot v_{3,3}$.
 The rendering of the Earth (node \texttt{4}) however, is performed only with the translation $v_{4,3} \cdot v_{3,3}$, ignoring all other scene graph nodes and thus not affected by their values.
@@ -350,7 +350,7 @@ First, this means that when different cameras are present in the scene graph, ea
 More importantly, for two nodes \texttt{N} and \texttt{M} only the subtree with the closest common parent at the root needs to be traversed in order to retrieve all information necessary to transform \texttt{M} into the local coordinate system of \texttt{N} and vice versa.
 Without including the root node in every traversal, the location of the local subtree does not have an impact on the precision of the objects contained within, thus evading the potential of catastrophic cancellation as discussed in Section~\ref{sec:theory:translation}.
 This fact lies at the core of our proposed method as it leads to a high-precision rendering independent of the location of the nodes within the extended scene graph.
-By utilizing the shortest path between \texttt{M} and \texttt{N} we avoid large the translations which would otherwise be necessary if the all transformations originate from the root node and which would lead to precision problems.
+By utilizing the shortest path between \texttt{M} and \texttt{N} we avoid the large translations which would otherwise be necessary if all the transformations originate from the root node and which would lead to precision problems.
 
 This technique enables the highest precision for the node \texttt{N} with precision decreasing for growing distances from the center of \texttt{N}.
 As described in Section~\ref{sec:theoretical}, the representable precision decreases with increasing numbers, such that small details in large objects with great distances would become prone to precision error.
@@ -371,7 +371,7 @@ Conceptually, our method pivots the scene graph such that the node \texttt{N} is
 \subsection{Dynamic camera attachment} \label{sec:method:dca}
 In our scene graph, a camera is always attached to a single node, the AN, and the camera's position and orientation is expressed in AN's local coordinate system.
 At all times, the AN is the deepest node in the scene graph whose sphere of influence fully encompasses the camera position.
-In Figure~\ref{fig:scenegraph} camera \texttt{A} is located in nodes \texttt{1} and \texttt{3}, and is thus attached to node \texttt{3}. Likewise, camera \texttt{B} is inside nodes \texttt{1}, \texttt{2} and \texttt{5} and is thus attached to node \texttt{5}.
+In Figure~\ref{fig:scenegraph} camera \texttt{A} is located in nodes \texttt{1} and \texttt{3}, and is thus attached to node \texttt{3}. Likewise, camera \texttt{B} is inside nodes \texttt{1}, \texttt{3} and \texttt{5} and is thus attached to node \texttt{5}.
 
 Figure~\ref{fig:imagesequence} shows an example of the dynamic camera attachment in a flight from the surface of Earth to Saturn's moon Titan. The camera changes its AN four times on this transition.
 
@@ -795,6 +795,6 @@ By combining Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get,
 \end{equation}
 
 \noindent with all interval matrix components $[E_{ij}], [F_{ij}] \in \mathds{E}$ and $e_{ijk} \in \mathds{E}$.
-We observe that the maximum floating point error of a component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$. Using the special cases from Equation \ref{eq:floatspecialcases}, we note that $e_{ijk} = 0$ if $A_{ik} = 0$ or $A_{ik} = 0$. Depending on the structure of the matrices $A$ and $B$, the output component may be subject to CC. 
+We observe that the maximum floating point error of a component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$. Using the special cases from Equation \ref{eq:floatspecialcases}, we note that $e_{ijk} = 0$ if $A_{ik} = 0$ or $A_{ik} = 1$. Depending on the structure of the matrices $A$ and $B$, the output component may be subject to CC.
 
 \end{document}
