@@ -764,7 +764,7 @@ It shows details with a resolution of 25\,cm per pixel.
 \noindent \textbf{Volumetric data. }
 As described in Section~\ref{sec:method:ds}, our system allows for the seamless integration of volumetric data.
 Figure~\ref{fig:res:galaxy} shows a frame of a three-channel time-varying volumetric rendering of the Milky Way~\cite{junichi2010interpretation,fujii2011dynamics}.
-In this scene, the root node of the scene graph is the center of the Milky Way and the solar system and all its contents are at a distance of $2,5 \cdot 10^{20}$ from the center inside the volume's bounding box of $\approx 10^{21} \times 10^{21} \times 1.5 \cdot 10^{19}$\,m.
+In this scene, the root node of the scene graph is the center of the Milky Way and the solar system and all its contents are at a distance of $2,5 \cdot 10^{20}$ from the center inside the volume's bounding box of $\approx 10^{21} \times 10^{21} \times 1.5 \cdot 10^{19}$\,m. The volume is rendered using ray casting, with its proxy geometry defined as a sibling node to our solar system, sharing a Milky Way group node as common parent.
 
 \begin{figure}
 \centering
