@@ -168,7 +168,7 @@ Improvments in hardware and software has led to optimized modern graphics proces
 In order to understand precision and range limitations of the computer graphics pipeline, it is necessary to consider floating point number properties and the available operations.
 
 
-\subsection*{Floating point numbers}\label{sec:floating-point-numbers}
+\subsection{Floating point numbers}\label{sec:floating-point-numbers}
 The IEEE754 standard for floating point numbers~\cite{zuras2008ieee} enables the representation of a large number range by encoding values as a sign, a mantissa, and an exponent.
 Single precision numbers use 1 sign bit, 8 exponent bits, and 23 mantissa bits.
 This encoding results in high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range.
@@ -223,7 +223,7 @@ Figure~\ref{fig:degradation-circles} shows a simulation with 5 mantissa bits.
 Using IEEE754 floats, at Pluto's distance from the Sun the distance between two adjacent floating point numbers is approximately $5.102 \cdot 10^9 \cdot 2^{-24}$\, km $= 304.1$\,km, which is about an eighth of Pluto's diameter and leads to visble artifacts (see Figure~\ref{fig:res:plutocomp}).
 %By using double precision, the corresponding distance between floating point numbers on Pluto becomes $5.102 \cdot 10^9 \cdot 2^{-53} \, \text{km} = \SI{56.64}{\micro\metre}$. Even at this relatively high resolution it is impossible to represent and contextualize tiny structures such as molecules. \emilcomment{Do we need to motivate this better? Who would ever want to look at molecules at Pluto?}
 
-\subsection*{Interval arithmetic}
+\subsection{Interval arithmetic}
 It is possible to use interval arithmetic to track potential sources of rounding error~\cite{Hickey2001}.
 Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$.
 Using interval arithmetic, this can be rewritten as $v(1 + u[-1,1])$.
@@ -247,7 +247,7 @@ For operations involving the degenerate intervals $[0, 0] = \{0\}$ and $[1, 1] =
 %\end{split}
 \end{equation}
 
-\subsection*{Propagation of error intervals}
+\subsection{Propagation of error intervals}
 Rounding errors will propagate and compound when a result from one floating point operation is used in further computations.
 For this reason, expressions on the form $(a + b) - b$ may evaluate to $0$ for a sufficiently small $a$ and large $b$.
 This phenomena is known as \emph{catastrophic cancellation} (CC)~\cite{Cuyt2001}.
@@ -301,7 +301,7 @@ By combining Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get,
 
 \noindent with all interval matrix components $[E_{ij}], [F_{ij}] \in \mathds{E}$ and $e_{ijk} \in \mathds{E}$.
 We observe that the maximum floating point error of a component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$.
-Using the special cases from Equation \ref{eq:floatspecialcases}, we note that $e_{ijk} = 0$ if $A_{ik} = 0$ or $A_{ik} = 1$.
+Using the special cases from Equation \ref{eq:floatspecialcases}, we note that $e_{ijk} = 0$ if $A_{ik} = 0$, $B_{ik} = 0$, $A_{ik} = 1$ or $B_{ik} = 1$.
 Depending on the structure of the matrices $A$ and $B$, the output component may be subject to CC.
 
 \begin{figure}
