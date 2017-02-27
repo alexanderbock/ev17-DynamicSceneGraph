@@ -13,16 +13,14 @@
 
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
-%\author[Axelsson \emph{et al.}]{Emil Axelsson$^{1}$, Jonathas Costa$^{2}$, Cl\'audio Silva$^{2}$, Carter Emmart$^{3}$, Alexander Bock$^{1}$, and Anders Ynnerman$^{1}$
- %       \\
+\author[Axelsson \emph{et al.}]{Emil Axelsson$^{1}$, Jonathas Costa$^{2}$, Cl\'audio Silva$^{2}$, Carter Emmart$^{3}$, Alexander Bock$^{1}$, and Anders Ynnerman$^{1}$
+       \\
 % For Computer Graphics Forum: Please use the abbreviation of your first name.
-%         $^1$~Linköping University \qquad
-%         $^2$~New York University \qquad
-%         $^3$~American Museum of Natural History
-  %       $^1$~Linköping University\\%
-   %      $^2$~New York University\vspace*{-0.2em}\\%
-    %      \small{$^3$~American Museum of Natural History}
-  \author{Submission 291}
+         $^1$~Linköping University\\%
+         $^2$~New York University\vspace*{-0.2em}\\%
+         \small{$^3$~American Museum of Natural History}
+}
+  %\author{Submission 291}
 
 % ------------------------------------------------------------------------
 
@@ -87,7 +85,9 @@ Furthermore, overflow and underflow of the available value ranges results in und
 %Previous work by the visualization community has provided solutions to some of these issues, such as the Power Scaled Coordinates by Hanson~\etal~\cite{hanson2000very} and the ScaleGraph by Klashed~\etal~\cite{KHECY10}. However, only partial solutions to the precision issues have been provided thus far and the root cause of these problems remains unsolved. \anderscomment{Hansen would disagree and kill the paper here if he were the reviewer, which is likely. In what way are they partial? We have to very precise here to make a case}
 
 In this work, we propose a general method, a dynamic scene graph, which enables fast and accurate scaling, positioning, and navigation without significant loss of precision.
-The concept is applicable to a variety of application domains with large scale differences and not limited to astronomical data.
+The concept is applicable to a variety of application domains requiring the combination of large distances and precise rendering, including astronomical and molecular visualizations.
+While being suitable for interactive visualization, other possible applications include 3D modelling tools, movie production software and video games.
+
 The method is based on an analysis of the sources of precision errors and range overflow problems in a conventional computer graphics pipeline.
 Using interval arithmetic to track floating point rounding errors, we are able to identify sets of operations that may introduce precision problems.
 We combine this information with the observation that high level of detail is only required for nearby objects.
@@ -124,6 +124,8 @@ The paper is structured as follows: After describing the related work in the fol
 Computer graphics and interactive visualization are immensely valuable tools for communicating scientific findings and contextualizing information.
 Notable examples of applications in which huge scale differences are visualized include movie productions, such as \emph{Powers of Ten} by Eames~\cite{powersOfTen} from 1977, as well as interactive software, such as Uniview~\cite{KHECY10}, DigiStar~\cite{ES16}, or DigitalSky~\cite{Sky16}, which are based on curated datasets containing information about our universe~\cite{abbott2006digital}.
 Virtual reality environments such as planetariums~\cite{magnor2010progress, liu20013} have always been in the focus of educators, but a shift towards supporting data inspection on consumer grade hardware is ongoing~\cite{nakasone2009astrosim}.
+
+Level of detail (LOD) and multiresolution methods are crucial when visualizing and navigating across large data sets~\cite{luebke2003level}. By using representations with fewer vertices and lower resolution textures to render distant objects, more computational and memory resources can be directed towards rendering salient objects. However, this family of methods do not mitigate any degradation of coordainte precision associated with conversions between frames of reference.
 
 Fu~\etal~\cite{fu2006navigation} categorized the problem of large scale navigation.
 \emph{Techniques for travel} constrain the user input with the goal of supporting the travel towards a selected target, whereas \emph{techniques for wayfinding} support the user in selecting a target by providing a spatial context.
@@ -165,8 +167,142 @@ As their work was focussed on the Uniview system as a whole, the detailed ScaleG
 Improvments in hardware and software has led to optimized modern graphics processing units that work efficiently on floating points.
 In order to understand precision and range limitations of the computer graphics pipeline, it is necessary to consider floating point number properties and the available operations.
 
-The derivation of floating point precision errors can be found in Appendix A for the interested reader.
-There, the origin of decreasing precision of floating point error for increasing values is examined through the use of four operators that utilize the interval arithmetic characteristic of floating point numbers; the effect of which is visible in an illustration in Figure~\ref{fig:degradation-circles} and in a real world example in Figure~\ref{fig:res:plutocomp}.
+
+\subsection*{Floating point numbers}\label{sec:floating-point-numbers}
+The IEEE754 standard for floating point numbers~\cite{zuras2008ieee} enables the representation of a large number range by encoding values as a sign, a mantissa, and an exponent.
+Single precision numbers use 1 sign bit, 8 exponent bits, and 23 mantissa bits.
+This encoding results in high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range.
+One important characteristic of floating point numbers is their inability to represent all real numbers.
+All numbers not representable are rounded to their closest representable number.
+Increasing the floating points bit depth will decrease the precision error at the cost of computational resources due to lacking efficient hardware support.
+
+%naturally require more computational resources, and might lack common hardware support, thus making their usage infeasible for real-time visualization.
+
+%While a 32-bit signed integer type can only represent numbers in the range $[-2^{31},\, 2^{31} - 1]$, an IEEE754 single precision floating point number approximately supports the range $[-2^{127},\, 2^{127}]$.
+
+
+%In floating point data types, values are represented as a sign, a mantissa, and an exponent. This representation has the attributes of resulting in high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range. The IEEE754 single precision floating point format uses 1 sign bit, 8 exponent bits, and 23 mantissa bits. Equation \ref{eq:floatingpoint} yields the value $v$ represented by the sign bit $s$, the mantissa bits $\mathbf{m}_i$, and the integer $e \in [-127, 128]$ which is encoded in the exponent bits. 
+
+%\begin{equation} \label{eq:floatingpoint}
+%v = \begin{cases}
+%(-1)^s \sum_{i = 1}^{23}\mathbf{m}_i\,2^{-i} 2^{-126}, & \text{for } e = -127 \\
+%(-1)^s (1 + \sum_{i = 1}^{23}\mathbf{m}_i\,2^{-i}) 2^e, & \text{for } -126 \leq e \leq 127 \\
+%\text{Special numbers such as NaN or }\infty, & \text{for } e = 128
+%\end{cases}
+%\end{equation}
+
+%\noindent Only values that can be composed by this set of bits are valid 32-bit floating point numbers. If exponent of a number is not in the range $[-126, 127]$ it will be represented as $\infty$ or $-\infty$. One critical characteristic of valid IEEE754 floating point numbers $\mathds{R}_f$ \alexcomment{Is there a better symbol for this?} is their inability to represent all possible numbers $\mathds{R}$. All numbers $\mathds{R} \setminus \mathds{R}_f$ that are not representable are rounded to their closest representable number in $\mathds{R}_f$. This characteristic is at the heart of the problem of floating point inaccuracies.
+
+%An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits, and 52 bits for the mantissa. Using 128-bits (quadruple precision), it is possible to further increase the precision and exponent range. Increasing the bit depth will naturally require more computational resources, and might lack common hardware support, thus making their usage unfeasible for real-time visualization.
+
+The exponent range in 32-bit floats provides a possible range of approximately 76 orders of magnitude (OM).
+%
+%\subsubsection{Exponent underflow and overflow}
+%The exponent range $[-126, 127]$ in 32-bit IEEE754 floats provides a possible scale range of approximately 76 orders of magnitude (OM).
+Exponents outside that range will cause exponent underflow or overflow and result in loss of data.
+While this range is larger than the 60 OM required for the known cosmos, problems may arise when distances need to be squared and thus generating numbers in a range of 120 OM.
+%This problem can be mitigated using a logarithmic representation as done in Power Scaled Coordinates or by using IEEE754 doubles, which have the exponent range $[-1022, 1023]$ resulting in representablity of approximately 616 OM. \emilcomment{Maybe add something about length calculation by division of largest component, to show that double and psc is not necessary.}
+
+%The scale difference between the Planck length and the diameter of the observable universe is approximately $62$ OM. While 32-bit floats are able to represent this scale difference, a conventional approach to computing lengths and normalizing vectors would break down.
+
+%\subsubsection{Precision limitations} \label{sec:theory:pl}
+Due to the limited number of mantissa bits, values need to be rounded to be representable as floating point numbers.
+An upper bound of the spacing between a floating point number $v$ and adjacent numbers is $\epsilon|v|$, where $\epsilon = 2^{-(n + 1)}$ with $n$ as the number of mantissa bits~\cite{higham2002accuracy}.
+%Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, with the rounding error coefficient $u = \frac{\epsilon}{2}$.
+For IEEE754 float, $\epsilon$ is $2^{-24}\,\approx
+\, 5.96 \cdot 10^{-8}$, meaning that values are precise to about 7 significant figures in decimal notation.
+Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, with the rounding error coefficient $u = \frac{\epsilon}{2}$.
+
+
+%Double precision floating point numbers have a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notation, this corresponds to a precision of 15 significant figures. For quadruple precision the corresponding number is 34 significant figures.
+
+For computer graphics, this limits the precision at which vertices can be represented.
+%In computer graphics, the limitation posed by the machine epsilon imposes that vertices are represented with less precision the further way from the coordinate system origin they are.
+Figure~\ref{fig:degradation-circles} shows a simulation with 5 mantissa bits.
+%, causing $\epsilon = 2^{-6} = \frac{1}{64}$.
+Using IEEE754 floats, at Pluto's distance from the Sun the distance between two adjacent floating point numbers is approximately $5.102 \cdot 10^9 \cdot 2^{-24}$\, km $= 304.1$\,km, which is about an eighth of Pluto's diameter and leads to visble artifacts (see Figure~\ref{fig:res:plutocomp}).
+%By using double precision, the corresponding distance between floating point numbers on Pluto becomes $5.102 \cdot 10^9 \cdot 2^{-53} \, \text{km} = \SI{56.64}{\micro\metre}$. Even at this relatively high resolution it is impossible to represent and contextualize tiny structures such as molecules. \emilcomment{Do we need to motivate this better? Who would ever want to look at molecules at Pluto?}
+
+\subsection*{Interval arithmetic}
+It is possible to use interval arithmetic to track potential sources of rounding error~\cite{Hickey2001}.
+Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$.
+Using interval arithmetic, this can be rewritten as $v(1 + u[-1,1])$.
+
+We use $\oplus$, $\ominus$, $\odot$, and $\oslash$ to denote floating point addition, subtraction, multiplication, and division respectively.
+The operators are commutative and yield the possible output intervals given two real number intervals $[x] = [x_1, x_2]$ and $[y] = [y_1, y_2]$ as,\vspace*{-1.5em}
+
+\begin{equation} \label{eq:floatoperations}
+\begin{split}
+[x] \oplus [y] & \subseteq ([x] + [y])(1 + u[-1, 1]) \\
+[x] \ominus [y] & \subseteq ([x] - [y])(1 + u[-1, 1]) \\
+[x] \odot [y] & \subseteq [x][y](1 + u[-1, 1]) \\
+[x] \oslash [y] & \subseteq \frac{[x]}{[y]}(1 + u[-1, 1]) \\
+\end{split}
+\end{equation}
+ 
+For operations involving the degenerate intervals $[0, 0] = \{0\}$ and $[1, 1] = \{1\}$ it holds that,
+\begin{equation} \label{eq:floatspecialcases}
+%\begin{split}
+[x] \odot \{1\} = [x] \quad \text{and}\quad [x] \oplus \{0\} = [x]
+%\end{split}
+\end{equation}
+
+\subsection*{Propagation of error intervals}
+Rounding errors will propagate and compound when a result from one floating point operation is used in further computations.
+For this reason, expressions on the form $(a + b) - b$ may evaluate to $0$ for a sufficiently small $a$ and large $b$.
+This phenomena is known as \emph{catastrophic cancellation} (CC)~\cite{Cuyt2001}.
+There is risk for floating point precision problems in any pipeline utilizing matrix multiplications or vector additions.
+
+Let $\mathds{E}$ be the set of intervals that can be written as $cu[-1, 1]$, where $c$ is a non-negative constant.
+For any intervals $[e_1], [e_2] \in \mathds{E}$, there are intervals $[e_3], [e_4] \in \mathds{E}$, such that $[e_1]+[e_2] \subseteq [e_3]$ and $[e_1e_2] \subseteq [e_4]$.
+We let $[e_i] = c_iu[-1, 1] \in \mathds{E}$ and consider two intervals $a(1 + [e_1])$ and $b(1 + [e_2])$.
+First, we study the effects of floating point multiplication acting on these intervals.\vspace*{-1.5em}
+
+\begin{equation} \label{eq:errortermmult} 
+\begin{split}
+a(1 + [e_1]) \odot b(1 + [e_2]) \\
+\subseteq ab(1 + [e_1])(1 + [e_2])(1 + u[-1, 1]) 
+\subseteq ab(1 + [e_3])
+\end{split}
+\end{equation}
+
+The output interval in Equation \ref{eq:errortermmult} has the size $|abc_3u|$, meaning that the maximum absolute rounding error of floating point multiplication is proportional to the absolute value of the product $ab$.
+However, the relative rounding error $c_3u$ is independent of these factors.
+We proceed with the properties of floating point addition.\vspace*{-1.5em}
+
+\begin{equation} \label{eq:errortermadd} 
+\begin{split}
+a(1 + [e_1]) \oplus b( 1 + [e_2]) \\
+\subseteq \big(a(1 + [e_1]) + b( 1 + [e_2])\big)(1 + u[-1, 1]) \\
+\subseteq a(1 + [e_4]) + b(1 + [e_5])
+\end{split}
+\end{equation}
+
+\noindent Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_4u| + |bc_5u|$.
+The relative error of the floating point sum depends on the individual terms' absolute value.
+By applying the equation iteratively, we see that $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, with $[x_i] = x_i(1 + [e_i])$ Equation~\ref{eq:errortermsum} holds regardless of the order of operations.\vspace*{-1.5em}
+
+\begin{equation} \label{eq:errortermsum} 
+\osum_i [x_i] \subseteq \sum_i [x_i](1 + [e'_i])
+\end{equation}
+
+Floating point sums will accumulate errors from all contributing terms with the risk for CC if both large positive and negative terms are involved in a computation with relatively small expected result.
+
+Given a matrix $X$ with components $X_{ij}$ and a matrix $[E]$ with interval components $[E_{ij}]$, let $[X^E]$ denote a matrix with the interval components $X_{ij}(1 + [E_{ij}])$.
+We use the operator $\otimes$ to denote matrix multiplication, in which output components are computed as sums of products.
+By combining Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get,\vspace*{-1.5em} 
+
+\begin{equation} \label{eq:matrixmult} 
+\begin{split}
+([A^E] \otimes [B^F])_{ij} \subseteq \osum_{k = 1}^m A_{ik} (1 + [e_{ij}])\odot B_{kj} (1 + [F_{kj}]) \\
+\subseteq \sum_{k = 1}^mA_{ik} B_{kj}(1 + [e_{ijk}])
+\end{split}
+\end{equation}
+
+\noindent with all interval matrix components $[E_{ij}], [F_{ij}] \in \mathds{E}$ and $e_{ijk} \in \mathds{E}$.
+We observe that the maximum floating point error of a component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$.
+Using the special cases from Equation \ref{eq:floatspecialcases}, we note that $e_{ijk} = 0$ if $A_{ik} = 0$ or $A_{ik} = 1$.
+Depending on the structure of the matrices $A$ and $B$, the output component may be subject to CC.
 
 \begin{figure}
 \centering
@@ -243,7 +379,7 @@ In order to observe how the matrices act on a coordinate vector, we study the fo
 
 After evaluating the possible effects of the scaling, translation, and rotation we continue with a similar analysis for the projection matrix, the perspective division, and the mapping to a depth buffer representation.
 
-\subsubsection{Scaling}
+\subsubsection{Scaling} \label{sec:theory:scaling}
 Consider an interval 4$\times$4-matrix $[S]$ composed of the 3$\times$3 interval matrix $[S']$, interval vector $\mathbf{[s]}$, and a bottom row of degenerate intervals analogously to the matrix A.
 Let the components of $[S]$ be scaling coefficient intervals, and let all other components of $[S]$ and $\mathbf{[s]}$ equal the degenerate interval $[0, 0]$.
 Equation \ref{eq:scalingconclusion} expresses the components of the output matrix $\hat{S}$, which is also a matrix on the form of A.
@@ -371,7 +507,7 @@ As described in Section~\ref{sec:theoretical}, the representable precision decre
 However, projected changes that are smaller than a fraction of a pixel will not be visible.
 Therefore, our method only loses precision in the areas where high precision is not required.
 
-Conceptually, our method pivots the scene graph such that the node \texttt{N} is placed at the root, all necessary transformation inversions are performed, and a traditional traversal algorithm is used.
+Conceptually, our method pivots the scene graph such that the node \texttt{N} is placed at the root, all necessary transformation inversions are performed, and a traditional traversal algorithm is used. Since inversion of scaling, rotation and translation matrices are inexpensive and usually already a part of scene graph based rendering pipelines, there is little to no performance implication associated with the proposed traversal scheme.
 
 \begin{figure}
 \centering
@@ -391,7 +527,7 @@ Likewise, camera \texttt{B} is inside nodes \texttt{1}, \texttt{3} and \texttt{5
 Figure~\ref{fig:imagesequence} shows an example of the dynamic camera attachment in a flight from the surface of Earth to Saturn's moon Titan.
 The camera changes its AN four times on this transition.
 
-There are two cases for updating a camera's AN in response to a user's interaction.
+There are two cases for updating a camera's AN in response to a user's interaction. 
 If a camera enters the sphere of influence of a current AN's child, that child is the new AN --- the camera moves down the scene graph.
 If the camera leaves the sphere of influence of the current AN, the AN's parent is the new AN --- the camera moves up the scene graph.
 At each step, the distances of the camera to the AN center and the distances to all children are computed and specified \emph{relative to the AN} as opposed to specifying the values relative to the global coordinate system origin defined by the root node.
@@ -406,8 +542,10 @@ The old and new locations are related by $\mathbf{w} = \mathbf{v} + \mathbf{n}$.
 To allow for this remapping to be computed without precision problems, extents of the scene graph nodes must be chosen such that the ratio between the child's and parent's extent is significantly larger than the machine epsilon.
 In order to circumvent rounding errors related to translation as described in Section~\ref{sec:theory:translation}, extents are chosen such that the camera attaches to a child render node before the details of the rendering become visible.
 
-Similarly to the translation, the rotation of the camera has to be inverted by applying the inverse of the rotation of \texttt{N} towards \texttt{M}.
-As stated in Section~\ref{sec:theory:rotation} no significant precision error with the rotation will occur.
+Similarly to the translation, the scaling and rotation of the camera has to be inverted by applying the inverse of the rotation of \texttt{N} towards \texttt{M}.
+As stated in Section~\ref{sec:theory:scaling} and Section~\ref{sec:theory:rotation} no significant precision error with the scaling and rotation will occur.
+
+The update procedure is computationally inexpensive and scales linearly with the number of children of the current AN. Hence, there are no significant performance implications associated with this operation.
 
 \begin{figure*}
 \centering
@@ -601,13 +739,14 @@ By always rendering objects in their physical location, as opposed to the reproj
 The Dynamic Scene Graph approach has been deployed in several use case scenarios exemplifying the utility of the approach.
 We have here chosen to provide some selected examples with corresponding rendered images showing: dynamic objects, scaled navigation, globe browsing, and contextualization of scientific simulations.
 The DSG has been integrated into the OpenSpace software framework~\cite{Bock_2015}, which is targeting science communication events in immersive environments, such as dome theaters and planetariums.
+The implementation has enabled seemless navigation in OpenSpace while providing accurate rendering of the scene contents and without any performance impact.
 The images shown are captures from such interactive sessions using OpenSpace.
 In this section, we shortly describe these use-cases and how our proposed method was used in four categories.
 
 \noindent \textbf{Space craft. }
 As one of the major motivations for developing this method, spacecraft are inherently small objects that need to be visualized precisely with respect to an object, mostly planets, that they are inspecting.
 One example is shown in Figure~\ref{fig:teaser} where the New Horizons space craft is shown at 80\,Mm distance to Pluto and around $6 \cdot 10^{12}$\,m away from the Sun.
-As described in Section~\ref{sec:theory:pl}, floating point numbers only have a precision of about 300\,km at the distance of Pluto, which would make a traditional approach infeasible. With our method, however, it is possible to show the entire mission with the required precision.
+As described in Section~\ref{sec:floating-point-numbers}, floating point numbers only have a precision of about 300\,km at the distance of Pluto, which would make a traditional approach infeasible. With our method, however, it is possible to show the entire mission with the required precision.
 A second space craft is ESA's Rosetta shown in Figure~\ref{fig:res:stereo} as a stereoscopic rendering. In the figure, we show the separation of the lander Philae from Rosetta on its way to the comet.
 
 \noindent \textbf{Navigation. }
@@ -616,6 +755,7 @@ At no point during this $1.65$\, billion km user-controlled journey are artifact
 
 \noindent \textbf{Virtual globes. }
 High resolution surface features are a big challenge when representing an entire solar system in a single scene graph.
+In addition to requiring a level of detail scheme to support dynamic loading of terrain data into the graphics memory, coordinate precision also needs to be maintained across the whole visualization pipeline.
 Individual surface features are much smaller than the available floating point precision for any planet.
 With our method however, we can produce an accurate rendering of the latest composite images and height maps on Pluto~\cite{stern2015pluto} with a resolution of between 2 and 5\,km/pixel (see Figure~\ref{fig:res:pluto}).
 Figure~\ref{fig:res:mars} shows detailed structures on the surface of Mars as returned from the Mars Reconnaissance Orbiter's HiRISE camera~\cite{mcewen2007mars}.
@@ -667,13 +807,13 @@ The method is flexible enough, however, to be implemented and used in any generi
 For future work, we would like to include higher-level wayfinding techniques such as the ones explored in Li~\etal~\cite{li2006scalable} and generalize these to both macro and microcosmos scenarios.
 Furthermore, a more rigorous automatic determination of scene node extents, based on analysis of an object's movement, would be beneficial for displaying objects which are not moving on regular orbits.
 
-%\section{Acknowledgments}
-%We would like to acknowledge the Swedish e-Science Research Center (SeRC) for their support of this work. Parts of this work were supported by NASA under award No NNX16AB93A. Additional thanks to Karl Bladin and Erik Broberg for their work on the planetary renderer and ESRI for providing the Earth data.
+\section{Acknowledgments}
+We would like to acknowledge the Swedish e-Science Research Center (SeRC) for their support of this work. Parts of this work were supported by NASA under award No NNX16AB93A. Additional thanks to Karl Bladin and Erik Broberg for their work on the planetary renderer and ESRI for providing the Earth data.
 
 
 %-------------------------------------------------------------------------
 
-\newpage
+%\newpage
 
 %\bibliographystyle{eg-alpha}
 \bibliographystyle{eg-alpha-doi}
@@ -682,142 +822,5 @@ Furthermore, a more rigorous automatic determination of scene node extents, base
 
 %-------------------------------------------------------------------------
 
-\newpage
-\section*{Appendix A}
-\subsection*{Floating point numbers}
-The IEEE754 standard for floating point numbers~\cite{zuras2008ieee} enables the representation of a large number range by encoding values as a sign, a mantissa, and an exponent.
-Single precision numbers use 1 sign bit, 8 exponent bits, and 23 mantissa bits.
-This encoding results in high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range.
-One important characteristic of floating point numbers is their inability to represent all real numbers.
-All numbers not representable are rounded to their closest representable number.
-Increasing the floating points bit depth will decrease the precision error at the cost of computational resources due to lacking efficient hardware support.
-
-%naturally require more computational resources, and might lack common hardware support, thus making their usage infeasible for real-time visualization.
-
-%While a 32-bit signed integer type can only represent numbers in the range $[-2^{31},\, 2^{31} - 1]$, an IEEE754 single precision floating point number approximately supports the range $[-2^{127},\, 2^{127}]$.
-
-
-%In floating point data types, values are represented as a sign, a mantissa, and an exponent. This representation has the attributes of resulting in high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range. The IEEE754 single precision floating point format uses 1 sign bit, 8 exponent bits, and 23 mantissa bits. Equation \ref{eq:floatingpoint} yields the value $v$ represented by the sign bit $s$, the mantissa bits $\mathbf{m}_i$, and the integer $e \in [-127, 128]$ which is encoded in the exponent bits. 
-
-%\begin{equation} \label{eq:floatingpoint}
-%v = \begin{cases}
-%(-1)^s \sum_{i = 1}^{23}\mathbf{m}_i\,2^{-i} 2^{-126}, & \text{for } e = -127 \\
-%(-1)^s (1 + \sum_{i = 1}^{23}\mathbf{m}_i\,2^{-i}) 2^e, & \text{for } -126 \leq e \leq 127 \\
-%\text{Special numbers such as NaN or }\infty, & \text{for } e = 128
-%\end{cases}
-%\end{equation}
-
-%\noindent Only values that can be composed by this set of bits are valid 32-bit floating point numbers. If exponent of a number is not in the range $[-126, 127]$ it will be represented as $\infty$ or $-\infty$. One critical characteristic of valid IEEE754 floating point numbers $\mathds{R}_f$ \alexcomment{Is there a better symbol for this?} is their inability to represent all possible numbers $\mathds{R}$. All numbers $\mathds{R} \setminus \mathds{R}_f$ that are not representable are rounded to their closest representable number in $\mathds{R}_f$. This characteristic is at the heart of the problem of floating point inaccuracies.
-
-%An alternative data type for representing numbers is the IEEE754 64-bit floating-point format (double precision). The standard uses 1 sign bit, 11 exponent bits, and 52 bits for the mantissa. Using 128-bits (quadruple precision), it is possible to further increase the precision and exponent range. Increasing the bit depth will naturally require more computational resources, and might lack common hardware support, thus making their usage unfeasible for real-time visualization.
-
-The exponent range in 32-bit floats provides a possible range of approximately 76 orders of magnitude (OM).
-%
-%\subsubsection{Exponent underflow and overflow}
-%The exponent range $[-126, 127]$ in 32-bit IEEE754 floats provides a possible scale range of approximately 76 orders of magnitude (OM).
-Exponents outside that range will cause exponent underflow or overflow and result in loss of data.
-While this range is larger than the 60 OM required for the known cosmos, problems may arise when distances need to be squared and thus generating numbers in a range of 120 OM.
-%This problem can be mitigated using a logarithmic representation as done in Power Scaled Coordinates or by using IEEE754 doubles, which have the exponent range $[-1022, 1023]$ resulting in representablity of approximately 616 OM. \emilcomment{Maybe add something about length calculation by division of largest component, to show that double and psc is not necessary.}
-
-%The scale difference between the Planck length and the diameter of the observable universe is approximately $62$ OM. While 32-bit floats are able to represent this scale difference, a conventional approach to computing lengths and normalizing vectors would break down.
-
-%\subsubsection{Precision limitations} \label{sec:theory:pl}
-Due to the limited number of mantissa bits, values need to be rounded to be representable as floating point numbers.
-An upper bound of the spacing between a floating point number $v$ and adjacent numbers is $\epsilon|v|$, where $\epsilon = 2^{-(n + 1)}$ with $n$ as the number of mantissa bits~\cite{higham2002accuracy}.
-%Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, with the rounding error coefficient $u = \frac{\epsilon}{2}$.
-For IEEE754 float, $\epsilon$ is $2^{-24}\,\approx
-\, 5.96 \cdot 10^{-8}$, meaning that values are precise to about 7 significant figures in decimal notation.
-Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, with the rounding error coefficient $u = \frac{\epsilon}{2}$.
-
-
-%Double precision floating point numbers have a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notation, this corresponds to a precision of 15 significant figures. For quadruple precision the corresponding number is 34 significant figures.
-
-For computer graphics, this limits the precision at which vertices can be represented.
-%In computer graphics, the limitation posed by the machine epsilon imposes that vertices are represented with less precision the further way from the coordinate system origin they are.
-Figure~\ref{fig:degradation-circles} shows a simulation with 5 mantissa bits.
-%, causing $\epsilon = 2^{-6} = \frac{1}{64}$.
-Using IEEE754 floats, at Pluto's distance from the Sun the distance between two adjacent floating point numbers is approximately $5.102 \cdot 10^9 \cdot 2^{-24}$\, km $= 304.1$\,km, which is about an eighth of Pluto's diameter and leads to visble artifacts (see Figure~\ref{fig:res:plutocomp}).
-%By using double precision, the corresponding distance between floating point numbers on Pluto becomes $5.102 \cdot 10^9 \cdot 2^{-53} \, \text{km} = \SI{56.64}{\micro\metre}$. Even at this relatively high resolution it is impossible to represent and contextualize tiny structures such as molecules. \emilcomment{Do we need to motivate this better? Who would ever want to look at molecules at Pluto?}
-
-\subsection*{Interval arithmetic}
-It is possible to use interval arithmetic to track potential sources of rounding error~\cite{Hickey2001}.
-Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$.
-Using interval arithmetic, this can be rewritten as $v(1 + u[-1,1])$.
-
-We use $\oplus$, $\ominus$, $\odot$, and $\oslash$ to denote floating point addition, subtraction, multiplication, and division respectively.
-The operators are commutative and yield the possible output intervals given two real number intervals $[x] = [x_1, x_2]$ and $[y] = [y_1, y_2]$ as,\vspace*{-1.5em}
-
-\begin{equation} \label{eq:floatoperations}
-\begin{split}
-[x] \oplus [y] & \subseteq ([x] + [y])(1 + u[-1, 1]) \\
-[x] \ominus [y] & \subseteq ([x] - [y])(1 + u[-1, 1]) \\
-[x] \odot [y] & \subseteq [x][y](1 + u[-1, 1]) \\
-[x] \oslash [y] & \subseteq \frac{[x]}{[y]}(1 + u[-1, 1]) \\
-\end{split}
-\end{equation}
- 
-For operations involving the degenerate intervals $[0, 0] = \{0\}$ and $[1, 1] = \{1\}$ it holds that,
-\begin{equation} \label{eq:floatspecialcases}
-%\begin{split}
-[x] \odot \{1\} = [x] \quad \text{and}\quad [x] \oplus \{0\} = [x]
-%\end{split}
-\end{equation}
-
-\subsection*{Propagation of error intervals}
-Rounding errors will propagate and compound when a result from one floating point operation is used in further computations.
-For this reason, expressions on the form $(a + b) - b$ may evaluate to $0$ for a sufficiently small $a$ and large $b$.
-This phenomena is known as \emph{catastrophic cancellation} (CC)~\cite{Cuyt2001}.
-There is risk for floating point precision problems in any pipeline utilizing matrix multiplications or vector additions.
-
-Let $\mathds{E}$ be the set of intervals that can be written as $cu[-1, 1]$, where $c$ is a non-negative constant.
-For any intervals $[e_1], [e_2] \in \mathds{E}$, there are intervals $[e_3], [e_4] \in \mathds{E}$, such that $[e_1]+[e_2] \subseteq [e_3]$ and $[e_1e_2] \subseteq [e_4]$.
-We let $[e_i] = c_iu[-1, 1] \in \mathds{E}$ and consider two intervals $a(1 + [e_1])$ and $b(1 + [e_2])$.
-First, we study the effects of floating point multiplication acting on these intervals.\vspace*{-1.5em}
-
-\begin{equation} \label{eq:errortermmult} 
-\begin{split}
-a(1 + [e_1]) \odot b(1 + [e_2]) \\
-\subseteq ab(1 + [e_1])(1 + [e_2])(1 + u[-1, 1]) 
-\subseteq ab(1 + [e_3])
-\end{split}
-\end{equation}
-
-The output interval in Equation \ref{eq:errortermmult} has the size $|abc_3u|$, meaning that the maximum absolute rounding error of floating point multiplication is proportional to the absolute value of the product $ab$.
-However, the relative rounding error $c_3u$ is independent of these factors.
-We proceed with the properties of floating point addition.\vspace*{-1.5em}
-
-\begin{equation} \label{eq:errortermadd} 
-\begin{split}
-a(1 + [e_1]) \oplus b( 1 + [e_2]) \\
-\subseteq \big(a(1 + [e_1]) + b( 1 + [e_2])\big)(1 + u[-1, 1]) \\
-\subseteq a(1 + [e_4]) + b(1 + [e_5])
-\end{split}
-\end{equation}
-
-\noindent Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_4u| + |bc_5u|$.
-The relative error of the floating point sum depends on the individual terms' absolute value.
-By applying the equation iteratively, we see that $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, with $[x_i] = x_i(1 + [e_i])$ Equation~\ref{eq:errortermsum} holds regardless of the order of operations.\vspace*{-1.5em}
-
-\begin{equation} \label{eq:errortermsum} 
-\osum_i [x_i] \subseteq \sum_i [x_i](1 + [e'_i])
-\end{equation}
-
-Floating point sums will accumulate errors from all contributing terms with the risk for CC if both large positive and negative terms are involved in a computation with relatively small expected result.
-
-Given a matrix $X$ with components $X_{ij}$ and a matrix $[E]$ with interval components $[E_{ij}]$, let $[X^E]$ denote a matrix with the interval components $X_{ij}(1 + [E_{ij}])$.
-We use the operator $\otimes$ to denote matrix multiplication, in which output components are computed as sums of products.
-By combining Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get,\vspace*{-1.5em} 
-
-\begin{equation} \label{eq:matrixmult} 
-\begin{split}
-([A^E] \otimes [B^F])_{ij} \subseteq \osum_{k = 1}^m A_{ik} (1 + [e_{ij}])\odot B_{kj} (1 + [F_{kj}]) \\
-\subseteq \sum_{k = 1}^mA_{ik} B_{kj}(1 + [e_{ijk}])
-\end{split}
-\end{equation}
-
-\noindent with all interval matrix components $[E_{ij}], [F_{ij}] \in \mathds{E}$ and $e_{ijk} \in \mathds{E}$.
-We observe that the maximum floating point error of a component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$.
-Using the special cases from Equation \ref{eq:floatspecialcases}, we note that $e_{ijk} = 0$ if $A_{ik} = 0$ or $A_{ik} = 1$.
-Depending on the structure of the matrices $A$ and $B$, the output component may be subject to CC.
 
 \end{document}
