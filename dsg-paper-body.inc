@@ -739,7 +739,7 @@ By always rendering objects in their physical location, as opposed to the reproj
 The Dynamic Scene Graph approach has been deployed in several use case scenarios exemplifying the utility of the approach.
 We have here chosen to provide some selected examples with corresponding rendered images showing: dynamic objects, scaled navigation, globe browsing, and contextualization of scientific simulations.
 The DSG has been integrated into the OpenSpace software framework~\cite{Bock_2015}, which is targeting science communication events in immersive environments, such as dome theaters and planetariums.
-The implementation has enabled seemless navigation in OpenSpace while providing accurate rendering of the scene contents and without any performance impact.
+The implementation has enabled seamless navigation in OpenSpace while providing accurate rendering of the scene contents and without any performance impact.
 The images shown are captures from such interactive sessions using OpenSpace.
 In this section, we shortly describe these use-cases and how our proposed method was used in four categories.
 
