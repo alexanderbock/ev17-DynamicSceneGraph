@@ -169,7 +169,7 @@ In order to understand precision and range limitations of the computer graphics 
 
 
 \subsection{Floating point numbers}\label{sec:floating-point-numbers}
-The IEEE754 standard for floating point numbers~\cite{zuras2008ieee} enables the representation of a large number range by encoding values as a sign, a mantissa, and an exponent.
+The IEEE754 standard for floating point numbers~\cite{zuras2008ieee}, used in CPU computations as well as in graphics hardware, enables the representation of a large number range by encoding values as a sign, a mantissa, and an exponent.
 Single precision numbers use 1 sign bit, 8 exponent bits, and 23 mantissa bits.
 This encoding results in high precision close to zero, decreasing precision for larger numbers, and a dramatic increase in value range.
 One important characteristic of floating point numbers is their inability to represent all real numbers.
@@ -251,10 +251,10 @@ For operations involving the degenerate intervals $[0, 0] = \{0\}$ and $[1, 1] =
 Rounding errors will propagate and compound when a result from one floating point operation is used in further computations.
 For this reason, expressions on the form $(a + b) - b$ may evaluate to $0$ for a sufficiently small $a$ and large $b$.
 This phenomena is known as \emph{catastrophic cancellation} (CC)~\cite{Cuyt2001}.
-There is risk for floating point precision problems in any pipeline utilizing matrix multiplications or vector additions.
+We will show how this is a real threat in any pipeline utilizing matrix multiplications or vector additions.
 
 Let $\mathds{E}$ be the set of intervals that can be written as $cu[-1, 1]$, where $c$ is a non-negative constant.
-For any intervals $[e_1], [e_2] \in \mathds{E}$, there are intervals $[e_3], [e_4] \in \mathds{E}$, such that $[e_1]+[e_2] \subseteq [e_3]$ and $[e_1e_2] \subseteq [e_4]$.
+For any pair of intervals $[e_1], [e_2] \in \mathds{E}$, there exist intervals $[e_3], [e_4] \in \mathds{E}$, such that $[e_1]+[e_2] \subseteq [e_3]$ and $[e_1e_2] \subseteq [e_4]$.
 We let $[e_i] = c_iu[-1, 1] \in \mathds{E}$ and consider two intervals $a(1 + [e_1])$ and $b(1 + [e_2])$.
 First, we study the effects of floating point multiplication acting on these intervals.\vspace*{-1.5em}
 
@@ -286,9 +286,9 @@ By applying the equation iteratively, we see that $\osum_i [x_i] = [x_1] \oplus 
 \osum_i [x_i] \subseteq \sum_i [x_i](1 + [e'_i])
 \end{equation}
 
-Floating point sums will accumulate errors from all contributing terms with the risk for CC if both large positive and negative terms are involved in a computation with relatively small expected result.
+Thus, floating point sums will accumulate errors from all contributing terms with the risk for CC if both large positive and negative terms are involved in a computation with relatively small expected result.
 
-Given a matrix $X$ with components $X_{ij}$ and a matrix $[E]$ with interval components $[E_{ij}]$, let $[X^E]$ denote a matrix with the interval components $X_{ij}(1 + [E_{ij}])$.
+Given a matrix $X$ with components $X_{ij}$ and an interval matrix $[E]$ with components $[E_{ij}]$, let $[X^E]$ denote a matrix with the interval components $X_{ij}(1 + [E_{ij}])$.
 We use the operator $\otimes$ to denote matrix multiplication, in which output components are computed as sums of products.
 By combining Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get,\vspace*{-1.5em} 
 
@@ -336,7 +336,7 @@ Depending on the structure of the matrices $A$ and $B$, the output component may
 %\subsection{Rendering artifacts}
 %\alexcomment{Merge this into 3.4, replacing most of 3.4 content and leaving a paragraph explaining the near/far plane}
 Lack of precision introduces several types of visual artifacts.
-If errors in the $x$ and $y$ coordinates of the normalized device coordinates are in the same order as pixel size, a vertex displacement is visible.
+If errors in the $x$ and $y$ coordinates of the normalized device coordinates reach or exceed the size of a pixel, a vertex displacement is visible.
 If the rounding error of $z$ in the depth buffer is larger than the difference of two fragments, there is a risk for z-fighting.
 
 In the following sections, we study the implications of the coordinate operations in the graphics pipeline to determine the circumstances in which precision problems may be introduced.
@@ -380,9 +380,9 @@ In order to observe how the matrices act on a coordinate vector, we study the fo
 After evaluating the possible effects of the scaling, translation, and rotation we continue with a similar analysis for the projection matrix, the perspective division, and the mapping to a depth buffer representation.
 
 \subsubsection{Scaling} \label{sec:theory:scaling}
-Consider an interval 4$\times$4-matrix $[S]$ composed of the 3$\times$3 interval matrix $[S']$, interval vector $\mathbf{[s]}$, and a bottom row of degenerate intervals analogously to the matrix A.
+Consider an 4$\times$4 interval matrix $[S]$ composed of the 3$\times$3 interval matrix $[S']$, interval vector $\mathbf{[s]}$, and a bottom row of degenerate intervals analogously to the matrix $[A]$.
 Let the components of $[S]$ be scaling coefficient intervals, and let all other components of $[S]$ and $\mathbf{[s]}$ equal the degenerate interval $[0, 0]$.
-Equation \ref{eq:scalingconclusion} expresses the components of the output matrix $\hat{S}$, which is also a matrix on the form of A.
+Equation \ref{eq:scalingconclusion} expresses the components of the output matrix $\hat{S}$, which is also a matrix on the form of $[A]$.
 
 \begin{align} \label{eq:scalingconclusion}
 [\hat{S}] = ([S'] \otimes [A'])_{ij} &\subseteq [S'_{ii}]\,[A'_{ij}](1 + [e_{ij}]) \\
@@ -428,20 +428,20 @@ Hence, there is no significant loss of relative precision in these components.
 Furthermore, while the perspective division shrinks the projected image of distant objects, this also has the effect of scaling down any precision errors in distant vertex coordinates.
 Hence, the sensitivity of visible vertex displacement of a vertex is inversely proportional to the distance of the vertex in view space.
 
-The z-component in clip space $c_z = (P\mathbf{v})_z$ is given by Equation~\ref{eq:nearfar}, where $n$ and $f$ are the distance from the camera to the near and far plane respectively.
+The z-component in clip space $c_z = (P\mathbf{v})_z$ is given by Equation~\ref{eq:nearfar}, where $p_n$ and $p_f$ are the distance from the camera to the near and far plane respectively.
 
 \begin{equation} \label{eq:nearfar}
-\lambda_1 = -\frac{f + n}{f - n}, \; \lambda_2 = \frac{2fn}{f - n}, \; [\mathbf{c}_z] = [\lambda_1] \otimes [\mathbf{v}_z] \oplus \lambda_2
+\lambda_1 = -\frac{p_f + p_n}{p_f - p_n}, \; \lambda_2 = \frac{2p_f\,p_n}{p_f - p_n}, \; [\mathbf{c}_z] = [\lambda_1] \otimes [\mathbf{v}_z] \oplus \lambda_2
 \end{equation}
 
 \noindent The result is an affine mapping of depths such that vertices in the near plane yield $\mathbf{c}_z = 0$ and vertices in the far plane give $\mathbf{c}_z = \mathbf{c}_w$.
 Subsequently, the perspective division maps $[\mathbf{n}_z]$ into the range $[0, 1]$.
 If an integer depth buffer is used, this non-linear mapping results in a higher depth resolution for close objects than for distant ones.
-Setting $n$ to a small number may cause distant vertices to collapse to the same $\mathbf{n}_z$ and cause z-fighting.
+Setting $p_n$ to a small number may cause distant vertices to collapse to the same depth buffer value and cause z-fighting.
 
 The problems of depth buffer precision are well known and have been subject to thorough analysis \cite{cozzi20113d}.
 Upchurch and Desbrun~\cite{upchurch2012tightening} show that good depth resolution can be maintained even with a far plane placed in $\infty$.
-However, precision problems for distant objects remain an issue for small $n$.
+However, precision problems for distant objects remain an issue for small $p_n$.
 
 %\subsection{Sources of precision errors}
 %To summarize this section, we have seen that:
