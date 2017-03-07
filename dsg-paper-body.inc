@@ -37,7 +37,7 @@
 
 \teaser{
   \centering
-  \fbox{\includegraphics[width=\linewidth]{figure/teaser2.png}}
+  \fbox{\includegraphics[width=0.955\linewidth]{figure/teaser2.png}}
   \caption{Accurate rendering of a real scale model of the New Horizons spacecraft taking measurements on Pluto. The model of about $2$\,m size is shown in its correct location relative to Pluto, which is about $6\cdot 10^{12}$\,m from the coordinate system origin with the stars of the constellation Ophiucus (about $10^{18}$\,m) in their correct 3D positions. High precision is required for computing the correct location of images on the surface of Pluto as well as correctly rendering the shadow cylinders of both Pluto and its moon, Charon.}
 \label{fig:teaser}
 }
@@ -47,7 +47,7 @@
 \begin{abstract}
 
 In this work, we address the challenge of seamlessly visualizing astronomical data exhibiting huge scale differences in distance, size, and resolution.
-One of the hurdles to overcome is accurate, fast, and dynamic positioning and navigation to enable scaling over orders of magnitude, far beyond the precision of floating point arithmetic.
+One of the difficulties is accurate, fast, and dynamic positioning and navigation to enable scaling over orders of magnitude, far beyond the precision of floating point arithmetic.
 To this end we propose a method that utilizes a dynamically assigned frame of reference to provide the highest possible numerical precision for all salient objects in a scene graph.
 This makes it possible to smoothly navigate and interactively render, for example, surface structures on Mars and the Milky Way simultaneously.
 Our work is based on an analysis of tracking and quantification of the propagation of precision errors through the computer graphics pipeline using interval arithmetic.
@@ -104,8 +104,8 @@ Examples of data that can be concurrently visualized cover a wide range from sub
 
 Many state-of-the-art theaters and planetariums support stereoscopic viewing and recently the interest in immersive visualization in VR environments has increased.
 Thus, software needs to support stereoscopic rendering and the ability to render on multi-pipe systems and complex display configurations.
-This poses yet another challenge when dealing with multiple scales as the eye separation needs to be adjusted to the current scale of interest.
-Our dynamic scene graph approach offers as well a seamless solution to this problem.
+This poses  another challenge when dealing with multiple scales as the eye separation needs to be adjusted to the current scale of interest.
+Our dynamic scene graph approach offers a seamless solution to this problem.
 
 It should be noted that our dynamic scene graph is applicable to any visualization tool that uses scene graphs to represent objects, and is compatible with techniques for volumetric rendering as well as order-independent transparency techniques.
 In summary, our contributions include:
@@ -125,7 +125,7 @@ Computer graphics and interactive visualization are immensely valuable tools for
 Notable examples of applications in which huge scale differences are visualized include movie productions, such as \emph{Powers of Ten} by Eames~\cite{powersOfTen} from 1977, as well as interactive software, such as Uniview~\cite{KHECY10}, DigiStar~\cite{ES16}, or DigitalSky~\cite{Sky16}, which are based on curated datasets containing information about our universe~\cite{abbott2006digital}.
 Virtual reality environments such as planetariums~\cite{magnor2010progress, liu20013} have always been in the focus of educators, but a shift towards supporting data inspection on consumer grade hardware is ongoing~\cite{nakasone2009astrosim}.
 
-Level of detail (LOD) and multiresolution methods are crucial when visualizing and navigating across large data sets~\cite{luebke2003level}. By using representations with fewer vertices and lower resolution textures to render distant objects, more computational and memory resources can be directed towards rendering salient objects. However, this family of methods do not mitigate any degradation of coordinate precision associated with conversions between frames of reference.
+Level of detail (LOD) and multiresolution methods are crucial when visualizing and navigating across large data sets~\cite{luebke2003level}. By using representations with fewer vertices and lower resolution textures to render distant objects, more computational and memory resources can be directed towards rendering salient objects. However, this family of methods do not mitigate any degradation of coordinate precision associated with conversions between frames of reference. \alexcomment{maybe one or two more paper references here}
 
 Fu~\etal~\cite{fu2006navigation} categorized the problem of large scale navigation.
 \emph{Techniques for travel} constrain the user input with the goal of supporting the travel towards a selected target, whereas \emph{techniques for wayfinding} support the user in selecting a target by providing a spatial context.
@@ -164,8 +164,8 @@ As their work was focussed on the Uniview system as a whole, the detailed ScaleG
 \end{figure}
 
 \section{Theoretical motivation}\label{sec:theoretical}
-Improvments in hardware and software has led to optimized modern graphics processing units that work efficiently on floating points.
-In order to understand precision and range limitations of the computer graphics pipeline, it is necessary to consider floating point number properties and the available operations.
+Improvements in hardware and software have led to optimized modern graphics processing units that work efficiently on floating points.
+In order to understand the precision and range limitations of the computer graphics pipeline, it is necessary to consider the properties of floating point numbers and available operations.
 
 
 \subsection{Floating point numbers}\label{sec:floating-point-numbers}
@@ -216,11 +216,11 @@ Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$,
 
 %Double precision floating point numbers have a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notation, this corresponds to a precision of 15 significant figures. For quadruple precision the corresponding number is 34 significant figures.
 
-For computer graphics, this limits the precision at which vertices can be represented.
+For computer graphics, this limits the precision with which vertices can be represented.
 %In computer graphics, the limitation posed by the machine epsilon imposes that vertices are represented with less precision the further way from the coordinate system origin they are.
 Figure~\ref{fig:degradation-circles} shows a simulation with 5 mantissa bits.
 %, causing $\epsilon = 2^{-6} = \frac{1}{64}$.
-Using IEEE754 floats, at Pluto's distance from the Sun the distance between two adjacent floating point numbers is approximately $5.102 \cdot 10^9 \cdot 2^{-24}$\, km $= 304.1$\,km, which is about an eighth of Pluto's diameter and leads to visble artifacts (see Figure~\ref{fig:res:plutocomp}).
+Using IEEE754 floats, at Pluto's distance from the Sun the distance between two floating point numbers is approximately $5.102 \cdot 10^9 \cdot 2^{-24}$\, km $= 304.1$\,km, which is about an eighth of Pluto's diameter and leads to visble artifacts (see Figure~\ref{fig:res:plutocomp}).
 %By using double precision, the corresponding distance between floating point numbers on Pluto becomes $5.102 \cdot 10^9 \cdot 2^{-53} \, \text{km} = \SI{56.64}{\micro\metre}$. Even at this relatively high resolution it is impossible to represent and contextualize tiny structures such as molecules. \emilcomment{Do we need to motivate this better? Who would ever want to look at molecules at Pluto?}
 
 \subsection{Interval arithmetic}
@@ -248,10 +248,9 @@ For operations involving the degenerate intervals $[0, 0] = \{0\}$ and $[1, 1] =
 \end{equation}
 
 \subsection{Propagation of error intervals}
-Rounding errors will propagate and compound when a result from one floating point operation is used in further computations.
-For this reason, expressions on the form $(a + b) - b$ may evaluate to $0$ for a sufficiently small $a$ and large $b$.
-This phenomena is known as \emph{catastrophic cancellation} (CC)~\cite{Cuyt2001}.
-We will show how this is a real threat in any pipeline utilizing matrix multiplications or vector additions.
+Rounding errors propagate and compound when a result from one floating point operation is used in further computations.
+For this reason, expressions of the form $(a + b) - b$ may evaluate to $0$ for a sufficiently small $a$ and large $b$; a phenomena known as \emph{catastrophic cancellation} (CC)~\cite{Cuyt2001}.
+We will show how impacts any pipeline utilizing matrix multiplications or vector additions.
 
 Let $\mathds{E}$ be the set of intervals that can be written as $cu[-1, 1]$, where $c$ is a non-negative constant.
 For any pair of intervals $[e_1], [e_2] \in \mathds{E}$, there exist intervals $[e_3], [e_4] \in \mathds{E}$, such that $[e_1]+[e_2] \subseteq [e_3]$ and $[e_1e_2] \subseteq [e_4]$.
@@ -286,7 +285,7 @@ By applying the equation iteratively, we see that $\osum_i [x_i] = [x_1] \oplus 
 \osum_i [x_i] \subseteq \sum_i [x_i](1 + [e'_i])
 \end{equation}
 
-Thus, floating point sums will accumulate errors from all contributing terms with the risk for CC if both large positive and negative terms are involved in a computation with relatively small expected result.
+Thus, floating point sums will accumulate errors from all contributing terms with the risk for CC if large positive and negative terms are involved with relatively small expected results.
 
 Given a matrix $X$ with components $X_{ij}$ and an interval matrix $[E]$ with components $[E_{ij}]$, let $[X^E]$ denote a matrix with the interval components $X_{ij}(1 + [E_{ij}])$.
 We use the operator $\otimes$ to denote matrix multiplication, in which output components are computed as sums of products.
@@ -512,7 +511,7 @@ Conceptually, our method pivots the scene graph such that the node \texttt{N} is
 \begin{figure}
 \centering
 \includegraphics[width=\linewidth]{figure/attachment-switch.pdf}
-\caption{When the camera attaches to a different node its coordinate system changes.
+\caption{When the camera reattaches to a node, its coordinate system changes.
 While the old location \texttt{A} is expressed relative to \texttt{N} as \textbf{v}, the new location \texttt{B} is expressed relative to \texttt{M} as \textbf{w} $-$ \textbf{n} instead.}
 \label{fig:coordsystems}
 \end{figure}
@@ -545,7 +544,8 @@ In order to circumvent rounding errors related to translation as described in Se
 Similarly to the translation, the scaling and rotation of the camera has to be inverted by applying the inverse of the rotation of \texttt{N} towards \texttt{M}.
 As stated in Section~\ref{sec:theory:scaling} and Section~\ref{sec:theory:rotation} no significant precision error with the scaling and rotation will occur.
 
-The update procedure is computationally inexpensive and scales linearly with the number of children of the current AN. Hence, there are no significant performance implications associated with this operation.
+The update procedure is computationally inexpensive and scales linearly with the number of children of the current AN as only these children and the parent need to be tested for reattachment.
+Hence, there are no significant performance implications associated with this operation.
 
 \begin{figure*}
 \centering
@@ -721,10 +721,10 @@ For depth comparisons, we use 32-bit floating point numbers representing the dis
 To avoid exponent overflow and underflow for distant and close fragments, we first divide the view coordinate vector $v$ by its component with largest magnitude $\mathbf{v}_{\text{max}}$, perform the computation using the pythagoran theorem, and multiply by $\mathbf{v}_{\text{max}}$.
 
 Depth sorting is performed using conventional z-buffering with a 32-bit floating point buffer.
-For scenes with volumetric content or transparent geometry, we use an A-buffer technique for order-independent transparency~\cite{lindholm2015hybrid}.
+For scenes with volumetric or transparent content, we use an A-buffer technique for order-independent transparency~\cite{lindholm2015hybrid}.
 When using ray casting for volumetric rendering, the distance taken along the ray is compared to the distance of rendered geometry in order to perform early ray termination.
 
-By always rendering objects in their physical location, as opposed to the reprojection of objects performed in the ScaleGraph approach, our method transparently handles stereoscopic rendering.
+By always rendering objects in their physical location, as opposed to the reprojection of objects performed in the ScaleGraph approach, our method handles stereoscopic rendering.
 
 %\subsection{Stereoscopic Rendering}
 
@@ -741,13 +741,14 @@ We have here chosen to provide some selected examples with corresponding rendere
 The DSG has been integrated into the OpenSpace software framework~\cite{Bock_2015}, which is targeting science communication events in immersive environments, such as dome theaters and planetariums.
 The implementation has enabled seamless navigation in OpenSpace while providing accurate rendering of the scene contents and without any performance impact.
 The images shown are captures from such interactive sessions using OpenSpace.
+While the use-cases in this section are dealing with astronomical datasets, our proposed method equally applies to other domains with large scale differences, such as molecular visualization or atomic visualization.
 In this section, we shortly describe these use-cases and how our proposed method was used in four categories.
 
 \noindent \textbf{Space craft. }
 As one of the major motivations for developing this method, spacecraft are inherently small objects that need to be visualized precisely with respect to an object, mostly planets, that they are inspecting.
 One example is shown in Figure~\ref{fig:teaser} where the New Horizons space craft is shown at 80\,Mm distance to Pluto and around $6 \cdot 10^{12}$\,m away from the Sun.
 As described in Section~\ref{sec:floating-point-numbers}, floating point numbers only have a precision of about 300\,km at the distance of Pluto, which would make a traditional approach infeasible. With our method, however, it is possible to show the entire mission with the required precision.
-A second space craft is ESA's Rosetta shown in Figure~\ref{fig:res:stereo} as a stereoscopic rendering. In the figure, we show the separation of the lander Philae from Rosetta on its way to the comet.
+A second space craft is ESA's Rosetta shown in Figure~\ref{fig:res:stereo} as a stereoscopic rendering of the separation of the lander Philae from Rosetta on its way to the comet.
 
 \noindent \textbf{Navigation. }
 Figure~\ref{fig:imagesequence} shows individual frames of a seamless nagivation through our solar system. Starting on the surface of Earth, where the mountains of the Alps are rendered with their correct height and surface textures, the Earth becomes visible further out before reaching the sphere of influence of Saturn and continuing to the surface of Titan, showing color images of the moon's surface.
@@ -764,7 +765,8 @@ It shows details with a resolution of 25\,cm per pixel.
 \noindent \textbf{Volumetric data. }
 As described in Section~\ref{sec:method:ds}, our system allows for the seamless integration of volumetric data.
 Figure~\ref{fig:res:galaxy} shows a frame of a three-channel time-varying volumetric rendering of the Milky Way~\cite{junichi2010interpretation,fujii2011dynamics}.
-In this scene, the root node of the scene graph is the center of the Milky Way and the solar system and all its contents are at a distance of $2,5 \cdot 10^{20}$ from the center inside the volume's bounding box of $\approx 10^{21} \times 10^{21} \times 1.5 \cdot 10^{19}$\,m. The volume is rendered using ray casting, with its proxy geometry defined as a sibling node to our solar system, sharing a Milky Way group node as common parent.
+In this scene, the root node of the scene graph is the center of the Milky Way and the solar system and all its contents are at a distance of $2,5 \cdot 10^{20}$ from the center inside the volume's bounding box of $\approx 10^{21} \times 10^{21} \times 1.5 \cdot 10^{19}$\,m. The volume is rendered using ray casting, with its proxy geometry defined as a sibling node to our solar system, sharing a Milky Way group node as common parent
+This means that only the transformations of the bounding box vertices have to be adjusted in order to incorporate volume rendering.
 
 \begin{figure}
 \centering
@@ -793,19 +795,22 @@ In this scene, the root node of the scene graph is the center of the Milky Way a
 
 %-------------------------------------------------------------------------
 \section{Conclusions}
-In this work, we presented a method that supports high-precision transformations in a scene graph by dynamically attaching the camera to the closest node and using this node as an origin for the scene traversal.
-The dynamic scene graph enables a higher level of individual precision than which is otherwise possible.
+In this work, we presented a method that supports high-precision transformations in a scene graph by dynamically attaching a camera to its closest node and using this node as the origin for the scene traversal.
+The dynamic scene graph enables a higher level of relative precision than which is otherwise possible.
 By supporting efficient dynamic reattachment of the camera to nodes, it becomes possible to navigate a scene encompassing scales and distances much larger than floating point precision would normally permit.
-The same reattachment technique can be applied to other scene graph nodes to provide the ability for scene graph nodes to retain high precision at multiple locations, for example, a space craft that requires high precision at multiple planets as it moves through space.
+The same reattachment technique can be applied to provide other scene graph nodes with the ability to retain high precision at multiple locations, for example, a space craft that requires high precision at multiple planets as it moves through space.
 The scene graph traversal uses the shortest path to every other scene graph node and thus circumvents potentially large translation values that would otherwise lead to precision degradation during the rendering.
 
-We implemented the method in the open-source software platform OpenSpace which has the goal of being able to visualize and contextualize a wide range of astrophysical data.
-The method was successfully tested on the visualization of multiple space craft missions~\cite{Bock_2015}, on virtual globes, and volumetric rendering.
-The method is flexible enough, however, to be implemented and used in any generic scene graph implementation.
+We implemented the method in the open-source software platform OpenSpace which has the goal of visualizing and contextualizing a wide range of astrophysical data.
+The method was successfully tested on space craft mission visualization~\cite{Bock_2015}, on virtual globes, and volumetric rendering.
+The method is flexible enough, however, to be implemented and used in any scene graph implementation through modification of the traversal scheme.
 
 \subsection{Future Work}
 For future work, we would like to include higher-level wayfinding techniques such as the ones explored in Li~\etal~\cite{li2006scalable} and generalize these to both macro and microcosmos scenarios.
-Furthermore, a more rigorous automatic determination of scene node extents, based on analysis of an object's movement, would be beneficial for displaying objects which are not moving on regular orbits.
+Furthermore, integrating datasets of vastly different spatial domains opens up new challenges in the design of interaction techniques.
+In the case of time-varying datasets, a large spatial extent usually corresponds to a large temporal extent as well, the handling of which requires further research.
+Another important future avenue is a heuristic to determine scene graph node extents based on analysis of an object's movement in order to prevent sibling intersections.
+This is particularly beneficial for displaying objects which are not moving on regular orbits.
 
 \section{Acknowledgments}
 We would like to acknowledge the Swedish e-Science Research Center (SeRC) for their support of this work. Parts of this work were supported by NASA under award No NNX16AB93A. Additional thanks to Karl Bladin and Erik Broberg for their work on the planetary renderer and ESRI for providing the Earth data.
