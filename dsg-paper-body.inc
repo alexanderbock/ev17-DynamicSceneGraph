@@ -814,7 +814,7 @@ This is particularly beneficial for displaying objects which are not moving on r
 
 \section{Acknowledgments}
 We would like to acknowledge the Swedish e-Science Research Center (SeRC) for their support of this work.
-Parts of this work were supported by NASA under award No NNX16AB93A, Moore-Sloan Data Science Environment at NYU, NSF awards CNS-1229185, CCF-1533564 and CNS-1544753.
+Parts of this work were supported by NASA under award No NNX16AB93A, the Moore-Sloan Data Science Environment at NYU, NSF awards CNS-1229185, CCF-1533564, and CNS-1544753.
 Additional thanks to Karl Bladin and Erik Broberg for their work on the planetary renderer and ESRI for providing the Earth data.
 
 
