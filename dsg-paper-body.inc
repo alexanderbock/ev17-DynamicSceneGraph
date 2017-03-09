@@ -125,8 +125,6 @@ Computer graphics and interactive visualization are immensely valuable tools for
 Notable examples of applications in which huge scale differences are visualized include movie productions, such as \emph{Powers of Ten} by Eames~\cite{powersOfTen} from 1977, as well as interactive software, such as Uniview~\cite{KHECY10}, DigiStar~\cite{ES16}, or DigitalSky~\cite{Sky16}, which are based on curated datasets containing information about our universe~\cite{abbott2006digital}.
 Virtual reality environments such as planetariums~\cite{magnor2010progress, liu20013} have always been in the focus of educators, but a shift towards supporting data inspection on consumer grade hardware is ongoing~\cite{nakasone2009astrosim}.
 
-Level of detail (LOD) and multiresolution methods are crucial when visualizing and navigating across large data sets~\cite{luebke2003level}. By using representations with fewer vertices and lower resolution textures to render distant objects, more computational and memory resources can be directed towards rendering salient objects. However, this family of methods do not mitigate any degradation of coordinate precision associated with conversions between frames of reference. \alexcomment{maybe one or two more paper references here}
-
 Fu~\etal~\cite{fu2006navigation} categorized the problem of large scale navigation.
 \emph{Techniques for travel} constrain the user input with the goal of supporting the travel towards a selected target, whereas \emph{techniques for wayfinding} support the user in selecting a target by providing a spatial context.
 Our travel component is based on their description of a \emph{Spatial Scaling Navigation Model} operating on a logarithmic camera model in which the navigation speed is dependent on the distance to the object of interest.
@@ -149,7 +147,11 @@ It employs a scene graph with sub-scenes to which cameras belong.
 The content of the current sub-scene is rendered in a local coordinate system with high precision and thus allowing multiple regions to be represented with high relative precision.
 Content outside the current sub-scene is translated onto the scene's boundary and scaled to compensate for perspective effects.
 This translation, however, leads to inconsistencies in stereoscopic rendering when switching scenes as objects jump from the bounding sphere of a scene to its physical location.
-As their work was focussed on the Uniview system as a whole, the detailed ScaleGraph descriptions are lacking and thus make it impossible to reproduce.
+As their work was focussed on the Uniview system as a whole, the detailed ScaleGraph descriptions are lacking and thus make it hard to reproduce.
+
+Level of detail (LOD) and multiresolution methods are crucial when visualizing and navigating across large data sets~\cite{luebke2003level}.
+By using representations with fewer vertices and lower resolution textures to render distant objects, more resources can be directed towards rendering salient objects.
+However, these methods do not mitigate degradation of precision associated with conversions between coordinate frames.
 %Vectors between sub-scenes are computed by traversing the scene graph through the closest common ancestor in the tree, to avoid introducing precision errors caused by handling unnecessarily large numbers.
 %By moving objects onto the bounding sphere of the current scene, object depths are mapped to a manageable range.
 %Furthermore, the method does not provide a general solution for depth sorting objects that are outside the current sub-scene.
@@ -200,7 +202,7 @@ The exponent range in 32-bit floats provides a possible range of approximately 7
 %\subsubsection{Exponent underflow and overflow}
 %The exponent range $[-126, 127]$ in 32-bit IEEE754 floats provides a possible scale range of approximately 76 orders of magnitude (OM).
 Exponents outside that range will cause exponent underflow or overflow and result in loss of data.
-While this range is larger than the 60 OM required for the known cosmos, problems may arise when distances need to be squared and thus generating numbers in a range of 120 OM.
+While this range is larger than the 60 OM required for the known cosmos, problems arise when distances need to be squared and thus generating numbers in a range of 120 OM.
 %This problem can be mitigated using a logarithmic representation as done in Power Scaled Coordinates or by using IEEE754 doubles, which have the exponent range $[-1022, 1023]$ resulting in representablity of approximately 616 OM. \emilcomment{Maybe add something about length calculation by division of largest component, to show that double and psc is not necessary.}
 
 %The scale difference between the Planck length and the diameter of the observable universe is approximately $62$ OM. While 32-bit floats are able to represent this scale difference, a conventional approach to computing lengths and normalizing vectors would break down.
@@ -250,7 +252,7 @@ For operations involving the degenerate intervals $[0, 0] = \{0\}$ and $[1, 1] =
 \subsection{Propagation of error intervals}
 Rounding errors propagate and compound when a result from one floating point operation is used in further computations.
 For this reason, expressions of the form $(a + b) - b$ may evaluate to $0$ for a sufficiently small $a$ and large $b$; a phenomena known as \emph{catastrophic cancellation} (CC)~\cite{Cuyt2001}.
-We will show how impacts any pipeline utilizing matrix multiplications or vector additions.
+We will show how this impacts any pipeline utilizing matrix multiplications or vector additions.
 
 Let $\mathds{E}$ be the set of intervals that can be written as $cu[-1, 1]$, where $c$ is a non-negative constant.
 For any pair of intervals $[e_1], [e_2] \in \mathds{E}$, there exist intervals $[e_3], [e_4] \in \mathds{E}$, such that $[e_1]+[e_2] \subseteq [e_3]$ and $[e_1e_2] \subseteq [e_4]$.
@@ -809,14 +811,14 @@ The method is flexible enough, however, to be implemented and used in any scene 
 For future work, we would like to include higher-level wayfinding techniques such as the ones explored in Li~\etal~\cite{li2006scalable} and generalize these to both macro and microcosmos scenarios.
 Furthermore, integrating datasets of vastly different spatial domains opens up new challenges in the design of interaction techniques.
 In the case of time-varying datasets, a large spatial extent usually corresponds to a large temporal extent as well, the handling of which requires further research.
-Another important future avenue is a heuristic to determine scene graph node extents based on analysis of an object's movement in order to prevent sibling intersections.
-This is particularly beneficial for displaying objects which are not moving on regular orbits.
+%Another important future avenue is a heuristic to determine scene graph node extents based on analysis of an object's movement in order to prevent sibling intersections.
+%This is particularly beneficial for displaying objects which are not moving on regular orbits.
 
 \section{Acknowledgments}
 We would like to acknowledge the Swedish e-Science Research Center (SeRC) for their support of this work.
 Parts of this work were supported by NASA under award No NNX16AB93A, the Moore-Sloan Data Science Environment at NYU, NSF awards CNS-1229185, CCF-1533564, and CNS-1544753.
-Additional thanks to Karl Bladin and Erik Broberg for their work on the planetary renderer and ESRI for providing the Earth data.
-
+We would also like to thank Karl Bladin and Erik Broberg for their work on the planetary renderer and ESRI for providing the Earth data.
+Additional thanks to Karljohan Lundin Palmerius and Patric Ljung for proof reading and giving insightful feedback.
 
 %-------------------------------------------------------------------------
 
