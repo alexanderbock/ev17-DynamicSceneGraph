@@ -300,13 +300,13 @@ By combining Equations~\ref{eq:errortermmult} and~\ref{eq:errortermsum}, we get,
 
 \noindent with all interval matrix components $[E_{ij}], [F_{ij}] \in \mathds{E}$ and $e_{ijk} \in \mathds{E}$.
 We observe that the maximum floating point error of a component $(AB)_{ij}$ of a matrix product is given by $\sum_{k = 1}^m|A_{ik} B_{kj} [e_{ijk}]|$.
-Using the special cases from Equation \ref{eq:floatspecialcases}, we note that $e_{ijk} = 0$ if $A_{ik} = 0$, $B_{ik} = 0$, $A_{ik} = 1$ or $B_{ik} = 1$.
+Using the special cases from Equation \ref{eq:floatspecialcases}, we note that $e_{ijk} = 0$ if $[A^E_{ik}] = \{0\}$, $[B^F_{ik}] = \{0\}$, $[A^E_{ik}] = \{1\}$ or $[B^F_{ik}] = \{1\}$.
 Depending on the structure of the matrices $A$ and $B$, the output component may be subject to CC.
 
 \begin{figure}
 \centering
 \fbox{\includegraphics[width=\linewidth]{figure/precision.png}}
-\caption{Real world floating point error at Pluto. Using power scaled coordinates, 8 quantization levels of floating point numbers are visible at Pluto's distance of 5.1 billion km from the Sun. Our method achieves high fidelity renderings while still representing objects with single precision floating point numbers.}
+\caption{Real world floating point error at Pluto. Using PSC, 8 quantization levels of floating point numbers are visible at Pluto's distance of 5.1 billion km from the Sun. Our method achieves high fidelity renderings while still representing objects with single precision floating point numbers.}
 \label{fig:res:plutocomp}
 \end{figure}
 
@@ -389,8 +389,8 @@ Equation \ref{eq:scalingconclusion} expresses the components of the output matri
 \end{align}
 
 The rounding error introduced by an interval scaling matrix $[S]$ is thus proportional to the size of the scaling factors in $[S']$.
-Any error interval in $A'$ and $\mathbf{a}$ will be scaled proportionally.
-Thus, we conclude that applying a scaling matrix to a matrix $A$ \emph{does not cause a significant loss of relative precision in any matrix component}.
+Any error interval in $[A']$ and $[\mathbf{a}]$ will be scaled proportionally.
+Thus, we conclude that applying a scaling matrix to a matrix $[A]$ \emph{does not cause a significant loss of relative precision in any matrix component}.
 
 \subsubsection{Translation} \label{sec:theory:translation}
 A corresponding analysis is made for translation matrices, composed of $[T']$ and $[\mathbf{t}]$, with degenerate intervals $[T'_{ij}] = [I_{ij}, I_{ij}]$, where $I$ is the identity matrix.
@@ -401,7 +401,7 @@ The components of $[\mathbf{t}]$ representing a translation interval vector.
 [\hat{\mathbf{t}}_i] = [\mathbf{t}_i] \oplus [\mathbf{a}_i] \subseteq ([\mathbf{t}_i] + [\mathbf{a}_i])(1 + [e_i])
 \end{align}
 
-We note that the precision in $\hat{T}_{ij}$ is preserved from $A'$ when any translation matrix $T$ is applied.
+We note that the precision in $[\hat{T}_{ij}]$ is preserved from $[A']$ when any translation matrix $[T]$ is applied.
 However, error intervals in $[\mathbf{t}_i]$ and $[\mathbf{a}_i]$ will propagate to $\hat{\mathbf[t]}_i$, and will \emph{not} be scaled down even if $|[\hat{\mathbf{t}}_i]|$ is much smaller than $|[\mathbf{t}_i]|$ and $|[\mathbf{a}_i]|$.
 This scenario \emph{may lead to catastrophic cancellation} in the component $[\hat{\mathbf{t}}_i]$.
 
@@ -739,8 +739,8 @@ By always rendering objects in their physical location, as opposed to the reproj
 The Dynamic Scene Graph approach has been deployed in several use case scenarios exemplifying the utility of the approach.
 We have here chosen to provide some selected examples with corresponding rendered images showing: dynamic objects, scaled navigation, globe browsing, and contextualization of scientific simulations.
 The DSG has been integrated into the OpenSpace software framework~\cite{Bock_2015}, which is targeting science communication events in immersive environments, such as dome theaters and planetariums.
-The implementation has enabled seamless navigation in OpenSpace while providing accurate rendering of the scene contents and without any performance impact.
-The images shown are captures from such interactive sessions using OpenSpace.
+The implementation has enabled seamless navigation and accurate rendering in OpenSpace, without any measurable performance impact when compared to rendering with a static scene graph based on PSC as shown in Figure~\ref{fig:res:plutocomp}.
+The images shown are captures from interactive sessions using OpenSpace.
 While the use-cases in this section are dealing with astronomical datasets, our proposed method equally applies to other domains with large scale differences, such as molecular visualization or atomic visualization.
 In this section, we shortly describe these use-cases and how our proposed method was used in four categories.
 
