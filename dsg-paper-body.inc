@@ -818,7 +818,7 @@ In the case of time-varying datasets, a large spatial extent usually corresponds
 We would like to acknowledge the Swedish e-Science Research Center (SeRC) for their support of this work.
 Parts of this work were supported by NASA under award No NNX16AB93A, the Moore-Sloan Data Science Environment at NYU, NSF awards CNS-1229185, CCF-1533564, and CNS-1544753.
 We would also like to thank Karl Bladin and Erik Broberg for their work on the planetary renderer and ESRI for providing the Earth data.
-Additional thanks to Karljohan Lundin Palmerius and Patric Ljung for proofreading and giving insightful feedback.
+Additional thanks to Karljohan Lundin Palmerius for proofreading and giving insightful feedback.
 
 %-------------------------------------------------------------------------
 
