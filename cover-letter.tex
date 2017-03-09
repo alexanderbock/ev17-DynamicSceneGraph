@@ -160,7 +160,7 @@ In addition, comparisons to the state of the art or alternative approaches are c
 However, the author needs to give the performance configuration of the experiment and give a performance comparison with the traditional methods \eqref{concern:performance}. 
 In order to prove that the framework can solve the problems.
     
-The evaluation part of this paper should also be improved \eqref{concern:evaluation}.
+The evaluation part of this paper should also be improved \eqref{concern:performance} \eqref{concern:comparisons}.
 It should be written more concretely.
 The experiment setups, the dataset used should be stated clearly because it may largely affect the results and the patterns of the study.
 
@@ -211,15 +211,10 @@ We have carefully revised the paper based on reviewers feedback about the struct
 The contents of the appendix have now been incorporated in the theory section to improve the flow of the paper. In the revised version, we thorougly introduce notation and concepts of interval arithmetic before our analysis of the rendering pipeline. Furthermore, we have refined our notation to highlight the distinction between interval matrices and scalar matrices.
 
 \subsection{Relation to level of detail methods}\label{concern:lod}
-We added references to section 2 in order to delineate the relation of our work to the 
-previous work in the field of level of detail and other multiresolution methods.
-
-\subsection{Relation to large-scale astronomical simulations}\label{concern:simulations}
-
-
+We added references to section 2 in order to delineate the relation of our work to the previous work in the field of level of detail and multiresolution methods.
 
 \subsection{Other applications}\label{concern:applications}
-In the introduction we have elaborated on the possible use cases of our method.
+We have elaborated on the possible use cases of our method in the introduction. 
 
 \subsection{Future work}\label{concern:future-work}
 In order to address this valid concern, we included additional explanations in the
@@ -235,10 +230,6 @@ We addressed the comments and typographical errors that were pointed out by the 
 The results section have been improved by clarifying that Figure 3 shows the result of our method compared to a method using power scaled coordinates, which is one of the state of the art methods for large scale astronomical visualization. Since important details of the ScaleGraph method have not been published such that its results are possible to reproduce, we have not been able to provide a more detailed comparison with that method. However, as pointed out in the related work section, the Uniview software does not properly handle stereoscopic rendering when transitioning between scenes. In section 4.4, we describe how our method handles this problem.
 
 \subsection{Rendering volumetric data}\label{concern:volumetric}
-TODO.
-
-\subsection{Evaluation}\label{concern:evaluation}
-TODO.
-
+We have added a description to the end of section 5, describing in more detail how volumetric rendering is integrated with the Dynamic Scene Graph in the OpenSpace implementation.
 
 \end{document}
