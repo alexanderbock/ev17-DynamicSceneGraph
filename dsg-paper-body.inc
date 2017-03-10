@@ -213,7 +213,6 @@ An upper bound of the spacing between a floating point number $v$ and adjacent n
 %Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, with the rounding error coefficient $u = \frac{\epsilon}{2}$.
 For IEEE754 float, $\epsilon$ is $2^{-24}\,\approx
 \, 5.96 \cdot 10^{-8}$, meaning that values are precise to about 7 significant figures in decimal notation.
-Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, with the rounding error coefficient $u = \frac{\epsilon}{2}$.
 
 
 %Double precision floating point numbers have a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notation, this corresponds to a precision of 15 significant figures. For quadruple precision the corresponding number is 34 significant figures.
@@ -226,8 +225,9 @@ Using IEEE754 floats, at Pluto's distance from the Sun the distance between two 
 %By using double precision, the corresponding distance between floating point numbers on Pluto becomes $5.102 \cdot 10^9 \cdot 2^{-53} \, \text{km} = \SI{56.64}{\micro\metre}$. Even at this relatively high resolution it is impossible to represent and contextualize tiny structures such as molecules. \emilcomment{Do we need to motivate this better? Who would ever want to look at molecules at Pluto?}
 
 \subsection{Interval arithmetic}
-It is possible to use interval arithmetic to track potential sources of rounding error~\cite{Hickey2001}.
-Due to the upper bound of the rounding error, a value $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$.
+Interval arithmetic makes it possible to track potential sources of rounding error~\cite{Hickey2001}.
+The maximum error introduced by rounding of a number $v$ can be written as $u|v|$, with the rounding error coefficient $u = \frac{\epsilon}{2}$.
+Hence, $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$.
 Using interval arithmetic, this can be rewritten as $v(1 + u[-1,1])$.
 
 We use $\oplus$, $\ominus$, $\odot$, and $\oslash$ to denote floating point addition, subtraction, multiplication, and division respectively.
@@ -251,11 +251,11 @@ For operations involving the degenerate intervals $[0, 0] = \{0\}$ and $[1, 1] =
 
 \subsection{Propagation of error intervals}
 Rounding errors propagate and compound when a result from one floating point operation is used in further computations.
-For this reason, expressions of the form $(a + b) - b$ may evaluate to $0$ for a sufficiently small $a$ and large $b$; a phenomena known as \emph{catastrophic cancellation} (CC)~\cite{Cuyt2001}.
+For this reason, expressions of the form $(a + b) - b$ may evaluate to $0$ for a sufficiently small $a \neq 0$ and large $b$; a phenomena known as \emph{catastrophic cancellation} (CC)~\cite{Cuyt2001}.
 We will show how this impacts any pipeline utilizing matrix multiplications or vector additions.
 
 Let $\mathds{E}$ be the set of intervals that can be written as $cu[-1, 1]$, where $c$ is a non-negative constant.
-For any pair of intervals $[e_1], [e_2] \in \mathds{E}$, there exist intervals $[e_3], [e_4] \in \mathds{E}$, such that $[e_1]+[e_2] \subseteq [e_3]$ and $[e_1e_2] \subseteq [e_4]$.
+For any pair of intervals $[e_1], [e_2] \in \mathds{E}$, there exist intervals $[e_3], [e_4] \in \mathds{E}$, such that $[e_1]+[e_2] \subseteq [e_3]$ and $[e_1][e_2] \subseteq [e_4]$.
 We let $[e_i] = c_iu[-1, 1] \in \mathds{E}$ and consider two intervals $a(1 + [e_1])$ and $b(1 + [e_2])$.
 First, we study the effects of floating point multiplication acting on these intervals.\vspace*{-1.5em}
 
@@ -281,7 +281,7 @@ a(1 + [e_1]) \oplus b( 1 + [e_2]) \\
 
 \noindent Equation \ref{eq:errortermadd} yields a maximum rounding error of $|ac_4u| + |bc_5u|$.
 The relative error of the floating point sum depends on the individual terms' absolute value.
-By applying the equation iteratively, we see that $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$, with $[x_i] = x_i(1 + [e_i])$ Equation~\ref{eq:errortermsum} holds regardless of the order of operations.\vspace*{-1.5em}
+By applying the equation iteratively, we see that Equation~\ref{eq:errortermsum} holds regardless of the order of operations, with $\osum_i [x_i] = [x_1] \oplus [x_2] \oplus ... \oplus [x_n]$ and $[x_i] = x_i(1 + [e_i])$. \vspace*{-1.5em}
 
 \begin{equation} \label{eq:errortermsum} 
 \osum_i [x_i] \subseteq \sum_i [x_i](1 + [e'_i])
@@ -364,7 +364,7 @@ The interval vector $[\mathbf{n}]$ of normalized device coordinates is derived f
 \noindent where $[P]$ is the projection matrix, $[V]$ is the view matrix, $[M]$ is the model matrix, and $[\mathbf{x}]$, $[\mathbf{c}]$ and $[\mathbf{n}]$ are interval vectors.
 The error interval size of the normalized device coordinates depends on the collective effects of $[M]$, $[V]$, $[P]$, and the perspective division as they act on $[\mathbf{x}]$.
 
-$M$ and $V$ are composed from three types of transformations: scaling, translation, and rotation.
+$[M]$ and $[V]$ are composed from three types of transformations: scaling, translation, and rotation.
 We study the effects of applying scaling, translation, and rotation on a generalized interval model matrix or view matrix $[A]$, composed of a translation vector $\mathbf{[a]}$ and a combined rotation/scaling 3$\times$3-matrix $[A']$, as given by Equation~\ref{eq:matrixa}.
 Scaling, rotation, and translation matrices can all be written on the same form as $[A]$.
 In order to observe how the matrices act on a coordinate vector, we study the fourth column in $[A]$.
@@ -381,13 +381,13 @@ In order to observe how the matrices act on a coordinate vector, we study the fo
 After evaluating the possible effects of the scaling, translation, and rotation we continue with a similar analysis for the projection matrix, the perspective division, and the mapping to a depth buffer representation.
 
 \subsubsection{Scaling} \label{sec:theory:scaling}
-Consider an 4$\times$4 interval matrix $[S]$ composed of the 3$\times$3 interval matrix $[S']$, interval vector $\mathbf{[s]}$, and a bottom row of degenerate intervals analogously to the matrix $[A]$.
-Let the components of $[S]$ be scaling coefficient intervals, and let all other components of $[S]$ and $\mathbf{[s]}$ equal the degenerate interval $[0, 0]$.
+Consider a 4$\times$4 interval matrix $[S]$, analogously to the matrix $[A]$ composed of the 3$\times$3 interval matrix $[S']$, interval vector $[\mathbf{s}]$, and a bottom row of degenerate intervals.
+Let the components of $[S]$ be scaling coefficient intervals, and let all other components of $[S]$ and $[\mathbf{s}]$ equal the degenerate interval $\{0\}$.
 Equation \ref{eq:scalingconclusion} expresses the components of the output matrix $\hat{S}$, which is also a matrix on the form of $[A]$.
 
 \begin{align} \label{eq:scalingconclusion}
-[\hat{S}] = ([S'] \otimes [A'])_{ij} &\subseteq [S'_{ii}]\,[A'_{ij}](1 + [e_{ij}]) \\
-[\hat{\mathbf{s}}] = ([S'] \otimes [\mathbf{a}])_{i} &\subseteq [S'_{ii}]\,[\mathbf{a}_i](1 + [e_{j}])
+[\hat{S}_i] = ([S'] \otimes [A'])_{ij} &\subseteq [S'_{ii}]\,[A'_{ij}](1 + [e_{ij}]) \\
+[\hat{\mathbf{s}}_i] = ([S'] \otimes [\mathbf{a}])_{i} &\subseteq [S'_{ii}]\,[\mathbf{a}_i](1 + [e_{j}])
 \end{align}
 
 The rounding error introduced by an interval scaling matrix $[S]$ is thus proportional to the size of the scaling factors in $[S']$.
@@ -395,7 +395,7 @@ Any error interval in $[A']$ and $[\mathbf{a}]$ will be scaled proportionally.
 Thus, we conclude that applying a scaling matrix to a matrix $[A]$ \emph{does not cause a significant loss of relative precision in any matrix component}.
 
 \subsubsection{Translation} \label{sec:theory:translation}
-A corresponding analysis is made for translation matrices, composed of $[T']$ and $[\mathbf{t}]$, with degenerate intervals $[T'_{ij}] = [I_{ij}, I_{ij}]$, where $I$ is the identity matrix.
+A corresponding analysis is made for translation matrices, composed of $[T']$ and $[\mathbf{t}]$, with degenerate intervals $[T'_{ij}] = \{I_{ij}\}$, where $I$ is the identity matrix.
 The components of $[\mathbf{t}]$ representing a translation interval vector.
 
 \begin{align} \label{eq:translationconclusion}
@@ -411,8 +411,8 @@ This scenario \emph{may lead to catastrophic cancellation} in the component $[\h
 Using a rotation interval matrix $[R]$ composed of the upper left 3$\times$3 matrix $[R']$ and a upper right 3-dimensional column vector $\mathbf{r}$ with the interval components $[R'_{ij}] \subseteq [-1, 1]$, and $\mathbf{r}_i = [0, 0]$, we study the effect of multiplying $[R]$ with the interval matrix $[A]$:
 
 \begin{align} \label{eq:rotationconclusion}
-\hat{R}'_{ij} = (R' \otimes A')_{ij} &\subseteq \sum_{k = 1}^3 R'_{ik}\,A'_{kj}(1 + [e_{ijk}]) \\
-\hat{\mathbf{r}}_i = (R' \otimes \mathbf{a})_{i} &\subseteq \sum_{k = 1}^3 R'_{ik}\,\mathbf{a}_k(1 + [e_{ijk}])
+[\hat{R}'_{ij}] = ([R'] \otimes [A'])_{ij} &\subseteq \sum_{k = 1}^3 [R'_{ik}]\,[A'_{kj}](1 + [e_{ijk}]) \\
+[\hat{\mathbf{r}}_i] = ([R'] \otimes [\mathbf{a}])_{i} &\subseteq \sum_{k = 1}^3 [R'_{ik}]\,[\mathbf{a}_k](1 + [e_{ijk}])
 \end{align}
 
 The potential error of any output component $A_{ij}$ will be equal to $\sum_{k = 1}^3 |[R'_{ik}]\,[A'_{kj}][e_{ijk}]|$.
@@ -456,7 +456,7 @@ However, precision problems for distant objects remain an issue for small $p_n$.
 \section{Dynamic Scene Graph Method}\label{sec:method}
 \begin{figure}
 \includegraphics[width=\linewidth]{figure/scenegraph.pdf}
-\caption{A potential scene graph consisting of two translation nodes for the solar system and the Earth system (1,3) and three rendering nodes for the Sun (2), Earth (4), and the Moon (5). Cameras (A, B) can be attached to different nodes, thus avoiding the introduction of large, error-prone translation values. (a) shows the nodes relative location, whereas (b) shows their organization in a graph. The arrows represent local upwards (red) and downwards (blue) transformations.}
+\caption{A potential scene graph consisting of two translation nodes for the solar system and the Earth system (\texttt{1},\texttt{3}) and three rendering nodes for the Sun (\texttt{2}), Earth (\texttt{4}), and the Moon (\texttt{5}). Cameras (\texttt{A}, \texttt{B}) can be attached to different nodes, thus avoiding the introduction of large, error-prone translation values. (a) shows the nodes relative location, whereas (b) shows their organization in a graph. The arrows represent local upwards (red) and downwards (blue) transformations.}
 \label{fig:scenegraph}
 \end{figure}
 
@@ -473,7 +473,7 @@ Unlike traditional scene graphs, each scene graph node has a radial \emph{extent
 Each scene graph node's extent has to be bigger than all its children's spheres of influence.
 
 Figure~\ref{fig:scenegraph} shows a possible scene graph with 5 nodes and their extents; (\texttt{1}, \texttt{3}) are transformation nodes centered on the solar system and the Earth barycenter respectively, (\texttt{2}, \texttt{4}, \texttt{5}) are rendering nodes containing the Sun, the Earth, and the Moon.
-Two cameras (A, B) are attached to the scene at different attachment nodes.
+Two cameras (\texttt{A}, \texttt{B}) are attached to the scene at different attachment nodes.
 
 First, we describe the relative scene traversal assuming a static camera, then describe the attachment changes of moving cameras.
 
@@ -753,7 +753,7 @@ As described in Section~\ref{sec:floating-point-numbers}, floating point numbers
 A second space craft is ESA's Rosetta shown in Figure~\ref{fig:res:stereo} as a stereoscopic rendering of the separation of the lander Philae from Rosetta on its way to the comet.
 
 \noindent \textbf{Navigation. }
-Figure~\ref{fig:imagesequence} shows individual frames of a seamless nagivation through our solar system. Starting on the surface of Earth, where the mountains of the Alps are rendered with their correct height and surface textures, the Earth becomes visible further out before reaching the sphere of influence of Saturn and continuing to the surface of Titan, showing color images of the moon's surface.
+Figure~\ref{fig:imagesequence} shows individual frames of a seamless navigation through our solar system. Starting on the surface of Earth, where the mountains of the Alps are rendered with their correct height and surface textures, the Earth becomes visible further out before reaching the sphere of influence of Saturn and continuing to the surface of Titan, showing color images of the moon's surface.
 At no point during this $1.65$\, billion km user-controlled journey are artifacts visible due to the camera's seamless transitions between the scene graph nodes.
 
 \noindent \textbf{Virtual globes. }
