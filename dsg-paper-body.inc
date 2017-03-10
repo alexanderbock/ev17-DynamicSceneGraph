@@ -17,7 +17,7 @@
        \\
 % For Computer Graphics Forum: Please use the abbreviation of your first name.
          $^1$~Linköping University,\;%
-         $^2$~New York University\vspace*{-0.2em},\;%
+         $^2$~New York University,\;%
          $^3$~American Museum of Natural History
 }
   %\author{Submission 291}
