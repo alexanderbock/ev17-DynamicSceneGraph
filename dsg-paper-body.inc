@@ -820,7 +820,7 @@ We would also like to thank Karl Bladin and Erik Broberg for their work on the p
 
 %-------------------------------------------------------------------------
 
-%\newpage
+\newpage
 
 %\bibliographystyle{eg-alpha}
 \bibliographystyle{eg-alpha-doi}
