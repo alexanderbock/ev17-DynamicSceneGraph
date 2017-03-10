@@ -208,14 +208,21 @@ While this range is larger than the 60 OM required for the known cosmos, problem
 %The scale difference between the Planck length and the diameter of the observable universe is approximately $62$ OM. While 32-bit floats are able to represent this scale difference, a conventional approach to computing lengths and normalizing vectors would break down.
 
 %\subsubsection{Precision limitations} \label{sec:theory:pl}
-Due to the limited number of mantissa bits, values need to be rounded to be representable as floating point numbers.
+Due to the limited number of mantissa bits, values are rounded to be representable as floating point numbers.
 An upper bound of the spacing between a floating point number $v$ and adjacent numbers is $\epsilon|v|$, where $\epsilon = 2^{-(n + 1)}$ with $n$ as the number of mantissa bits~\cite{higham2002accuracy}.
 %Hence, the maximum error introduced by rounding of $v$ can be written as $u|v|$, with the rounding error coefficient $u = \frac{\epsilon}{2}$.
 For IEEE754 float, $\epsilon$ is $2^{-24}\,\approx
-\, 5.96 \cdot 10^{-8}$, meaning that values are precise to about 7 significant figures in decimal notation.
-
+\, 5.96 \cdot 10^{-8}$, leading to a precision of about 7 significant figures in decimal notation.
 
 %Double precision floating point numbers have a machine epsilon of $\epsilon = 2^{-53}\approx 1.11 \cdot 10^{-16}$. In decimal notation, this corresponds to a precision of 15 significant figures. For quadruple precision the corresponding number is 34 significant figures.
+
+\begin{figure}
+\centering
+\fbox{\includegraphics[width=\linewidth]{figure/precision-cropped.png}}
+\caption{Floating point error at Pluto. Floating point quantization are visible at Pluto's distance of 5.1 billion km from the Sun using PSC. Our method achieves high fidelity renderings while still representing objects with single precision floating point numbers.}
+\label{fig:res:plutocomp}
+\end{figure}
+
 
 For computer graphics, this limits the precision with which vertices can be represented.
 %In computer graphics, the limitation posed by the machine epsilon imposes that vertices are represented with less precision the further way from the coordinate system origin they are.
@@ -305,13 +312,6 @@ We observe that the maximum floating point error of a component $(AB)_{ij}$ of a
 Using the special cases from Equation \ref{eq:floatspecialcases}, we note that $e_{ijk} = 0$ if $[A^E_{ik}] = \{0\}$, $[B^F_{ik}] = \{0\}$, $[A^E_{ik}] = \{1\}$ or $[B^F_{ik}] = \{1\}$.
 Depending on the structure of the matrices $A$ and $B$, the output component may be subject to CC.
 
-\begin{figure}
-\centering
-\fbox{\includegraphics[width=\linewidth]{figure/precision.png}}
-\caption{Real world floating point error at Pluto. Using PSC, 8 quantization levels of floating point numbers are visible at Pluto's distance of 5.1 billion km from the Sun. Our method achieves high fidelity renderings while still representing objects with single precision floating point numbers.}
-\label{fig:res:plutocomp}
-\end{figure}
-
 
 \subsection{Precision-related rendering artifacts}
 %Having observed how error intervals originate and propagate through various floating point operations, we can studying the operations performed in the graphics pipeline to identify sources of precision problems of vertex as well as fragment operations.
@@ -378,12 +378,12 @@ In order to observe how the matrices act on a coordinate vector, we study the fo
 \mright)
 \end{equation}
 
-After evaluating the possible effects of the scaling, translation, and rotation we continue with a similar analysis for the projection matrix, the perspective division, and the mapping to a depth buffer representation.
+After evaluating the possible effects of the scaling, translation, and rotation we similarly analyze the projection matrix, the perspective division, and the mapping to a depth buffer representation.
 
 \subsubsection{Scaling} \label{sec:theory:scaling}
 Consider a 4$\times$4 interval matrix $[S]$, analogously to the matrix $[A]$ composed of the 3$\times$3 interval matrix $[S']$, interval vector $[\mathbf{s}]$, and a bottom row of degenerate intervals.
-Let the components of $[S]$ be scaling coefficient intervals, and let all other components of $[S]$ and $[\mathbf{s}]$ equal the degenerate interval $\{0\}$.
-Equation \ref{eq:scalingconclusion} expresses the components of the output matrix $\hat{S}$, which is also a matrix on the form of $[A]$.
+Let the components of $[S]$ be scaling coefficient intervals, and other components of $[S]$ and $[\mathbf{s}]$ equal the degenerate interval.
+Equation \ref{eq:scalingconclusion} expresses the components of the output matrix $\hat{S}$, which is also a matrix of the form of $[A]$.
 
 \begin{align} \label{eq:scalingconclusion}
 [\hat{S}_i] = ([S'] \otimes [A'])_{ij} &\subseteq [S'_{ii}]\,[A'_{ij}](1 + [e_{ij}]) \\
@@ -512,7 +512,7 @@ Conceptually, our method pivots the scene graph such that the node \texttt{N} is
 
 \begin{figure}
 \centering
-\includegraphics[width=\linewidth]{figure/attachment-switch.pdf}
+\includegraphics[width=0.8\linewidth]{figure/attachment-switch.pdf}
 \caption{When the camera reattaches to a node, its coordinate system changes.
 While the old location \texttt{A} is expressed relative to \texttt{N} as \textbf{v}, the new location \texttt{B} is expressed relative to \texttt{M} as \textbf{w} $-$ \textbf{n} instead.}
 \label{fig:coordsystems}
@@ -546,7 +546,7 @@ In order to circumvent rounding errors related to translation as described in Se
 Similarly to the translation, the scaling and rotation of the camera has to be inverted by applying the inverse of the rotation of \texttt{N} towards \texttt{M}.
 As stated in Section~\ref{sec:theory:scaling} and Section~\ref{sec:theory:rotation} no significant precision error with the scaling and rotation will occur.
 
-The update procedure is computationally inexpensive and scales linearly with the number of children of the current AN as only these children and the parent need to be tested for reattachment.
+The update procedure is computationally inexpensive and scales linearly with the number of children of the current AN as only these need to be tested for reattachment.
 Hence, there are no significant performance implications associated with this operation.
 
 \begin{figure*}
@@ -733,7 +733,7 @@ By always rendering objects in their physical location, as opposed to the reproj
 \section{Results} \label{sec:result}
 \begin{figure}[b]
 \centering
-\fbox{\includegraphics[width=\linewidth]{figure/pluto.png}}
+\fbox{\includegraphics[width=\linewidth]{figure/pluto-cropped.png}}
 \caption{A rendering of Pluto's surface with a height field reconstructed from New Horizons' images showing the Zheng He Montes and al-Idrisi Montes in front of Tombaugh Regio.}
 \label{fig:res:pluto}
 \end{figure}
@@ -753,7 +753,7 @@ As described in Section~\ref{sec:floating-point-numbers}, floating point numbers
 A second spacecraft is ESA's Rosetta shown in Figure~\ref{fig:res:stereo} as a stereoscopic rendering of the separation of the lander Philae from Rosetta on its way to the comet.
 
 \noindent \textbf{Navigation. }
-Figure~\ref{fig:imagesequence} shows individual frames of a seamless navigation through our solar system. Starting on the surface of Earth, where the mountains of the Alps are rendered with their correct height and surface textures, the Earth becomes visible further out before reaching the sphere of influence of Saturn and continuing to the surface of Titan, showing color images of the moon's surface.
+Figure~\ref{fig:imagesequence} shows frames of a seamless navigation through our solar system. Starting on the surface of Earth, where the Alps are rendered with their correct height and surface textures, the Earth becomes visible further out before reaching the sphere of influence of Saturn and continuing to the surface of Titan, showing color images of the moon's surface.
 At no point during this $1.65$\, billion km user-controlled journey are artifacts visible due to the camera's seamless transitions between the scene graph nodes.
 
 \noindent \textbf{Virtual globes. }
@@ -765,14 +765,14 @@ Figure~\ref{fig:res:mars} shows detailed structures on the surface of Mars as re
 It shows details with a resolution of 25\,cm per pixel.
 
 \noindent \textbf{Volumetric data. }
-As described in Section~\ref{sec:method:ds}, our system allows for the seamless integration of volumetric data.
+As described in Section~\ref{sec:method:ds}, our system enables the seamless integration of volumetric data.
 Figure~\ref{fig:res:galaxy} shows a frame of a three-channel time-varying volumetric rendering of the Milky Way~\cite{junichi2010interpretation,fujii2011dynamics}.
-In this scene, the root node of the scene graph is the center of the Milky Way and the solar system and all its contents are at a distance of $2,5 \cdot 10^{20}$ from the center inside the volume's bounding box of $\approx 10^{21} \times 10^{21} \times 1.5 \cdot 10^{19}$\,m. The volume is rendered using ray casting, with its proxy geometry defined as a sibling node to our solar system, sharing a Milky Way group node as common parent.
+In this scene, the center of the Milky Way is the root node of the scene graph and the solar system are at a distance of $2,5 \cdot 10^{20}$ from the center inside the volume's bounding box of $\approx 10^{21} \times 10^{21} \times 1.5 \cdot 10^{19}$\,m. The volume is rendered using ray casting, with its proxy geometry defined as a sibling node to our solar system, sharing a Milky Way group node as common parent.
 This means that only the transformations of the bounding box vertices have to be adjusted in order to incorporate volume rendering.
 
 \begin{figure}
 \centering
-\fbox{\includegraphics[width=\linewidth]{figure/mars-new.png}}
+\fbox{\includegraphics[width=\linewidth]{figure/mars-new-cropped.png}}
 \caption{Details of structures with up to 25\,cm per pixel resolution in a rendering of the surface features in West Candor Chasma on Mars as captured from the HiRISE camera.
 %, showing details of structures with up to 25\,cm per pixel in resolution.}
 }
@@ -781,14 +781,14 @@ This means that only the transformations of the bounding box vertices have to be
 
 \begin{figure}
 \centering
-\fbox{\includegraphics[width=\linewidth]{figure/stereo.png}}
+\fbox{\includegraphics[width=\linewidth]{figure/stereo-cropped.png}}
 \caption{Our approach supports stereoscopic rendering (here, amber/blue anaglyph) exemplified with the Rosetta/Philae separation for the landing on the comet 67P/Churyumov-Gerasimenko.}
 \label{fig:res:stereo}
 \end{figure}
 
 \begin{figure}[b]
 \centering
-\fbox{\includegraphics[width=\linewidth]{figure/galaxy.png}}
+\fbox{\includegraphics[width=\linewidth]{figure/galaxy-cropped.png}}
 \caption{A volumetric rendering of a three-channel simulation of the Milky Way with a bounding box size in the order of $10^{20}$\,m.}
 \label{fig:res:galaxy}
 \end{figure}
@@ -808,17 +808,16 @@ The method was successfully tested on spacecraft mission visualization~\cite{Boc
 The method is flexible enough, however, to be implemented and used in any scene graph implementation through modification of the traversal scheme.
 
 \subsection{Future Work}
-For future work, we would like to include higher-level wayfinding techniques such as the ones explored in Li~\etal~\cite{li2006scalable} and generalize these to both macro and microcosmos scenarios.
-Furthermore, integrating datasets of vastly different spatial domains opens up new challenges in the design of interaction techniques.
-In the case of time-varying datasets, a large spatial extent usually corresponds to a large temporal extent as well, the handling of which requires further research.
+For future work, we like to include high-level wayfinding techniques such as the ones explored in Li~\etal~\cite{li2006scalable} and generalize these to macro and microcosmos scenarios.
+For time-varying datasets, a large spatial extent usually corresponds to a large temporal extent as well, the handling of which requires further research.
+Furthermore, combining datasets of vast spatial domains opens up new challenges in the design of interaction techniques.
 %Another important future avenue is a heuristic to determine scene graph node extents based on analysis of an object's movement in order to prevent sibling intersections.
 %This is particularly beneficial for displaying objects which are not moving on regular orbits.
 
 \section{Acknowledgments}
 We would like to acknowledge the Swedish e-Science Research Center (SeRC) for their support of this work.
 Parts of this work were supported by NASA under award No NNX16AB93A, the Moore-Sloan Data Science Environment at NYU, NSF awards CNS-1229185, CCF-1533564, and CNS-1544753.
-We would also like to thank Karl Bladin and Erik Broberg for their work on the planetary renderer and ESRI for providing the Earth data.
-Additional thanks to Karljohan Lundin Palmerius and Patric Ljung for proofreading and giving insightful feedback.
+We would also like to thank Karl Bladin and Erik Broberg for their work on the planetary renderer and Karljohan Lundin Palmerius and Patric Ljung for proofreading and giving insightful feedback.
 
 %-------------------------------------------------------------------------
 
