@@ -511,7 +511,7 @@ Conceptually, our method pivots the scene graph such that the node \texttt{N} is
 
 \begin{figure}
 \centering
-\includegraphics[width=0.8\linewidth]{figure/attachment-switch.pdf}
+\includegraphics[width=\linewidth]{figure/attachment-switch.pdf}
 \caption{When the camera reattaches to a node, its coordinate system changes.
 While the old location \texttt{A} is expressed relative to \texttt{N} as \textbf{v}, the new location \texttt{B} is expressed relative to \texttt{M} as \textbf{w} $-$ \textbf{n} instead.}
 \label{fig:coordsystems}
