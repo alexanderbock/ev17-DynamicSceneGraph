@@ -37,12 +37,14 @@
 
 Dear Reviewers, \\
 
-We would like to thank you for the many valuable comments we have received for our submission.
+We would like to thank you for the many valuable comments we received for our submission.
 During the revision, we addressed the issues brought up and revised the manuscript accordingly.
+In order to accommodate the necessary changes, the tenth page now contains both the manuscript as well as the reference, in accordance with the submission guideline checklist.
 Below, you will find our responses to the reviews together with descriptions of the performed changes.
 The remainder of this cover letter is structured as follows:
 
-For each concern that was raised by a reviewer, we paraphrase the reviewer's comments and then summarize the changes that we made in the manuscript to address the concern. Finally, we have inserted the original review texts along with references to the sections where we have discussed the particular concerns.
+For each concern that was raised by a reviewer, we paraphrase the reviewer's comments and then summarize the changes that we made in the manuscript to address the concern.
+Finally, we have inserted the original review texts along with references to the sections where we have discussed the particular concerns.
 
 All references to sections and figures relate to the new layout of the revised submission.
 
@@ -62,32 +64,32 @@ For each concern that was raised by a reviewer, we paraphrase the reviewer's com
 \subsection{Clarity in the Theory Section}\label{concern:structure}
 Several reviewers agreed that there were ``inconsistencies and confusion due to lack of definitions and explanations directly in Section 3'' and that the ``section is hard to follow, especially when reading for the first time'', which ``come from the fact, that the authors chose to move major parts of the content to the back of the paper to Appendix A''.
 \end{tcolorbox}
-We have carefully revised the paper based on reviewers feedback about the structuring of Section 3 and the appendix A.
-The contents of the appendix have been incorporated into Section 3 in order to make it self-contained and thus improve the flow of the paper.
-In the revised version, we introduce the notation and the concepts of interval arithmetic before our analysis of the rendering pipeline in order to improve its comprehension.
+We carefully revised the paper based on reviewers feedback about the structuring of Section 3 and the Appendix A.
+The contents of the appendix were incorporated into Section 3 in order to make it self-contained and thus improve the flow of the paper.
+In the revised version, we introduce the notation and the concepts of interval arithmetic prior to our analysis of the rendering pipeline thus making it easier to follow.
 Furthermore, we have refined our notation to highlight the distinction between interval matrices and scalar matrices.
 
 \vspace*{1cm}
 
 
 \begin{tcolorbox}
-\subsection{Comparison to prior work}\label{concern:comparisons}  The point was raised that ``a comparison or relation to the large field of level of detail methods is missing'' and ``comparisons to the state of the art or alternative approaches are completely missing''.
+\subsection{Comparison to prior work}\label{concern:comparisons}
+Reviewers raised the point that ``a comparison or relation to the large field of level of detail methods is missing'' and ``comparisons to the state of the art or alternative approaches are completely missing''.
 \end{tcolorbox}
-To address this point, we added references to Section 2 in order to delineate the relation of our work to the previous work in the field of level of detail and other multiresolution methods.
+To address this point, we improved the related works section and added references to Section 2 in order to delineate the relation of our work to the previous work in the field of level of detail and other multiresolution methods.
 
 The results section has been improved by clarifying that Figure 3 shows the result of our method compared to a method using power scaled coordinates, which is one of the published state of the art methods for large scale astronomical visualization.
-As important details of the ScaleGraph method have not been published beyond the 2010 EuroGraphics Short Paper [KHE*10], we have not been able to provide a scientific comparison with that method.
+As the only published paper about the ScaleGraph is the 2010 EuroGraphics Area Paper [KHE*10] and this paper does not contain enough technical details to reproduce the method, we have not been able to provide a scientific comparison with that method.
 However, as pointed out in the related work section, the Uniview software which is based on the ScaleGraph does not properly handle stereoscopic rendering when transitioning between scenes.
 In Section 4.4, we describe how our method handles this problem.
 
 \vspace*{1cm}
 
 \begin{tcolorbox}
-\subsection{Other use cases}\label{concern:applications} These points questioned which ``other potential use cases might benefit from this method'' and that ``(limited) thoughts on future extensions are given'' and the reviewer noted that he ``would be very interested to hear from the authors about their thoughts on further challenges in other application fields''.
+\subsection{Other use cases}\label{concern:applications}
+These points questioned which ``other potential use cases might benefit from this method'' and that ``(limited) thoughts on future extensions are given'' and the reviewer noted that he ``would be very interested to hear from the authors about their thoughts on further challenges in other application fields''.
 \end{tcolorbox}
-In order to address this valid concern, we included additional explanations in the
-introduction, the beginning of the results sections, as well as providing avenues for
-future work in the end of the manuscript, especially dealing with the integration of datasets that span large extents both spatially and temporally, which is possible due to our proposed method.
+In order to address this valid concern, we included additional explanations in the introduction, the beginning of the results sections, as well as providing avenues for future work in the end of the manuscript, especially dealing with the integration of datasets that span large extents both spatially and temporally, which is possible due to our proposed method.
 
 \vspace*{1cm}
 
@@ -99,9 +101,9 @@ We added discussions about the performance implications of our method in multipl
 
 Section 4 has been improved to show why our proposed scene graph traversal scheme does not increase the algorithmic complexity compared to a standard scene graph traversal and might, dependening on the scene graph structure, even be more performant as only a local subsection of the sceen graph needs to be evaluated.
 
-Furthermore, we have now added a description about the algorithmic complexity of updating the camera attachment node to show that this also does not introduce a performace degredation.
-Section 5 was also modified to clarify that the implementation of the Dynamic Scene Graph in our reference implementation OpenSpace has not impacted performance negatively, compared to the PSC method that was previously implemented in the software.
-Due to the dependence on a scene graph layout (and thus irreproducibility), a restriction in the number of pages in the manuscript, and the fact that we do not claim to have an algorithm that improves the performance, we chose to omit these measurements.
+Furthermore, we added a description about the algorithmic complexity of updating the camera attachment node to show that this operation also does not introduce a performace degredation.
+Section 5 was modified to clarify that the implementation of the Dynamic Scene Graph in our reference implementation OpenSpace has not impacted performance negatively, compared to the Power Scaled Coordinate method that was previously implemented in the software.
+Due to the dependence on a scene graph layout (and thus general irreproducibility), the fact that we do not claim to have an algorithm that improves the performance, and a restriction in the number of pages in the manuscript, we chose to omit a detailed discussion of performance measurements in a separate section of the manuscript.
 
 \vspace*{1cm}
 
@@ -109,7 +111,7 @@ Due to the dependence on a scene graph layout (and thus irreproducibility), a re
 \subsection{Volume rendering}\label{concern:volumetric}
 Reviewer 1 raises the issue that we ``present a volumetric rendering of the Milky Way where it remains completely unclear how the volumetric rendering was performed and how this was integrated with the proposed rendering pipeline''.
 \end{tcolorbox}
-We have added a description to the end of section 5, describing in more detail how volumetric rendering is integrated with the Dynamic Scene Graph in the OpenSpace implementation.
+We added a description to the end of Section 5, describing in more detail how volumetric rendering is integrated with the Dynamic Scene Graph in the OpenSpace implementation in particular and how it can be integrated in a generic Dynamic Scene Graph implementation.
 
 \vspace*{1cm}
 
@@ -117,7 +119,7 @@ We have added a description to the end of section 5, describing in more detail h
 \subsection{Typographical corrections}\label{concern:typos}
 Reviewer 1 and 4 noticed a missing reference and some typographical errors.
 \end{tcolorbox}
-Thanks to the feedback of the reviwers, these concerns have been corrected in the new version of the manuscript.
+Thanks to the feedback, these concerns have been corrected in the new version of the manuscript.
 
 
 
