@@ -78,11 +78,11 @@ places throughout the manuscript; the end of Section 4, Section 4.2, and the res
 section now discuss this issue.
 Section 4 has been improved to show why our proposed scene graph traversal scheme
 does not increase the algorithmic complexity compared to a standard scene graph
-traversal and might, dependening on the scene graph structure, even be more performant
-as only a local subsection of the sceen graph needs to be evaluated.
+traversal and might, depending on the scene graph structure, even be more performant
+as only a local subsection of the scene graph needs to be evaluated.
 Furthermore, we added a description about the algorithmic complexity of updating
 the camera attachment node to show that this operation also does not introduce a
-performace degredation. Section 5 was modified to clarify that the implementation
+performance degradation. Section 5 was modified to clarify that the implementation
 of the Dynamic Scene Graph in our reference implementation OpenSpace has not
 impacted performance negatively, compared to the Power Scaled Coordinate method
 that was previously implemented in the software. Due to the dependence on a scene
