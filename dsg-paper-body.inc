@@ -147,7 +147,7 @@ It employs a scene graph with sub-scenes to which cameras belong.
 The content of the current sub-scene is rendered in a local coordinate system with high precision and thus allowing multiple regions to be represented with high relative precision.
 Content outside the current sub-scene is translated onto the scene's boundary and scaled to compensate for perspective effects.
 This translation, however, leads to inconsistencies in stereoscopic rendering when switching scenes as objects jump from the bounding sphere of a scene to its physical location.
-As their work was focussed on the Uniview system as a whole, the detailed ScaleGraph descriptions are lacking and thus make it hard to reproduce.
+As their presentation was focussed on the Uniview system as a whole, the detailed ScaleGraph descriptions are lacking and thus make it hard to reproduce.
 
 Level of detail (LOD) and multiresolution methods are crucial when visualizing and navigating across large data sets~\cite{luebke2003level}.
 By using representations with fewer vertices and lower resolution textures to render distant objects, more resources can be directed towards rendering salient objects.
