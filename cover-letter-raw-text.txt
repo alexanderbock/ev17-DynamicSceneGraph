@@ -8,24 +8,20 @@ submission. During the revision, we addressed the issues brought up and revised
 the manuscript accordingly. In order to accommodate the necessary changes, the
 tenth page now contains both the manuscript as well as the reference, in accordance
 with the submission guideline checklist. Below, you will find our responses to the
-reviews together with descriptions of the performed changes. The remainder of this
-cover letter is structured as follows:
+reviews together with descriptions of the performed changes.
+
 For each concern that was raised by a reviewer, we paraphrase the reviewer’s comments
 and then summarize the changes that we made in the manuscript to address
 the concern. Finally, we have inserted the original review texts along with references
 to the sections where we have discussed the particular concerns.
+
 All references to sections and figures relate to the new layout of the revised submission.
 
 Best regards,
 The Authors
 
-
 1 Reviews and comments
 ----------------------
-
-For each concern that was raised by a reviewer, we paraphrase the reviewer’s comments
-and then summarize the changes that we made in the manuscript to address
-the concern.
 
 1.1 Clarity in the Theory Section
 Several reviewers agreed that there were “inconsistencies and confusion due
@@ -114,48 +110,53 @@ the manuscript.
 2 Original review texts
 -----------------------
 
-This section contains citations from the reviews, along with references to the previous
-sections where the raised concerns have been discussed. For a compact presentation,
-we have omitted paragraphs with solely positive or neutral feedback.
+This section contains the original reviews. Brief comments, within parentheses,
+have been inserted to indicate how and where we have addressed any concern.
+For a compact presentation, we have omitted paragraphs with solely
+positive or neutral feedback.
 
 Summary Review
 [...]
 The main points of criticism include that there are no performance considerations
-given (1.4), the structuring of the manuscript has been questioned as it introduces
-inconsistencies and confusion due to lack of definitions and explanations directly in
-section 3 (1.1), as well the comparison or relation to the large field of level of detail
-methods is missing (1.2). Also it would be interesting to understand what other
-potential use cases might benefit from this method (1.3).
+given (performance is discussed in 1.4), the structuring of the manuscript has been
+questioned as it introduces inconsistencies and confusion due to lack of definitions
+and explanations directly in section 3 (see 1.1), as well the comparison or relation
+to the large field of level of detail methods is missing (see 1.2). Also it would be
+interesting to understand what other potential use cases might benefit from this
+method (see 1.3).
 [...]
 
 Review 4
 [...]
 Section 3 provides a theoretical background for the sources of floating point inaccuracies.
-This section is hard to follow, especially when reading for the first time, and
-part of this challenge seems to come from the fact, that the authors chose to move
-major parts of the content to the back of the paper to Appendix A (1.1). This is
+This section is hard to follow, especially when reading for the first time,
+and part of this challenge seems to come from the fact, that the authors chose to
+move major parts of the content to the back of the paper to Appendix A. This is
 problematic and also introduces some inconsistencies. I would suggest to reconsider
-or at least fix some of the problematic parts, see below.
+or at least fix some of the problematic parts, see below. (Changes to the structure
+is discussed in section 1.1.)
 [...]
 In the end conclusions are drawn and some (limited) thoughts on future extensions
 are given. This could be definitely extended a bit, for example I would be very
 interested to hear from the authors about their thoughts on further challenges in
-other application fields (1.3).
-As for the problematic structuring of section 3 vs the Appendix A (1.1): Appendix
-A is introducing some definitions, which are used in the remainder of section 3
-(as well as to some extent also in the further sections later on, but in front of the
+other application fields. (Future work is discussed in section 1.3.)
+
+As for the problematic structuring of section 3 vs the Appendix A: Appendix A
+is introducing some definitions, which are used in the remainder of section 3 (as
+well as to some extent also in the further sections later on, but in front of the
 Appendix itself). For example the definition of the interval arithmetic and symbols
 is given in the Appendix, but used without any further explanation in most of the
 equations in section 3. This is bad and leads to large confusion for the reader. Also
 the definition and an example for the catastrophic cancellation is given only in the
 Appendix, but referred to in the text of Section 3 as well as Section 4. And further
-similar examples would be possible.
+similar examples would be possible. (Structural changes are discussed in 1.1).
+
 As the Appendix is introducing major integral parts of the theory and definitions,
 I would strongly recommend to include it in Section 3, or, if considered impossible,
 to at least clearly point the reader to it in a more strict way, mentioning that it is
 an integral part and necessary to follow and understand the rest of the paper. Just
 pointing the ”interested” reader to this Appendix seems not sufficient enough.
-Other errors (1.6) include:
+Other errors include:
 
 Section 4.1, paragraph 2: v_i,j is the transformation from node i to j
 and v_j,i=-v_i,j as the inverse. Here v_j,i is wrongly displayed as vJ_i
@@ -176,24 +177,28 @@ Appendix A, last paragraph: there seems to be something wrong with the
 statement that "we note that e_ijk=0 if A_ik=0 or A_ik=0" -- here A_ik is
 mentioned twice.
 
+(These errors have been addressed, see 1.6.)
+
 Review 1
 The authors present the technique dynamic scene graph to visualize interstellar
-objects. The paper is structured and written well. Only at page 7 there is a
-missing reference (1.6). The introduction gives a nice insight into the very different
+objects. The paper is structured and written well. Only at page 7 there is a missing
+reference (See 1.6). The introduction gives a nice insight into the very different
 magnitudes of space objects and their relations as well as the challenges during
 rendering. In the following, authors discuss related work with respect to navigation
 interaction, space and education, as well as some solutions to the cancellation effects
-of floating point numbers. However, they completely omit the whole world of level of detail
-algorithms out there in computer graphics for decades. Authors should
-do an extensive literature research in this direction, since many proposed solutions
-were already solved in different ways several years ago (1.2). This is also true for
-numerical problems of large-scale astronomical simulations; which astrophysics also
-have dealt with for decades now.
+of floating point numbers. However, they completely omit the whole world of levelof-detail
+algorithms out there in computer graphics for decades. Authors should do
+an extensive literature research in this direction, since many proposed solutions were
+already solved in different ways several years ago. This is also true for numerical
+problems of large-scale astronomical simulations; which astrophysics also have dealt
+with for decades now. (See 1.2.)
+
 The third section motivates the presented approach. Authors examine how different
 operations of vectors and matrices, which are typically applied during rendering,
 effect precision. In Equation (1) there is the variable cw and one circular operator
-which are not explained (1.1). The analysis shows that mainly translations result
-in problematic cancellations and the authors show the well-known effect that nonlinear
+which are not explained. (This was addressed by moving the contents of the appendix
+into section 3, see 1.1.) The analysis shows that mainly translations result in
+problematic cancellations and the authors show the well-known effect that nonlinear
 depth buffers result in precision problems. The following section describes
 the algorithms of the dynamic scene graph. Authors propose a navigation that lets
 the camera travel in space by traversing the scene graph and successively choosing
@@ -202,22 +207,25 @@ problems by using direct traversal in the hierarchy and utilizing respective mat
 This procedure can also be adapted to movements of cameras or even objects. The
 depth-buffer problems are removed by the well-known approach of linearization,
 using actual distance.
+
 In the results section, authors show many nice rendering of interstellar objects.
 However, authors do not present at which hardware these renderings were performed
-at which performance (1.4). Also, they present a volumetric rendering of
-the Milky Way where it remains completely unclear how the volumetric rendering
-was performed and how this was integrated with the proposed rendering pipeline
-(1.5). In addition, comparisons to the state of the art or alternative approaches are
-completely missing (1.2).
+at which performance (See 1.4). Also, they present a volumetric rendering of the
+Milky Way where it remains completely unclear how the volumetric rendering was
+performed and how this was integrated with the proposed rendering pipeline (see
+1.5). In addition, comparisons to the state of the art or alternative approaches are
+completely missing (see 1.2).
+
 
 Review 2
 [...]
 However, the author needs to give the performance configuration of the experiment
-and give a performance comparison with the traditional methods (1.4). In order to
-prove that the framework can solve the problems.
-The evaluation part of this paper should also be improved (1.4) (1.2). It should be
-written more concretely. The experiment setups, the dataset used should be stated
-clearly because it may largely affect the results and the patterns of the study.
+and give a performance comparison with the traditional methods. (This issue is
+discussed in 1.4.) In order to prove that the framework can solve the problems.
+The evaluation part of this paper should also be improved. (This concern is covered
+in 1.2 and 1.4.) It should be written more concretely. The experiment setups, the
+dataset used should be stated clearly because it may largely affect the results and
+the patterns of the study.
 
 Review 3
 This paper addresses the precision problem which is common in the fields of graphics
