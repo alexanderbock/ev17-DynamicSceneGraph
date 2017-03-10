@@ -1,0 +1,228 @@
+The following content is aslo submitted in pdf format as supplementary material.
+--------------------------------------------------------------------------------
+
+Dear Reviewers,
+
+We would like to thank you for the many valuable comments we received for our
+submission. During the revision, we addressed the issues brought up and revised
+the manuscript accordingly. In order to accommodate the necessary changes, the
+tenth page now contains both the manuscript as well as the reference, in accordance
+with the submission guideline checklist. Below, you will find our responses to the
+reviews together with descriptions of the performed changes. The remainder of this
+cover letter is structured as follows:
+For each concern that was raised by a reviewer, we paraphrase the reviewer’s comments
+and then summarize the changes that we made in the manuscript to address
+the concern. Finally, we have inserted the original review texts along with references
+to the sections where we have discussed the particular concerns.
+All references to sections and figures relate to the new layout of the revised submission.
+
+Best regards,
+The Authors
+
+
+1 Reviews and comments
+----------------------
+
+For each concern that was raised by a reviewer, we paraphrase the reviewer’s comments
+and then summarize the changes that we made in the manuscript to address
+the concern.
+
+1.1 Clarity in the Theory Section
+Several reviewers agreed that there were “inconsistencies and confusion due
+to lack of definitions and explanations directly in Section 3” and that the
+“section is hard to follow, especially when reading for the first time”, which
+“come from the fact, that the authors chose to move major parts of the
+content to the back of the paper to Appendix A”.
+
+We carefully revised the paper based on reviewers' feedback about the structuring
+of Section 3 and the Appendix A. The contents of the appendix were incorporated
+into Section 3 in order to make it self-contained and thus improve the flow of the
+paper. In the revised version, we introduce the notation and the concepts of interval
+arithmetic prior to our analysis of the rendering pipeline thus making it easier
+to follow. Furthermore, we have refined our notation to highlight the distinction
+between interval matrices and scalar matrices.
+
+1.2 Comparison to prior work
+Reviewers raised the point that “a comparison or relation to the large field
+of level of detail methods is missing” and “comparisons to the state of the
+art or alternative approaches are completely missing”.
+
+To address this point, we improved the related works section and added references
+to Section 2 in order to delineate the relation of our work to the previous work in
+the field of level of detail and other multiresolution methods.
+The results section has been improved by clarifying that Figure 3 shows the result
+of our method compared to a method using power scaled coordinates, which is one
+of the published state of the art methods for large scale astronomical visualization.
+As the only published paper about the ScaleGraph is the 2010 EuroGraphics Area
+Paper [KHE*10] and this paper does not contain enough technical details to reproduce
+the method, we have not been able to provide a scientific comparison with that method.
+However, as pointed out in the related work section, the Uniview 
+software which is based on the ScaleGraph does not properly handle stereoscopic
+rendering when transitioning between scenes. In Section 4.4, we describe how our
+method handles this problem.
+
+1.3 Other use cases
+These points questioned which “other potential use cases might benefit from
+this method” and that “(limited) thoughts on future extensions are given”
+and the reviewer noted that he “would be very interested to hear from the authors
+about their thoughts on further challenges in other application fields”.
+
+In order to address this valid concern, we included additional explanations in the
+introduction, the beginning of the results sections, as well as providing avenues for
+future work in the end of the manuscript, especially dealing with the integration
+of datasets that span large extents both spatially and temporally, which is possible
+due to our proposed method.
+
+1.4 Performance considerations
+The reviewer raises the concern that “no performance considerations [are]
+given” for our proposed method.
+
+We added discussions about the performance implications of our method in multiple
+places throughout the manuscript; the end of Section 4, Section 4.2, and the results
+section now discuss this issue.
+Section 4 has been improved to show why our proposed scene graph traversal scheme
+does not increase the algorithmic complexity compared to a standard scene graph
+traversal and might, dependening on the scene graph structure, even be more performant
+as only a local subsection of the sceen graph needs to be evaluated.
+Furthermore, we added a description about the algorithmic complexity of updating
+the camera attachment node to show that this operation also does not introduce a
+performace degredation. Section 5 was modified to clarify that the implementation
+of the Dynamic Scene Graph in our reference implementation OpenSpace has not
+impacted performance negatively, compared to the Power Scaled Coordinate method
+that was previously implemented in the software. Due to the dependence on a scene
+graph layout (and thus general irreproducibility), the fact that we do not claim to
+have an algorithm that improves the performance, and a restriction in the number
+of pages in the manuscript, we chose to omit a detailed discussion of performance
+measurements in a separate section of the manuscript.
+
+1.5 Volume rendering
+Reviewer 1 raises the issue that we “present a volumetric rendering of the
+Milky Way where it remains completely unclear how the volumetric rendering
+was performed and how this was integrated with the proposed rendering
+pipeline”.
+We added a description to the end of Section 5, describing in more detail how
+volumetric rendering is integrated with the Dynamic Scene Graph in the OpenSpace
+implementation in particular and how it can be integrated in a generic Dynamic
+Scene Graph implementation.
+
+1.6 Typographical corrections
+Reviewer 1 and 4 noticed a missing reference and some typographical errors.
+Thanks to the feedback, these concerns have been corrected in the new version of
+the manuscript.
+
+
+2 Original review texts
+-----------------------
+
+This section contains citations from the reviews, along with references to the previous
+sections where the raised concerns have been discussed. For a compact presentation,
+we have omitted paragraphs with solely positive or neutral feedback.
+
+Summary Review
+[...]
+The main points of criticism include that there are no performance considerations
+given (1.4), the structuring of the manuscript has been questioned as it introduces
+inconsistencies and confusion due to lack of definitions and explanations directly in
+section 3 (1.1), as well the comparison or relation to the large field of level of detail
+methods is missing (1.2). Also it would be interesting to understand what other
+potential use cases might benefit from this method (1.3).
+[...]
+
+Review 4
+[...]
+Section 3 provides a theoretical background for the sources of floating point inaccuracies.
+This section is hard to follow, especially when reading for the first time, and
+part of this challenge seems to come from the fact, that the authors chose to move
+major parts of the content to the back of the paper to Appendix A (1.1). This is
+problematic and also introduces some inconsistencies. I would suggest to reconsider
+or at least fix some of the problematic parts, see below.
+[...]
+In the end conclusions are drawn and some (limited) thoughts on future extensions
+are given. This could be definitely extended a bit, for example I would be very
+interested to hear from the authors about their thoughts on further challenges in
+other application fields (1.3).
+As for the problematic structuring of section 3 vs the Appendix A (1.1): Appendix
+A is introducing some definitions, which are used in the remainder of section 3
+(as well as to some extent also in the further sections later on, but in front of the
+Appendix itself). For example the definition of the interval arithmetic and symbols
+is given in the Appendix, but used without any further explanation in most of the
+equations in section 3. This is bad and leads to large confusion for the reader. Also
+the definition and an example for the catastrophic cancellation is given only in the
+Appendix, but referred to in the text of Section 3 as well as Section 4. And further
+similar examples would be possible.
+As the Appendix is introducing major integral parts of the theory and definitions,
+I would strongly recommend to include it in Section 3, or, if considered impossible,
+to at least clearly point the reader to it in a more strict way, mentioning that it is
+an integral part and necessary to follow and understand the rest of the paper. Just
+pointing the ”interested” reader to this Appendix seems not sufficient enough.
+Other errors (1.6) include:
+
+Section 4.1, paragraph 2: v_i,j is the transformation from node i to j
+and v_j,i=-v_i,j as the inverse. Here v_j,i is wrongly displayed as vJ_i
+
+Section 4.1, paragraph 3: By utilizing the shortest path between M and N
+we avoid large the (should be: the large) translations which would
+otherwise be necessary if the all (should be: all the) transformations
+originate ...
+
+Section 4.2., end of paragraph 1: "Likewise, camera B is inside nodes 1,2
+and 5 and ... " should be "Likewise, camera B is inside nodes 1,3 and 5
+..."" if I understand the Figure 4 correctly. 
+
+Section 5, paragraph about "Space craft.":
+"As described in Section ??" -- here a wrong reference is apparent.
+
+Appendix A, last paragraph: there seems to be something wrong with the
+statement that "we note that e_ijk=0 if A_ik=0 or A_ik=0" -- here A_ik is
+mentioned twice.
+
+Review 1
+The authors present the technique dynamic scene graph to visualize interstellar
+objects. The paper is structured and written well. Only at page 7 there is a
+missing reference (1.6). The introduction gives a nice insight into the very different
+magnitudes of space objects and their relations as well as the challenges during
+rendering. In the following, authors discuss related work with respect to navigation
+interaction, space and education, as well as some solutions to the cancellation effects
+of floating point numbers. However, they completely omit the whole world of level of detail
+algorithms out there in computer graphics for decades. Authors should
+do an extensive literature research in this direction, since many proposed solutions
+were already solved in different ways several years ago (1.2). This is also true for
+numerical problems of large-scale astronomical simulations; which astrophysics also
+have dealt with for decades now.
+The third section motivates the presented approach. Authors examine how different
+operations of vectors and matrices, which are typically applied during rendering,
+effect precision. In Equation (1) there is the variable cw and one circular operator
+which are not explained (1.1). The analysis shows that mainly translations result
+in problematic cancellations and the authors show the well-known effect that nonlinear
+depth buffers result in precision problems. The following section describes
+the algorithms of the dynamic scene graph. Authors propose a navigation that lets
+the camera travel in space by traversing the scene graph and successively choosing
+respective points of interest. During the traversals, authors try to reduce accuracy
+problems by using direct traversal in the hierarchy and utilizing respective matrices.
+This procedure can also be adapted to movements of cameras or even objects. The
+depth-buffer problems are removed by the well-known approach of linearization,
+using actual distance.
+In the results section, authors show many nice rendering of interstellar objects.
+However, authors do not present at which hardware these renderings were performed
+at which performance (1.4). Also, they present a volumetric rendering of
+the Milky Way where it remains completely unclear how the volumetric rendering
+was performed and how this was integrated with the proposed rendering pipeline
+(1.5). In addition, comparisons to the state of the art or alternative approaches are
+completely missing (1.2).
+
+Review 2
+[...]
+However, the author needs to give the performance configuration of the experiment
+and give a performance comparison with the traditional methods (1.4). In order to
+prove that the framework can solve the problems.
+The evaluation part of this paper should also be improved (1.4) (1.2). It should be
+written more concretely. The experiment setups, the dataset used should be stated
+clearly because it may largely affect the results and the patterns of the study.
+
+Review 3
+This paper addresses the precision problem which is common in the fields of graphics
+and visualization. After analyzing the reasons behind the precision problem, this
+paper proposes dynamic scene graph-based method for seamlessly high-precision
+rendering of large scale scenes. The case studies as well as the supplemental video
+demonstrate good results by using the proposed method. The proposed technique
+is reproducible for a skilled graduate student.
