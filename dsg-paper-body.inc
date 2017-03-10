@@ -114,7 +114,7 @@ In summary, our contributions include:
 \item A \emph{Dynamic Scene Graph} approach for representing objects and cameras to avoid precision-related rendering artifacts.
 \item A general method for rendering objects with a wide depth range and precision without the explicit need for near and far planes.
 \item A scheme for seamless adaption of the eye-separation used for stereoscopic rendering.
-\item An analysis of floating point precision errors using interval arithmatic.
+\item An analysis of floating point precision errors using interval arithmetic.
 \item A method for dynamically updating the parent/child relationship for scene graph nodes.
 \end{itemize}
 
@@ -221,7 +221,7 @@ For computer graphics, this limits the precision with which vertices can be repr
 %In computer graphics, the limitation posed by the machine epsilon imposes that vertices are represented with less precision the further way from the coordinate system origin they are.
 Figure~\ref{fig:degradation-circles} shows a simulation with 5 mantissa bits.
 %, causing $\epsilon = 2^{-6} = \frac{1}{64}$.
-Using IEEE754 floats, at Pluto's distance from the Sun the distance between two floating point numbers is approximately $5.102 \cdot 10^9 \cdot 2^{-24}$\, km $= 304.1$\,km, which is about an eighth of Pluto's diameter and leads to visble artifacts (see Figure~\ref{fig:res:plutocomp}).
+Using IEEE754 floats, at Pluto's distance from the Sun the distance between two floating point numbers is approximately $5.102 \cdot 10^9 \cdot 2^{-24}$\, km $= 304.1$\,km, which is about an eighth of Pluto's diameter and leads to visible artifacts (see Figure~\ref{fig:res:plutocomp}).
 %By using double precision, the corresponding distance between floating point numbers on Pluto becomes $5.102 \cdot 10^9 \cdot 2^{-53} \, \text{km} = \SI{56.64}{\micro\metre}$. Even at this relatively high resolution it is impossible to represent and contextualize tiny structures such as molecules. \emilcomment{Do we need to motivate this better? Who would ever want to look at molecules at Pluto?}
 
 \subsection{Interval arithmetic}
@@ -575,7 +575,7 @@ One example is the New Horizons mission~\cite{stern2009new}, where the spacecraf
 For this visualization, it is necessary to render the spacecraft at high resolution on the launchpad in Florida, in interplanetary space, during the gravity assist at Jupiter, on the flyby at Pluto, and eventually at its next flyby at 2014 MU69.
 If the scene graph node containing New Horizons would statically be a direct child of the solar system, floating point precision would not suffice for accurately representing the probe at these various locations.
 %In order to avoid this, we enable scene graph nodes to dynamically attach to different nodes under specialized circumstances, that is, being highly mobile objects such as spacecraft, asteroids, or comets.
-In Figure~\ref{fig:teaser}, the New Horizons spacecraft scene graph node has been dynamically attached to the Pluto barycenter node, in order to allow simultanueous high fidelity rendering of the probe as well as the planetary system.
+In Figure~\ref{fig:teaser}, the New Horizons spacecraft scene graph node has been dynamically attached to the Pluto barycenter node, in order to allow simultaneous high fidelity rendering of the probe as well as the planetary system.
 
 
 
@@ -720,7 +720,7 @@ In our approach, we use a modified perspective matrix with $\lambda_1 = \lambda_
 Geometry behind the camera is discarded due to the criterion of $-\mathbf{c}_w < \mathbf{c}_w$ imposed by the OpenGL pipeline.
 For depth comparisons, we use 32-bit floating point numbers representing the distance to the rendered fragment.
 
-To avoid exponent overflow and underflow for distant and close fragments, we first divide the view coordinate vector $v$ by its component with largest magnitude $\mathbf{v}_{\text{max}}$, perform the computation using the pythagoran theorem, and multiply by $\mathbf{v}_{\text{max}}$.
+To avoid exponent overflow and underflow for distant and close fragments, we first divide the view coordinate vector $v$ by its component with largest magnitude $\mathbf{v}_{\text{max}}$, perform the computation using the pythagorean theorem, and multiply by $\mathbf{v}_{\text{max}}$.
 
 Depth sorting is performed using conventional z-buffering with a 32-bit floating point buffer.
 For scenes with volumetric or transparent content, we use an A-buffer technique for order-independent transparency~\cite{lindholm2015hybrid}.
