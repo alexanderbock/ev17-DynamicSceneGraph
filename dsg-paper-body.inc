@@ -778,18 +778,18 @@ This means that only the transformations of the bounding box vertices have to be
 \label{fig:res:mars}
 \end{figure}
 
-\begin{figure}
-\centering
-\fbox{\includegraphics[width=\linewidth]{figure/stereo-cropped.png}}
-\caption{Our approach supports stereoscopic rendering (here, amber/blue anaglyph) exemplified with the Rosetta/Philae separation for the landing on the comet 67P/Churyumov-Gerasimenko.}
-\label{fig:res:stereo}
-\end{figure}
-
 \begin{figure}[b]
 \centering
 \fbox{\includegraphics[width=\linewidth]{figure/galaxy-cropped.png}}
 \caption{A volumetric rendering of a three-channel simulation of the Milky Way with a bounding box size in the order of $10^{20}$\,m.}
 \label{fig:res:galaxy}
+\end{figure}
+
+\begin{figure}
+\centering
+\fbox{\includegraphics[width=\linewidth]{figure/stereo-cropped.png}}
+\caption{Our approach supports stereoscopic rendering (here, amber/blue anaglyph) exemplified with the Rosetta/Philae separation for the landing on the comet 67P/Churyumov-Gerasimenko.}
+\label{fig:res:stereo}
 \end{figure}
 
 
