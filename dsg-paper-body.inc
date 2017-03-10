@@ -16,9 +16,9 @@
 \author[Axelsson \emph{et al.}]{Emil Axelsson$^{1}$, Jonathas Costa$^{2}$, Cl\'audio Silva$^{2}$, Carter Emmart$^{3}$, Alexander Bock$^{1}$, and Anders Ynnerman$^{1}$
        \\
 % For Computer Graphics Forum: Please use the abbreviation of your first name.
-         $^1$~Linköping University\\%
-         $^2$~New York University\vspace*{-0.2em}\\%
-         \small{$^3$~American Museum of Natural History}
+         $^1$~Linköping University,\;%
+         $^2$~New York University,\;%
+         $^3$~American Museum of Natural History
 }
   %\author{Submission 291}
 
@@ -232,10 +232,9 @@ Using IEEE754 floats, at Pluto's distance from the Sun the distance between two 
 %By using double precision, the corresponding distance between floating point numbers on Pluto becomes $5.102 \cdot 10^9 \cdot 2^{-53} \, \text{km} = \SI{56.64}{\micro\metre}$. Even at this relatively high resolution it is impossible to represent and contextualize tiny structures such as molecules. \emilcomment{Do we need to motivate this better? Who would ever want to look at molecules at Pluto?}
 
 \subsection{Interval arithmetic}
-Interval arithmetic makes it possible to track potential sources of rounding error~\cite{Hickey2001}.
 The maximum error introduced by rounding of a number $v$ can be written as $u|v|$, with the rounding error coefficient $u = \frac{\epsilon}{2}$.
 Hence, $v$ may be rounded to a number $v' \in [v - u|v|, v + u|v|]$.
-Using interval arithmetic, this can be rewritten as $v(1 + u[-1,1])$.
+Using interval arithmetic~\cite{Hickey2001}, this can be rewritten as $v(1 + u[-1,1])$.
 
 We use $\oplus$, $\ominus$, $\odot$, and $\oslash$ to denote floating point addition, subtraction, multiplication, and division respectively.
 The operators are commutative and yield the possible output intervals given two real number intervals $[x] = [x_1, x_2]$ and $[y] = [y_1, y_2]$ as,\vspace*{-1.5em}
