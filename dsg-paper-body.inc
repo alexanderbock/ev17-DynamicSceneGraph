@@ -746,11 +746,11 @@ The images shown are captures from interactive sessions using OpenSpace.
 While the use-cases in this section are dealing with astronomical datasets, our proposed method equally applies to other domains with large scale differences, such as molecular visualization or atomic visualization.
 In this section, we shortly describe these use-cases and how our proposed method was used in four categories.
 
-\noindent \textbf{Space craft. }
+\noindent \textbf{Spacecraft. }
 As one of the major motivations for developing this method, spacecraft are inherently small objects that need to be visualized precisely with respect to an object, mostly planets, that they are inspecting.
-One example is shown in Figure~\ref{fig:teaser} where the New Horizons space craft is shown at 80\,Mm distance to Pluto and around $6 \cdot 10^{12}$\,m away from the Sun.
+One example is shown in Figure~\ref{fig:teaser} where the New Horizons spacecraft is shown at 80\,Mm distance to Pluto and around $6 \cdot 10^{12}$\,m away from the Sun.
 As described in Section~\ref{sec:floating-point-numbers}, floating point numbers only have a precision of about 300\,km at the distance of Pluto, which would make a traditional approach infeasible. With our method, however, it is possible to show the entire mission with the required precision.
-A second space craft is ESA's Rosetta shown in Figure~\ref{fig:res:stereo} as a stereoscopic rendering of the separation of the lander Philae from Rosetta on its way to the comet.
+A second spacecraft is ESA's Rosetta shown in Figure~\ref{fig:res:stereo} as a stereoscopic rendering of the separation of the lander Philae from Rosetta on its way to the comet.
 
 \noindent \textbf{Navigation. }
 Figure~\ref{fig:imagesequence} shows individual frames of a seamless navigation through our solar system. Starting on the surface of Earth, where the mountains of the Alps are rendered with their correct height and surface textures, the Earth becomes visible further out before reaching the sphere of influence of Saturn and continuing to the surface of Titan, showing color images of the moon's surface.
@@ -800,11 +800,11 @@ This means that only the transformations of the bounding box vertices have to be
 In this work, we presented a method that supports high-precision transformations in a scene graph by dynamically attaching a camera to its closest node and using this node as the origin for the scene traversal.
 The dynamic scene graph enables a higher level of relative precision than which is otherwise possible.
 By supporting efficient dynamic reattachment of the camera to nodes, it becomes possible to navigate a scene encompassing scales and distances much larger than floating point precision would normally permit.
-The same reattachment technique can be applied to provide other scene graph nodes with the ability to retain high precision at multiple locations, for example, a space craft that requires high precision at multiple planets as it moves through space.
+The same reattachment technique can be applied to provide other scene graph nodes with the ability to retain high precision at multiple locations, for example, a spacecraft that requires high precision at multiple planets as it moves through space.
 The scene graph traversal uses the shortest path to every other scene graph node and thus circumvents potentially large translation values that would otherwise lead to precision degradation during the rendering.
 
 We implemented the method in the open-source software platform OpenSpace which has the goal of visualizing and contextualizing a wide range of astrophysical data.
-The method was successfully tested on space craft mission visualization~\cite{Bock_2015}, on virtual globes, and volumetric rendering.
+The method was successfully tested on spacecraft mission visualization~\cite{Bock_2015}, on virtual globes, and volumetric rendering.
 The method is flexible enough, however, to be implemented and used in any scene graph implementation through modification of the traversal scheme.
 
 \subsection{Future Work}
