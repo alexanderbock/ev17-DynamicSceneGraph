@@ -16,9 +16,9 @@
 \author[Axelsson \emph{et al.}]{Emil Axelsson$^{1}$, Jonathas Costa$^{2}$, Cl\'audio Silva$^{2}$, Carter Emmart$^{3}$, Alexander Bock$^{1}$, and Anders Ynnerman$^{1}$
        \\
 % For Computer Graphics Forum: Please use the abbreviation of your first name.
-         $^1$~Linköping University\\%
-         $^2$~New York University\vspace*{-0.2em}\\%
-         \small{$^3$~American Museum of Natural History}
+         $^1$~Linköping University,\;%
+         $^2$~New York University\vspace*{-0.2em},\;%
+         $^3$~American Museum of Natural History
 }
   %\author{Submission 291}
 
